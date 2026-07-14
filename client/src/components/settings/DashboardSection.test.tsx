@@ -8,10 +8,12 @@ import type { Account } from '../../types/account';
 vi.mock('../../api/dashboardConfig', () => ({
     getDashboardConfig: vi.fn(),
     addToDashboard: vi.fn(),
+    addCrossAccountTile: vi.fn(),
     removeFromDashboard: vi.fn(),
     reorderDashboard: vi.fn(),
     updateShowBalance: vi.fn(),
     updateTile: vi.fn(),
+    CROSS_ACCOUNT_TILE_TYPES: ['net_worth', 'net_worth_chart'],
 }));
 
 
@@ -23,9 +25,9 @@ import * as dashboardConfigApi from '../../api/dashboardConfig';
 import * as accountsApi from '../../api/accounts';
 
 const mockConfig: DashboardConfigItem[] = [
-    { id: 1, account_id: 10, position: 1, tile_type: 'transactions', time_window: null, show_balance: true, balance_cents: 10000 },
-    { id: 2, account_id: 20, position: 2, tile_type: 'transactions', time_window: null, show_balance: true, balance_cents: 20000 },
-    { id: 3, account_id: 30, position: 3, tile_type: 'transactions', time_window: null, show_balance: false, balance_cents: 30000 },
+    { id: 1, account_id: 10, position: 1, tile_type: 'transactions', time_window: null, show_balance: true, forecast_discretionary: false, balance_cents: 10000 },
+    { id: 2, account_id: 20, position: 2, tile_type: 'transactions', time_window: null, show_balance: true, forecast_discretionary: false, balance_cents: 20000 },
+    { id: 3, account_id: 30, position: 3, tile_type: 'transactions', time_window: null, show_balance: false, forecast_discretionary: false, balance_cents: 30000 },
 ];
 
 const mockAccounts: Account[] = [
@@ -51,7 +53,7 @@ beforeEach(() => {
     vi.mocked(dashboardConfigApi.reorderDashboard).mockResolvedValue(undefined);
     vi.mocked(dashboardConfigApi.removeFromDashboard).mockResolvedValue(undefined);
     vi.mocked(dashboardConfigApi.addToDashboard).mockResolvedValue({
-        id: 4, account_id: 40, position: 4, tile_type: 'transactions', time_window: null, show_balance: false, balance_cents: 0,
+        id: 4, account_id: 40, position: 4, tile_type: 'transactions', time_window: null, show_balance: false, forecast_discretionary: false, balance_cents: 0,
     });
     vi.mocked(dashboardConfigApi.updateShowBalance).mockResolvedValue(undefined);
 });
@@ -71,8 +73,8 @@ describe.skip('DashboardSection', () => {
 
     it('shows tile type suffix for chart tiles', async () => {
         vi.mocked(dashboardConfigApi.getDashboardConfig).mockResolvedValue([
-            { id: 1, account_id: 10, position: 1, tile_type: 'balance_over_time', time_window: '30d', show_balance: false, balance_cents: null },
-            { id: 2, account_id: 20, position: 2, tile_type: 'totals_by_category', time_window: '3m', show_balance: false, balance_cents: null },
+            { id: 1, account_id: 10, position: 1, tile_type: 'balance_over_time', time_window: '30d', show_balance: false, forecast_discretionary: false, balance_cents: null },
+            { id: 2, account_id: 20, position: 2, tile_type: 'totals_by_category', time_window: '3m', show_balance: false, forecast_discretionary: false, balance_cents: null },
         ]);
         renderSection();
         await waitFor(() => {
@@ -273,7 +275,7 @@ describe.skip('DashboardSection', () => {
 
     it('shows show balance checkbox for balance_over_time tiles', async () => {
         vi.mocked(dashboardConfigApi.getDashboardConfig).mockResolvedValue([
-            { id: 1, account_id: 10, position: 1, tile_type: 'balance_over_time', time_window: '30d', show_balance: false, balance_cents: 5000 },
+            { id: 1, account_id: 10, position: 1, tile_type: 'balance_over_time', time_window: '30d', show_balance: false, forecast_discretionary: false, balance_cents: 5000 },
         ]);
         renderSection();
         await waitFor(() => screen.getByRole('checkbox', { name: /show balance/i }));
@@ -282,9 +284,9 @@ describe.skip('DashboardSection', () => {
 
     it('does not show show balance checkbox for ineligible tile types', async () => {
         vi.mocked(dashboardConfigApi.getDashboardConfig).mockResolvedValue([
-            { id: 1, account_id: 10, position: 1, tile_type: 'totals_by_category', time_window: '30d', show_balance: false, balance_cents: null },
-            { id: 2, account_id: 20, position: 2, tile_type: 'income_vs_expense', time_window: '3m', show_balance: false, balance_cents: null },
-            { id: 3, account_id: 30, position: 3, tile_type: 'budget_progress', time_window: null, show_balance: false, balance_cents: null },
+            { id: 1, account_id: 10, position: 1, tile_type: 'totals_by_category', time_window: '30d', show_balance: false, forecast_discretionary: false, balance_cents: null },
+            { id: 2, account_id: 20, position: 2, tile_type: 'income_vs_expense', time_window: '3m', show_balance: false, forecast_discretionary: false, balance_cents: null },
+            { id: 3, account_id: 30, position: 3, tile_type: 'budget_progress', time_window: null, show_balance: false, forecast_discretionary: false, balance_cents: null },
         ]);
         renderSection();
         await waitFor(() => screen.getAllByRole('button', { name: /move .* up/i }));
@@ -310,7 +312,7 @@ describe.skip('DashboardSection', () => {
 
     it('does not render grip handles when only one tile is configured', async () => {
         vi.mocked(dashboardConfigApi.getDashboardConfig).mockResolvedValue([
-            { id: 1, account_id: 10, position: 1, tile_type: 'transactions', time_window: null, show_balance: true, balance_cents: 10000 },
+            { id: 1, account_id: 10, position: 1, tile_type: 'transactions', time_window: null, show_balance: true, forecast_discretionary: false, balance_cents: 10000 },
         ]);
         renderSection();
         await waitFor(() => screen.getAllByRole('button', { name: /move .* up/i }));

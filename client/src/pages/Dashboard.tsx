@@ -9,6 +9,7 @@ import IncomeVsExpenseChartTile from '../components/IncomeVsExpenseChartTile';
 import BudgetProgressTile from '../components/BudgetProgressTile';
 import NetWorthTile from '../components/NetWorthTile';
 import NetWorthChartTile from '../components/NetWorthChartTile';
+import ForecastTile from '../components/ForecastTile';
 import AccountForm, { type AccountFormValues } from '../components/AccountForm';
 import SkeletonCard from '../components/SkeletonCard';
 import TransactionForm from '../components/TransactionForm';
@@ -239,6 +240,19 @@ export default function Dashboard() {
                                         accountId={tile.account_id}
                                         accountName={account?.name ?? `Account ${tile.account_id}`}
                                         window={tile.time_window ?? '3m'}
+                                    />
+                                );
+                            }
+                            if (tile.tile_type === 'forecast') {
+                                const account = allAccountsWithBalances.find((a) => a.id === tile.account_id);
+                                const days = parseInt((tile.time_window ?? '30d').replace('d', ''), 10);
+                                return (
+                                    <ForecastTile
+                                        key={tile.id}
+                                        accountId={tile.account_id}
+                                        accountName={account?.name ?? `Account ${tile.account_id}`}
+                                        days={days}
+                                        includeDiscretionary={tile.forecast_discretionary}
                                     />
                                 );
                             }

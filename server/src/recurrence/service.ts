@@ -1,7 +1,7 @@
 import db from '../db';
 import { generateTransferGroupId } from '../transfers/repository';
 
-type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'yearly';
+export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'yearly';
 
 interface TemplateRow {
     id: number;
@@ -52,7 +52,7 @@ function toDateStr(y: number, m: number, d: number): string {
     return `${yy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
 }
 
-function today(): string {
+export function today(): string {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }

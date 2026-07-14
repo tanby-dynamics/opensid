@@ -25,6 +25,7 @@ import transferRoutes from './transfers/routes';
 import reconciliationRoutes from './reconciliations/routes';
 import rulesRoutes from './rules/routes';
 import netWorthRoutes from './net-worth/routes';
+import forecastRoutes from './forecast/routes';
 
 const app = express();
 const PORT = 3000;
@@ -51,6 +52,7 @@ app.use('/api/dashboard-config', dashboardConfigRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/accounts/:id/export', exportRoutes);
 app.use('/api/accounts/:id/chart', chartRoutes);
+app.use('/api/accounts/:id/forecast', forecastRoutes);
 app.use('/api/accounts/:accountId/budgets', budgetRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/accounts/:accountId/transactions/import', importRoutes);

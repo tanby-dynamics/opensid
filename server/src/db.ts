@@ -117,6 +117,12 @@ try {
     // column already exists
 }
 
+try {
+    db.exec(`ALTER TABLE dashboard_config ADD COLUMN forecast_discretionary INTEGER NOT NULL DEFAULT 0`);
+} catch {
+    // column already exists
+}
+
 db.exec(`
     CREATE TABLE IF NOT EXISTS saved_views (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -260,12 +266,13 @@ try {
                 position    INTEGER NOT NULL,
                 tile_type   TEXT NOT NULL DEFAULT 'transactions',
                 time_window TEXT,
-                show_balance INTEGER NOT NULL DEFAULT 0
+                show_balance INTEGER NOT NULL DEFAULT 0,
+                forecast_discretionary INTEGER NOT NULL DEFAULT 0
             );
 
             INSERT INTO dashboard_config_new
-                (id, account_id, position, tile_type, time_window, show_balance)
-            SELECT id, account_id, position, tile_type, time_window, show_balance
+                (id, account_id, position, tile_type, time_window, show_balance, forecast_discretionary)
+            SELECT id, account_id, position, tile_type, time_window, show_balance, forecast_discretionary
             FROM dashboard_config;
 
             DROP TABLE dashboard_config;

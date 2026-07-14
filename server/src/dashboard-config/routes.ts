@@ -5,8 +5,9 @@ import { CROSS_ACCOUNT_TILE_TYPES, type TileType, type DashboardConfigItem, type
 
 const router = Router();
 
-const VALID_TILE_TYPES: TileType[] = ['transactions', 'balance_over_time', 'totals_by_category', 'income_vs_expense', 'budget_progress', 'net_worth', 'net_worth_chart'];
+const VALID_TILE_TYPES: TileType[] = ['transactions', 'balance_over_time', 'totals_by_category', 'income_vs_expense', 'budget_progress', 'net_worth', 'net_worth_chart', 'forecast'];
 const TILE_TYPE_ERROR = `tile_type must be one of: ${VALID_TILE_TYPES.join(', ')}`;
+const FORECAST_WINDOWS = ['14d', '30d', '60d', '90d'];
 
 function isCrossAccountType(tileType: TileType): boolean {
     return CROSS_ACCOUNT_TILE_TYPES.includes(tileType);
@@ -23,8 +24,13 @@ function isValidWindow(w: string): boolean {
     return false;
 }
 
+function isValidWindowForType(tileType: TileType, w: string): boolean {
+    if (tileType === 'forecast') return FORECAST_WINDOWS.includes(w);
+    return isValidWindow(w);
+}
+
 function toClientItem(item: DashboardConfigItem) {
-    return { ...item, show_balance: item.show_balance === 1 };
+    return { ...item, show_balance: item.show_balance === 1, forecast_discretionary: item.forecast_discretionary === 1 };
 }
 
 router.get('/', (_req, res) => {
@@ -59,7 +65,7 @@ router.post('/:accountId', (req, res) => {
         res.status(404).json({ error: 'account not found' });
         return;
     }
-    const { tile_type, time_window } = req.body as { tile_type?: string; time_window?: string };
+    const { tile_type, time_window, forecast_discretionary } = req.body as { tile_type?: string; time_window?: string; forecast_discretionary?: unknown };
     if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType) || isCrossAccountType(tile_type as TileType)) {
         res.status(400).json({ error: TILE_TYPE_ERROR });
         return;
@@ -72,12 +78,12 @@ router.post('/:accountId', (req, res) => {
             res.status(400).json({ error: 'time_window is required for chart tiles' });
             return;
         }
-        if (!isValidWindow(time_window)) {
+        if (!isValidWindowForType(tileType, time_window)) {
             res.status(400).json({ error: 'invalid time_window value' });
             return;
         }
     }
-    const item = repo.add(accountId, tileType, needsWindow ? time_window : undefined);
+    const item = repo.add(accountId, tileType, needsWindow ? time_window : undefined, forecast_discretionary === true);
     res.status(201).json(toClientItem(item));
 });
 
@@ -98,11 +104,12 @@ router.patch('/:id/show-balance', (req, res) => {
 
 router.patch('/:id', (req, res) => {
     const tileId = parseInt(req.params.id, 10);
-    const { account_id, tile_type, time_window, show_balance } = req.body as {
+    const { account_id, tile_type, time_window, show_balance, forecast_discretionary } = req.body as {
         account_id?: unknown;
         tile_type?: unknown;
         time_window?: unknown;
         show_balance?: unknown;
+        forecast_discretionary?: unknown;
     };
 
     if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType)) {
@@ -134,7 +141,7 @@ router.patch('/:id', (req, res) => {
             res.status(400).json({ error: 'time_window is required for chart tiles' });
             return;
         }
-        if (!isValidWindow(time_window)) {
+        if (!isValidWindowForType(tileType, time_window)) {
             res.status(400).json({ error: 'invalid time_window value' });
             return;
         }
@@ -149,6 +156,7 @@ router.patch('/:id', (req, res) => {
         tile_type: tileType,
         time_window: needsWindow && typeof time_window === 'string' ? time_window : null,
         show_balance,
+        forecast_discretionary: forecast_discretionary === true,
     };
     const updated = repo.updateTile(tileId, fields);
     if (!updated) {

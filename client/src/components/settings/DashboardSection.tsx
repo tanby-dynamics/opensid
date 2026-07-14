@@ -41,7 +41,20 @@ const TILE_TYPE_LABELS: Record<TileType, string> = {
     budget_progress: 'Budget Progress',
     net_worth: 'Net Worth',
     net_worth_chart: 'Net Worth Over Time',
+    forecast: 'Forecast',
 };
+
+const FORECAST_WINDOW_OPTIONS = [
+    { value: '14d', label: 'Next 14 days' },
+    { value: '30d', label: 'Next 30 days' },
+    { value: '60d', label: 'Next 60 days' },
+    { value: '90d', label: 'Next 90 days' },
+];
+
+function forecastWindowLabel(timeWindow: string): string {
+    const match = FORECAST_WINDOW_OPTIONS.find((o) => o.value === timeWindow);
+    return match?.label ?? timeWindow;
+}
 
 const WINDOW_OPTIONS = [
     { value: '30d', label: 'Last 30 days' },
@@ -59,14 +72,16 @@ const INCOME_VS_EXPENSE_WINDOW_OPTIONS = [
 ];
 
 function tileLabel(item: DashboardConfigItem, accountName: string): string {
+    const windowLabel = (w: string) => item.tile_type === 'forecast' ? forecastWindowLabel(w) : formatChartWindow(w);
+
     if (item.account_id === null) {
         const base = TILE_TYPE_LABELS[item.tile_type];
-        if (item.time_window) return `${base} — ${formatChartWindow(item.time_window)}`;
+        if (item.time_window) return `${base} — ${windowLabel(item.time_window)}`;
         return base;
     }
     if (item.tile_type === 'transactions') return accountName;
     const base = `${accountName} — ${TILE_TYPE_LABELS[item.tile_type]}`;
-    if (item.time_window) return `${base} — ${formatChartWindow(item.time_window)}`;
+    if (item.time_window) return `${base} — ${windowLabel(item.time_window)}`;
     return base;
 }
 
@@ -132,12 +147,14 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
     const [windowOption, setWindowOption] = useState(() => windowToOption(tile.time_window).option);
     const [weeks, setWeeks] = useState(() => windowToOption(tile.time_window).weeks);
     const [showBalance, setShowBalance] = useState(tile.show_balance);
+    const [discretionary, setDiscretionary] = useState(tile.forecast_discretionary);
     const [error, setError] = useState('');
 
     const isCrossAccountType = CROSS_ACCOUNT_TILE_TYPES.includes(tileType);
     const isChartType = tileType === 'balance_over_time' || tileType === 'totals_by_category' || tileType === 'net_worth_chart';
     const isIncomeVsExpense = tileType === 'income_vs_expense';
-    const needsWindow = isChartType || isIncomeVsExpense;
+    const isForecastType = tileType === 'forecast';
+    const needsWindow = isChartType || isIncomeVsExpense || isForecastType;
     const supportsBalance = tileType === 'transactions' || tileType === 'balance_over_time';
 
     const handleCancel = useCallback(onCancel, [onCancel]);
@@ -163,6 +180,7 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                 tile_type: tileType,
                 time_window: timeWindow,
                 show_balance: supportsBalance ? showBalance : false,
+                forecast_discretionary: isForecastType ? discretionary : false,
             });
         },
         onSuccess: onSave,
@@ -222,8 +240,36 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                             <option value="budget_progress">Budget Progress</option>
                             <option value="net_worth">Net Worth</option>
                             <option value="net_worth_chart">Net Worth Over Time</option>
+                            <option value="forecast">Forecast</option>
                         </select>
                     </div>
+
+                    {isForecastType && (
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[12px] font-bold tracking-[0.06em] text-[var(--text-muted)] uppercase font-body">Window</label>
+                            <select
+                                className={inputCls}
+                                value={windowOption}
+                                onChange={(e) => setWindowOption(e.target.value)}
+                            >
+                                <option value="" disabled>Window…</option>
+                                {FORECAST_WINDOW_OPTIONS.map((o) => (
+                                    <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {isForecastType && (
+                        <label className="flex items-center gap-2 text-[14px] font-body text-[var(--text-primary)] cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={discretionary}
+                                onChange={(e) => setDiscretionary(e.target.checked)}
+                            />
+                            Include average discretionary spend
+                        </label>
+                    )}
 
                     {isChartType && (
                         <div className="flex flex-col gap-1">
@@ -401,6 +447,7 @@ export default function DashboardSection() {
     const [addTileType, setAddTileType] = useState<TileType | ''>('');
     const [addWindowOption, setAddWindowOption] = useState('');
     const [addWeeks, setAddWeeks] = useState('');
+    const [addDiscretionary, setAddDiscretionary] = useState(false);
     const [editingTile, setEditingTile] = useState<DashboardConfigItem | null>(null);
     const [localConfig, setLocalConfig] = useState<DashboardConfigItem[]>([]);
     const [activeId, setActiveId] = useState<number | null>(null);
@@ -440,14 +487,15 @@ export default function DashboardSection() {
     });
 
     const addMutation = useMutation({
-        mutationFn: ({ accountId, tileType, timeWindow }: { accountId: number; tileType: TileType; timeWindow?: string }) =>
-            addToDashboard(accountId, tileType, timeWindow),
+        mutationFn: ({ accountId, tileType, timeWindow, forecastDiscretionary }: { accountId: number; tileType: TileType; timeWindow?: string; forecastDiscretionary?: boolean }) =>
+            addToDashboard(accountId, tileType, timeWindow, forecastDiscretionary),
         onSuccess: () => {
             invalidate();
             setAddAccountId('');
             setAddTileType('');
             setAddWindowOption('');
             setAddWeeks('');
+            setAddDiscretionary(false);
         },
         onError: () => toast.error('Failed to add tile to dashboard.'),
     });
@@ -518,7 +566,8 @@ export default function DashboardSection() {
     const isCrossAccountType = addTileType !== '' && CROSS_ACCOUNT_TILE_TYPES.includes(addTileType);
     const isChartType = addTileType === 'balance_over_time' || addTileType === 'totals_by_category' || addTileType === 'net_worth_chart';
     const isIncomeVsExpenseType = addTileType === 'income_vs_expense';
-    const needsWindow = isChartType || isIncomeVsExpenseType;
+    const isForecastType = addTileType === 'forecast';
+    const needsWindow = isChartType || isIncomeVsExpenseType || isForecastType;
     const timeWindow = resolvedTimeWindow();
     const canAdd =
         addTileType !== '' &&
@@ -538,6 +587,7 @@ export default function DashboardSection() {
             accountId: parseInt(addAccountId, 10),
             tileType: addTileType,
             timeWindow: needsWindow ? timeWindow : undefined,
+            forecastDiscretionary: isForecastType ? addDiscretionary : undefined,
         });
     }
 
@@ -668,6 +718,7 @@ export default function DashboardSection() {
                             setAddAccountId('');
                             setAddWindowOption('');
                             setAddWeeks('');
+                            setAddDiscretionary(false);
                         }}
                     >
                         <option value="" disabled>Tile type…</option>
@@ -678,7 +729,33 @@ export default function DashboardSection() {
                         <option value="budget_progress">Budget Progress</option>
                         <option value="net_worth">Net Worth</option>
                         <option value="net_worth_chart">Net Worth Over Time</option>
+                        <option value="forecast">Forecast</option>
                     </select>
+
+                    {isForecastType && (
+                        <select
+                            aria-label="Time window"
+                            className={inputCls}
+                            value={addWindowOption}
+                            onChange={(e) => setAddWindowOption(e.target.value)}
+                        >
+                            <option value="" disabled>Window…</option>
+                            {FORECAST_WINDOW_OPTIONS.map((o) => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                        </select>
+                    )}
+
+                    {isForecastType && (
+                        <label className="flex items-center gap-2 text-[14px] font-body text-[var(--text-primary)] cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={addDiscretionary}
+                                onChange={(e) => setAddDiscretionary(e.target.checked)}
+                            />
+                            Include discretionary
+                        </label>
+                    )}
 
                     {isChartType && (
                         <select

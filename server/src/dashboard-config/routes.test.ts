@@ -208,6 +208,44 @@ t.test('POST /cross-account — rejects per-account tile types', async () => {
         .expect(400);
 });
 
+// --- forecast tile type ---
+
+t.test('POST /:accountId — adds a forecast tile with a 14d/30d/60d/90d window', async (t) => {
+    const accountId = insertAccount('Everyday');
+    const app = makeApp();
+    const res = await request(app)
+        .post(`/api/dashboard-config/${accountId}`)
+        .send({ tile_type: 'forecast', time_window: '60d' })
+        .expect(201);
+
+    t.equal(res.body.tile_type, 'forecast');
+    t.equal(res.body.time_window, '60d');
+    t.equal(res.body.forecast_discretionary, false);
+});
+
+t.test('POST /:accountId — rejects a non-forecast window value for a forecast tile', async () => {
+    const accountId = insertAccount('Everyday');
+    const app = makeApp();
+    await request(app)
+        .post(`/api/dashboard-config/${accountId}`)
+        .send({ tile_type: 'forecast', time_window: '3m' })
+        .expect(400);
+});
+
+t.test('PATCH /:id — updates forecast_discretionary', async (t) => {
+    const accountId = insertAccount('Everyday');
+    const tileId = insertTile(accountId, 'forecast', '30d');
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'forecast', time_window: '90d', show_balance: false, forecast_discretionary: true })
+        .expect(200);
+
+    t.equal(res.body.time_window, '90d');
+    t.equal(res.body.forecast_discretionary, true);
+});
+
 t.test('PATCH /:id — accepts null account_id for net_worth tile', async (t) => {
     const app = makeApp();
     const created = await request(app)

@@ -9,7 +9,8 @@ export type TileType =
     | 'income_vs_expense'
     | 'budget_progress'
     | 'net_worth'
-    | 'net_worth_chart';
+    | 'net_worth_chart'
+    | 'forecast';
 
 export const CROSS_ACCOUNT_TILE_TYPES: TileType[] = ['net_worth', 'net_worth_chart'];
 
@@ -20,6 +21,7 @@ export interface DashboardConfigItem {
     tile_type: TileType;
     time_window: string | null;
     show_balance: boolean;
+    forecast_discretionary: boolean;
     balance_cents: number | null;
 }
 
@@ -28,6 +30,7 @@ export interface UpdateTilePayload {
     tile_type: TileType;
     time_window?: string;
     show_balance: boolean;
+    forecast_discretionary?: boolean;
 }
 
 export async function getDashboardConfig(): Promise<DashboardConfigItem[]> {
@@ -39,10 +42,12 @@ export async function addToDashboard(
     accountId: number,
     tileType: TileType,
     timeWindow?: string,
+    forecastDiscretionary?: boolean,
 ): Promise<DashboardConfigItem> {
     const { data } = await axios.post<DashboardConfigItem>(`${base}/${accountId}`, {
         tile_type: tileType,
         time_window: timeWindow,
+        forecast_discretionary: forecastDiscretionary,
     });
     return data;
 }
@@ -61,6 +66,7 @@ export async function updateTile(tileId: number, payload: UpdateTilePayload): Pr
         tile_type: payload.tile_type,
         time_window: payload.time_window,
         show_balance: payload.show_balance,
+        forecast_discretionary: payload.forecast_discretionary,
     });
     return data;
 }
