@@ -3,6 +3,8 @@ export interface BackupAccount {
     name: string;
     created_at: string;
     deleted_at: string | null;
+    kind: 'asset' | 'liability';
+    exclude_from_net_worth: number;
 }
 
 export interface BackupTransaction {

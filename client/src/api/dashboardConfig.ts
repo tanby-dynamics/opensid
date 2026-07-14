@@ -2,11 +2,20 @@ import axios from 'axios';
 
 const base = '/api/dashboard-config';
 
-export type TileType = 'transactions' | 'balance_over_time' | 'totals_by_category' | 'income_vs_expense' | 'budget_progress';
+export type TileType =
+    | 'transactions'
+    | 'balance_over_time'
+    | 'totals_by_category'
+    | 'income_vs_expense'
+    | 'budget_progress'
+    | 'net_worth'
+    | 'net_worth_chart';
+
+export const CROSS_ACCOUNT_TILE_TYPES: TileType[] = ['net_worth', 'net_worth_chart'];
 
 export interface DashboardConfigItem {
     id: number;
-    account_id: number;
+    account_id: number | null;
     position: number;
     tile_type: TileType;
     time_window: string | null;
@@ -15,7 +24,7 @@ export interface DashboardConfigItem {
 }
 
 export interface UpdateTilePayload {
-    account_id: number;
+    account_id: number | null;
     tile_type: TileType;
     time_window?: string;
     show_balance: boolean;
@@ -32,6 +41,14 @@ export async function addToDashboard(
     timeWindow?: string,
 ): Promise<DashboardConfigItem> {
     const { data } = await axios.post<DashboardConfigItem>(`${base}/${accountId}`, {
+        tile_type: tileType,
+        time_window: timeWindow,
+    });
+    return data;
+}
+
+export async function addCrossAccountTile(tileType: TileType, timeWindow?: string): Promise<DashboardConfigItem> {
+    const { data } = await axios.post<DashboardConfigItem>(`${base}/cross-account`, {
         tile_type: tileType,
         time_window: timeWindow,
     });

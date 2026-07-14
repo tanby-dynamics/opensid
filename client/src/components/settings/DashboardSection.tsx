@@ -21,10 +21,12 @@ import { CSS } from '@dnd-kit/utilities';
 import {
     getDashboardConfig,
     addToDashboard,
+    addCrossAccountTile,
     removeFromDashboard,
     reorderDashboard,
     updateTile,
     updateShowBalance,
+    CROSS_ACCOUNT_TILE_TYPES,
     type TileType,
     type DashboardConfigItem,
 } from '../../api/dashboardConfig';
@@ -37,6 +39,8 @@ const TILE_TYPE_LABELS: Record<TileType, string> = {
     totals_by_category: 'Totals by category',
     income_vs_expense: 'Income vs Expense',
     budget_progress: 'Budget Progress',
+    net_worth: 'Net Worth',
+    net_worth_chart: 'Net Worth Over Time',
 };
 
 const WINDOW_OPTIONS = [
@@ -55,6 +59,11 @@ const INCOME_VS_EXPENSE_WINDOW_OPTIONS = [
 ];
 
 function tileLabel(item: DashboardConfigItem, accountName: string): string {
+    if (item.account_id === null) {
+        const base = TILE_TYPE_LABELS[item.tile_type];
+        if (item.time_window) return `${base} — ${formatChartWindow(item.time_window)}`;
+        return base;
+    }
     if (item.tile_type === 'transactions') return accountName;
     const base = `${accountName} — ${TILE_TYPE_LABELS[item.tile_type]}`;
     if (item.time_window) return `${base} — ${formatChartWindow(item.time_window)}`;
@@ -118,14 +127,15 @@ interface EditModalProps {
 }
 
 function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
-    const [accountId, setAccountId] = useState(String(tile.account_id));
+    const [accountId, setAccountId] = useState(tile.account_id === null ? '' : String(tile.account_id));
     const [tileType, setTileType] = useState<TileType>(tile.tile_type);
     const [windowOption, setWindowOption] = useState(() => windowToOption(tile.time_window).option);
     const [weeks, setWeeks] = useState(() => windowToOption(tile.time_window).weeks);
     const [showBalance, setShowBalance] = useState(tile.show_balance);
     const [error, setError] = useState('');
 
-    const isChartType = tileType === 'balance_over_time' || tileType === 'totals_by_category';
+    const isCrossAccountType = CROSS_ACCOUNT_TILE_TYPES.includes(tileType);
+    const isChartType = tileType === 'balance_over_time' || tileType === 'totals_by_category' || tileType === 'net_worth_chart';
     const isIncomeVsExpense = tileType === 'income_vs_expense';
     const needsWindow = isChartType || isIncomeVsExpense;
     const supportsBalance = tileType === 'transactions' || tileType === 'balance_over_time';
@@ -149,7 +159,7 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                 }
             }
             return updateTile(tile.id, {
-                account_id: parseInt(accountId, 10),
+                account_id: isCrossAccountType ? null : parseInt(accountId, 10),
                 tile_type: tileType,
                 time_window: timeWindow,
                 show_balance: supportsBalance ? showBalance : false,
@@ -161,7 +171,7 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
 
     function handleSave() {
         setError('');
-        if (!accountId) { setError('Account is required.'); return; }
+        if (!isCrossAccountType && !accountId) { setError('Account is required.'); return; }
         if (needsWindow && !windowOption) { setError('Time window is required for this tile type.'); return; }
         if (needsWindow && windowOption === 'custom_weeks' && !isValidWeeks(weeks)) {
             setError('Enter a number of weeks between 1 and 52.');
@@ -179,18 +189,20 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                 <h3 className="font-display text-[18px] font-bold text-[var(--teak-dark)] mb-5">Edit tile</h3>
 
                 <div className="flex flex-col gap-3">
-                    <div className="flex flex-col gap-1">
-                        <label className="text-[12px] font-bold tracking-[0.06em] text-[var(--text-muted)] uppercase font-body">Account</label>
-                        <select
-                            className={inputCls}
-                            value={accountId}
-                            onChange={(e) => setAccountId(e.target.value)}
-                        >
-                            {accounts.map((a) => (
-                                <option key={a.id} value={a.id}>{a.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {!isCrossAccountType && (
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[12px] font-bold tracking-[0.06em] text-[var(--text-muted)] uppercase font-body">Account</label>
+                            <select
+                                className={inputCls}
+                                value={accountId}
+                                onChange={(e) => setAccountId(e.target.value)}
+                            >
+                                {accounts.map((a) => (
+                                    <option key={a.id} value={a.id}>{a.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div className="flex flex-col gap-1">
                         <label className="text-[12px] font-bold tracking-[0.06em] text-[var(--text-muted)] uppercase font-body">Tile type</label>
@@ -208,6 +220,8 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                             <option value="totals_by_category">Totals by category</option>
                             <option value="income_vs_expense">Income vs Expense</option>
                             <option value="budget_progress">Budget Progress</option>
+                            <option value="net_worth">Net Worth</option>
+                            <option value="net_worth_chart">Net Worth Over Time</option>
                         </select>
                     </div>
 
@@ -438,6 +452,19 @@ export default function DashboardSection() {
         onError: () => toast.error('Failed to add tile to dashboard.'),
     });
 
+    const addCrossAccountMutation = useMutation({
+        mutationFn: ({ tileType, timeWindow }: { tileType: TileType; timeWindow?: string }) =>
+            addCrossAccountTile(tileType, timeWindow),
+        onSuccess: () => {
+            invalidate();
+            setAddAccountId('');
+            setAddTileType('');
+            setAddWindowOption('');
+            setAddWeeks('');
+        },
+        onError: () => toast.error('Failed to add tile to dashboard.'),
+    });
+
     const showBalanceMutation = useMutation({
         mutationFn: ({ tileId, showBalance }: { tileId: number; showBalance: boolean }) =>
             updateShowBalance(tileId, showBalance),
@@ -488,17 +515,25 @@ export default function DashboardSection() {
         return addWindowOption || undefined;
     }
 
-    const isChartType = addTileType === 'balance_over_time' || addTileType === 'totals_by_category';
+    const isCrossAccountType = addTileType !== '' && CROSS_ACCOUNT_TILE_TYPES.includes(addTileType);
+    const isChartType = addTileType === 'balance_over_time' || addTileType === 'totals_by_category' || addTileType === 'net_worth_chart';
     const isIncomeVsExpenseType = addTileType === 'income_vs_expense';
     const needsWindow = isChartType || isIncomeVsExpenseType;
     const timeWindow = resolvedTimeWindow();
     const canAdd =
-        addAccountId !== '' &&
         addTileType !== '' &&
+        (isCrossAccountType || addAccountId !== '') &&
         (!needsWindow || (addWindowOption !== '' && (addWindowOption !== 'custom_weeks' || isValidWeeks(addWeeks))));
 
     function handleAdd() {
         if (!canAdd || !addTileType) return;
+        if (isCrossAccountType) {
+            addCrossAccountMutation.mutate({
+                tileType: addTileType,
+                timeWindow: needsWindow ? timeWindow : undefined,
+            });
+            return;
+        }
         addMutation.mutate({
             accountId: parseInt(addAccountId, 10),
             tileType: addTileType,
@@ -610,17 +645,19 @@ export default function DashboardSection() {
 
             {!configLoading && allAccounts.length > 0 && (
                 <div className="flex flex-wrap items-end gap-3 mt-2">
-                    <select
-                        aria-label="Account"
-                        className={inputCls}
-                        value={addAccountId}
-                        onChange={(e) => setAddAccountId(e.target.value)}
-                    >
-                        <option value="" disabled>Account…</option>
-                        {allAccounts.map((a) => (
-                            <option key={a.id} value={a.id}>{a.name}</option>
-                        ))}
-                    </select>
+                    {!isCrossAccountType && (
+                        <select
+                            aria-label="Account"
+                            className={inputCls}
+                            value={addAccountId}
+                            onChange={(e) => setAddAccountId(e.target.value)}
+                        >
+                            <option value="" disabled>Account…</option>
+                            {allAccounts.map((a) => (
+                                <option key={a.id} value={a.id}>{a.name}</option>
+                            ))}
+                        </select>
+                    )}
 
                     <select
                         aria-label="Tile type"
@@ -628,6 +665,7 @@ export default function DashboardSection() {
                         value={addTileType}
                         onChange={(e) => {
                             setAddTileType(e.target.value as TileType | '');
+                            setAddAccountId('');
                             setAddWindowOption('');
                             setAddWeeks('');
                         }}
@@ -638,6 +676,8 @@ export default function DashboardSection() {
                         <option value="totals_by_category">Totals by category</option>
                         <option value="income_vs_expense">Income vs Expense</option>
                         <option value="budget_progress">Budget Progress</option>
+                        <option value="net_worth">Net Worth</option>
+                        <option value="net_worth_chart">Net Worth Over Time</option>
                     </select>
 
                     {isChartType && (

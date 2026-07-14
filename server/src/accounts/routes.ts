@@ -31,17 +31,25 @@ router.get('/balances', (_req, res) => {
     res.json(rows);
 });
 
+function isValidKind(kind: unknown): kind is 'asset' | 'liability' {
+    return kind === 'asset' || kind === 'liability';
+}
+
 router.post('/', (req, res) => {
-    const { name } = req.body as { name?: string };
+    const { name, kind, exclude_from_net_worth } = req.body as { name?: string; kind?: unknown; exclude_from_net_worth?: unknown };
     if (!name || name.trim() === '') {
         res.status(400).json({ error: 'name is required' });
+        return;
+    }
+    if (kind !== undefined && !isValidKind(kind)) {
+        res.status(400).json({ error: 'kind must be asset or liability' });
         return;
     }
     if (repo.findByName(name.trim())) {
         res.status(409).json({ error: 'name already exists' });
         return;
     }
-    const account = repo.create(name.trim());
+    const account = repo.create(name.trim(), isValidKind(kind) ? kind : 'asset', exclude_from_net_worth === true);
     dashboardConfig.add(account.id, 'transactions');
     res.status(201).json(account);
 });
@@ -72,9 +80,18 @@ router.get('/:id', (req, res) => {
 
 router.put('/:id', (req, res) => {
     const id = parseInt(req.params.id, 10);
-    const { name } = req.body as { name?: string };
+    const { name, kind, exclude_from_net_worth } = req.body as { name?: string; kind?: unknown; exclude_from_net_worth?: unknown };
     if (!name || name.trim() === '') {
         res.status(400).json({ error: 'name is required' });
+        return;
+    }
+    if (kind !== undefined && !isValidKind(kind)) {
+        res.status(400).json({ error: 'kind must be asset or liability' });
+        return;
+    }
+    const current = repo.findById(id);
+    if (!current) {
+        res.status(404).json({ error: 'account not found' });
         return;
     }
     const existing = repo.findByName(name.trim());
@@ -82,7 +99,9 @@ router.put('/:id', (req, res) => {
         res.status(409).json({ error: 'name already exists' });
         return;
     }
-    const account = repo.update(id, name.trim());
+    const resolvedKind = isValidKind(kind) ? kind : current.kind;
+    const resolvedExclude = exclude_from_net_worth === undefined ? current.exclude_from_net_worth === 1 : exclude_from_net_worth === true;
+    const account = repo.update(id, name.trim(), resolvedKind, resolvedExclude);
     if (!account) {
         res.status(404).json({ error: 'account not found' });
         return;

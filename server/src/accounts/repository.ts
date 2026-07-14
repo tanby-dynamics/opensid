@@ -1,11 +1,15 @@
 import db from '../db';
 
+export type AccountKind = 'asset' | 'liability';
+
 export interface Account {
     id: number;
     name: string;
     created_at: string;
     deleted_at: string | null;
     transaction_count: number;
+    kind: AccountKind;
+    exclude_from_net_worth: number; // 0 or 1
 }
 
 export function findAll(): Account[] {
@@ -40,13 +44,17 @@ export function findByName(name: string): Account | undefined {
         .get(name) as Account | undefined;
 }
 
-export function create(name: string): Account {
-    const result = db.prepare('INSERT INTO accounts (name) VALUES (?)').run(name);
+export function create(name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false): Account {
+    const result = db
+        .prepare('INSERT INTO accounts (name, kind, exclude_from_net_worth) VALUES (?, ?, ?)')
+        .run(name, kind, excludeFromNetWorth ? 1 : 0);
     return findById(result.lastInsertRowid as number)!;
 }
 
-export function update(id: number, name: string): Account | undefined {
-    db.prepare('UPDATE accounts SET name = ? WHERE id = ? AND deleted_at IS NULL').run(name, id);
+export function update(id: number, name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false): Account | undefined {
+    db.prepare(
+        'UPDATE accounts SET name = ?, kind = ?, exclude_from_net_worth = ? WHERE id = ? AND deleted_at IS NULL',
+    ).run(name, kind, excludeFromNetWorth ? 1 : 0, id);
     return findById(id);
 }
 

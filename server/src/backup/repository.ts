@@ -7,7 +7,7 @@ function formatTimestamp(d: Date): string {
 }
 
 export function exportAll(): BackupPayload {
-    const accounts = db.prepare(`SELECT id, name, created_at, deleted_at FROM accounts ORDER BY id`).all() as BackupAccount[];
+    const accounts = db.prepare(`SELECT id, name, created_at, deleted_at, kind, exclude_from_net_worth FROM accounts ORDER BY id`).all() as BackupAccount[];
 
     const transactions = db.prepare(`SELECT id, account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, recurrence_source_id, transfer_group_id, cleared_at FROM transactions ORDER BY id`).all() as BackupTransaction[];
 
@@ -31,7 +31,7 @@ export function exportAll(): BackupPayload {
     const rules = db.prepare(`SELECT id, name, priority, enabled, account_id, match_type, description_pattern, amount_min_cents, amount_max_cents, tx_type, set_category, add_tag_ids, notes_prefix, last_run_at, last_match_count, created_at, deleted_at FROM rules ORDER BY id`).all() as BackupRule[];
 
     return {
-        version: 6,
+        version: 7,
         exported_at: new Date().toISOString(),
         accounts,
         transactions,
@@ -46,7 +46,7 @@ export function exportAll(): BackupPayload {
 }
 
 export function importMerge(payload: BackupPayload): ImportResult {
-    const insertAccount = db.prepare(`INSERT INTO accounts (name, created_at, deleted_at) VALUES (?, ?, ?)`);
+    const insertAccount = db.prepare(`INSERT INTO accounts (name, created_at, deleted_at, kind, exclude_from_net_worth) VALUES (?, ?, ?, ?, ?)`);
     const insertTransaction = db.prepare(`INSERT INTO transactions (account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, transfer_group_id, cleared_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     const updateRecurrenceSource = db.prepare(`UPDATE transactions SET recurrence_source_id = ? WHERE id = ?`);
     const insertAttachment = db.prepare(`INSERT INTO attachments (transaction_id, filename, mime_type, size_bytes, data, created_at, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?)`);
@@ -65,7 +65,7 @@ export function importMerge(payload: BackupPayload): ImportResult {
         for (const account of p.accounts) {
             const conflict = findActiveByName.get(account.name) as { id: number } | undefined;
             const name = conflict ? `${account.name} ${timestamp}` : account.name;
-            const result = insertAccount.run(name, account.created_at, account.deleted_at);
+            const result = insertAccount.run(name, account.created_at, account.deleted_at, account.kind ?? 'asset', account.exclude_from_net_worth ?? 0);
             const newId = result.lastInsertRowid as number;
             accountIdMap.set(account.id, newId);
             if (!account.deleted_at) {
@@ -270,7 +270,7 @@ export function importMerge(payload: BackupPayload): ImportResult {
 }
 
 export function importWipe(payload: BackupPayload): ImportResult {
-    const insertAccount = db.prepare(`INSERT INTO accounts (id, name, created_at, deleted_at) VALUES (?, ?, ?, ?)`);
+    const insertAccount = db.prepare(`INSERT INTO accounts (id, name, created_at, deleted_at, kind, exclude_from_net_worth) VALUES (?, ?, ?, ?, ?, ?)`);
     const insertTransaction = db.prepare(`INSERT INTO transactions (id, account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, recurrence_source_id, transfer_group_id, cleared_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     const insertAttachment = db.prepare(`INSERT INTO attachments (id, transaction_id, filename, mime_type, size_bytes, data, created_at, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
 
@@ -286,7 +286,7 @@ export function importWipe(payload: BackupPayload): ImportResult {
         db.prepare(`DELETE FROM accounts`).run();
 
         for (const account of p.accounts) {
-            insertAccount.run(account.id, account.name, account.created_at, account.deleted_at);
+            insertAccount.run(account.id, account.name, account.created_at, account.deleted_at, account.kind ?? 'asset', account.exclude_from_net_worth ?? 0);
         }
 
         // Re-seed dashboard_config for all non-deleted accounts in alphabetical order

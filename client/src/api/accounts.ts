@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Account, AccountWithBalance } from '../types/account';
+import type { Account, AccountKind, AccountWithBalance } from '../types/account';
 
 const base = '/api/accounts';
 
@@ -13,13 +13,13 @@ export async function getAccount(id: number): Promise<Account> {
     return data;
 }
 
-export async function createAccount(name: string): Promise<Account> {
-    const { data } = await axios.post<Account>(base, { name });
+export async function createAccount(name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false): Promise<Account> {
+    const { data } = await axios.post<Account>(base, { name, kind, exclude_from_net_worth: excludeFromNetWorth });
     return data;
 }
 
-export async function updateAccount(id: number, name: string): Promise<Account> {
-    const { data } = await axios.put<Account>(`${base}/${id}`, { name });
+export async function updateAccount(id: number, name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false): Promise<Account> {
+    const { data } = await axios.put<Account>(`${base}/${id}`, { name, kind, exclude_from_net_worth: excludeFromNetWorth });
     return data;
 }
 

@@ -1,11 +1,16 @@
 import { Router } from 'express';
 import * as repo from './repository';
 import * as accountRepo from '../accounts/repository';
-import type { TileType, DashboardConfigItem, UpdateTileFields } from './repository';
+import { CROSS_ACCOUNT_TILE_TYPES, type TileType, type DashboardConfigItem, type UpdateTileFields } from './repository';
 
 const router = Router();
 
-const VALID_TILE_TYPES: TileType[] = ['transactions', 'balance_over_time', 'totals_by_category', 'income_vs_expense', 'budget_progress'];
+const VALID_TILE_TYPES: TileType[] = ['transactions', 'balance_over_time', 'totals_by_category', 'income_vs_expense', 'budget_progress', 'net_worth', 'net_worth_chart'];
+const TILE_TYPE_ERROR = `tile_type must be one of: ${VALID_TILE_TYPES.join(', ')}`;
+
+function isCrossAccountType(tileType: TileType): boolean {
+    return CROSS_ACCOUNT_TILE_TYPES.includes(tileType);
+}
 
 function isValidWindow(w: string): boolean {
     if (w === 'all') return true;
@@ -26,6 +31,28 @@ router.get('/', (_req, res) => {
     res.json({ items: repo.getAll().map(toClientItem) });
 });
 
+router.post('/cross-account', (req, res) => {
+    const { tile_type, time_window } = req.body as { tile_type?: string; time_window?: string };
+    if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType) || !isCrossAccountType(tile_type as TileType)) {
+        res.status(400).json({ error: `tile_type must be one of: ${CROSS_ACCOUNT_TILE_TYPES.join(', ')}` });
+        return;
+    }
+    const tileType = tile_type as TileType;
+    const needsWindow = tileType === 'net_worth_chart';
+    if (needsWindow) {
+        if (!time_window) {
+            res.status(400).json({ error: 'time_window is required for chart tiles' });
+            return;
+        }
+        if (!isValidWindow(time_window)) {
+            res.status(400).json({ error: 'invalid time_window value' });
+            return;
+        }
+    }
+    const item = repo.add(null, tileType, needsWindow ? time_window : undefined);
+    res.status(201).json(toClientItem(item));
+});
+
 router.post('/:accountId', (req, res) => {
     const accountId = parseInt(req.params.accountId, 10);
     if (!accountRepo.findById(accountId)) {
@@ -33,8 +60,8 @@ router.post('/:accountId', (req, res) => {
         return;
     }
     const { tile_type, time_window } = req.body as { tile_type?: string; time_window?: string };
-    if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType)) {
-        res.status(400).json({ error: 'tile_type must be one of: transactions, balance_over_time, totals_by_category, income_vs_expense, budget_progress' });
+    if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType) || isCrossAccountType(tile_type as TileType)) {
+        res.status(400).json({ error: TILE_TYPE_ERROR });
         return;
     }
     const tileType = tile_type as TileType;
@@ -78,20 +105,30 @@ router.patch('/:id', (req, res) => {
         show_balance?: unknown;
     };
 
-    if (typeof account_id !== 'number') {
-        res.status(400).json({ error: 'account_id must be a number' });
-        return;
-    }
-    if (!accountRepo.findById(account_id)) {
-        res.status(404).json({ error: 'account not found' });
-        return;
-    }
     if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType)) {
-        res.status(400).json({ error: 'tile_type must be one of: transactions, balance_over_time, totals_by_category, income_vs_expense, budget_progress' });
+        res.status(400).json({ error: TILE_TYPE_ERROR });
         return;
     }
     const tileType = tile_type as TileType;
-    const needsWindow = tileType !== 'transactions' && tileType !== 'budget_progress';
+    const crossAccount = isCrossAccountType(tileType);
+
+    if (crossAccount) {
+        if (account_id !== null && account_id !== undefined) {
+            res.status(400).json({ error: 'account_id must be null for cross-account tile types' });
+            return;
+        }
+    } else {
+        if (typeof account_id !== 'number') {
+            res.status(400).json({ error: 'account_id must be a number' });
+            return;
+        }
+        if (!accountRepo.findById(account_id)) {
+            res.status(404).json({ error: 'account not found' });
+            return;
+        }
+    }
+
+    const needsWindow = crossAccount ? tileType === 'net_worth_chart' : tileType !== 'transactions' && tileType !== 'budget_progress';
     if (needsWindow) {
         if (!time_window || typeof time_window !== 'string') {
             res.status(400).json({ error: 'time_window is required for chart tiles' });
@@ -108,7 +145,7 @@ router.patch('/:id', (req, res) => {
     }
 
     const fields: UpdateTileFields = {
-        account_id,
+        account_id: crossAccount ? null : (account_id as number),
         tile_type: tileType,
         time_window: needsWindow && typeof time_window === 'string' ? time_window : null,
         show_balance,

@@ -29,10 +29,10 @@ const mockConfig: DashboardConfigItem[] = [
 ];
 
 const mockAccounts: Account[] = [
-    { id: 10, name: 'Savings', created_at: '', deleted_at: null, transaction_count: 0 },
-    { id: 20, name: 'Checking', created_at: '', deleted_at: null, transaction_count: 0 },
-    { id: 30, name: 'Credit Card', created_at: '', deleted_at: null, transaction_count: 0 },
-    { id: 40, name: 'Hidden Account', created_at: '', deleted_at: null, transaction_count: 0 },
+    { id: 10, name: 'Savings', created_at: '', deleted_at: null, transaction_count: 0, kind: 'asset', exclude_from_net_worth: 0 },
+    { id: 20, name: 'Checking', created_at: '', deleted_at: null, transaction_count: 0, kind: 'asset', exclude_from_net_worth: 0 },
+    { id: 30, name: 'Credit Card', created_at: '', deleted_at: null, transaction_count: 0, kind: 'asset', exclude_from_net_worth: 0 },
+    { id: 40, name: 'Hidden Account', created_at: '', deleted_at: null, transaction_count: 0, kind: 'asset', exclude_from_net_worth: 0 },
 ];
 
 function renderSection() {

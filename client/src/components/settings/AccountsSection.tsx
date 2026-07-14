@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import axios from 'axios';
-import AccountForm from '../AccountForm';
+import AccountForm, { type AccountFormValues } from '../AccountForm';
 import ConfirmDialog from '../ConfirmDialog';
 import { listAccounts, createAccount, updateAccount, deleteAccount } from '../../api/accounts';
 import type { Account } from '../../types/account';
@@ -39,7 +39,7 @@ export default function AccountsSection() {
     });
 
     const createMutation = useMutation({
-        mutationFn: (name: string) => createAccount(name),
+        mutationFn: (values: AccountFormValues) => createAccount(values.name, values.kind, values.excludeFromNetWorth),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
@@ -56,7 +56,8 @@ export default function AccountsSection() {
     });
 
     const updateMutation = useMutation({
-        mutationFn: ({ id, name }: { id: number; name: string }) => updateAccount(id, name),
+        mutationFn: ({ id, values }: { id: number; values: AccountFormValues }) =>
+            updateAccount(id, values.name, values.kind, values.excludeFromNetWorth),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
@@ -114,6 +115,9 @@ export default function AccountsSection() {
                             <th className="text-left px-3 pt-2 pb-[10px] text-[11px] font-bold tracking-[0.06em] text-[var(--text-muted)] uppercase font-body">
                                 Name
                             </th>
+                            <th className="text-left px-3 pt-2 pb-[10px] text-[11px] font-bold tracking-[0.06em] text-[var(--text-muted)] uppercase font-body">
+                                Kind
+                            </th>
                             <th className="text-right px-3 pt-2 pb-[10px] text-[11px] font-bold tracking-[0.06em] text-[var(--text-muted)] uppercase font-body">
                                 Transactions
                             </th>
@@ -125,6 +129,9 @@ export default function AccountsSection() {
                             <tr key={account.id} className="border-b border-[var(--cream-mid)]">
                                 <td className="p-3 text-sm font-semibold text-[var(--text-primary)] font-body">
                                     {account.name}
+                                </td>
+                                <td className="p-3 text-sm text-[var(--text-secondary)] font-body capitalize">
+                                    {account.kind}
                                 </td>
                                 <td className="p-3 text-sm text-[var(--text-secondary)] text-right font-body">
                                     {account.transaction_count}
@@ -159,7 +166,7 @@ export default function AccountsSection() {
                 <AccountForm
                     title="New account"
                     serverError={modal.serverError}
-                    onSubmit={(name) => createMutation.mutate(name)}
+                    onSubmit={(values) => createMutation.mutate(values)}
                     onCancel={() => setModal(null)}
                 />
             )}
@@ -167,8 +174,10 @@ export default function AccountsSection() {
                 <AccountForm
                     title="Rename account"
                     initialName={modal.account.name}
+                    initialKind={modal.account.kind}
+                    initialExcludeFromNetWorth={modal.account.exclude_from_net_worth === 1}
                     serverError={modal.serverError}
-                    onSubmit={(name) => updateMutation.mutate({ id: modal.account.id, name })}
+                    onSubmit={(values) => updateMutation.mutate({ id: modal.account.id, values })}
                     onCancel={() => setModal(null)}
                 />
             )}

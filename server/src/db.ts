@@ -236,6 +236,48 @@ db.exec(`
     );
 `);
 
+try {
+    db.exec(`ALTER TABLE accounts ADD COLUMN kind TEXT NOT NULL DEFAULT 'asset' CHECK(kind IN ('asset','liability'))`);
+} catch { /* column already exists */ }
+
+try {
+    db.exec(`ALTER TABLE accounts ADD COLUMN exclude_from_net_worth INTEGER NOT NULL DEFAULT 0`);
+} catch { /* column already exists */ }
+
+// One-shot migration: allow NULL account_id on dashboard_config for cross-account tiles
+// (net_worth / net_worth_chart). SQLite cannot drop a NOT NULL constraint, so table-rename.
+{
+    const cols = (db.prepare('PRAGMA table_info(dashboard_config)').all() as { name: string; notnull: number }[]);
+    const accountIdCol = cols.find((c) => c.name === 'account_id');
+    if (accountIdCol && accountIdCol.notnull === 1) {
+        db.pragma('foreign_keys = OFF');
+        db.exec(`
+            BEGIN TRANSACTION;
+
+            CREATE TABLE dashboard_config_new (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id  INTEGER REFERENCES accounts(id),
+                position    INTEGER NOT NULL,
+                tile_type   TEXT NOT NULL DEFAULT 'transactions',
+                time_window TEXT,
+                show_balance INTEGER NOT NULL DEFAULT 0
+            );
+
+            INSERT INTO dashboard_config_new
+                (id, account_id, position, tile_type, time_window, show_balance)
+            SELECT id, account_id, position, tile_type, time_window, show_balance
+            FROM dashboard_config;
+
+            DROP TABLE dashboard_config;
+
+            ALTER TABLE dashboard_config_new RENAME TO dashboard_config;
+
+            COMMIT;
+        `);
+        db.pragma('foreign_keys = ON');
+    }
+}
+
 db.exec(`
     CREATE TABLE IF NOT EXISTS rules (
         id                  INTEGER PRIMARY KEY AUTOINCREMENT,

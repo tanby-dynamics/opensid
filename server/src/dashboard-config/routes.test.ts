@@ -178,3 +178,49 @@ t.test('GET / — balance_cents is null for ineligible tile types', async (t) =>
 
     t.equal(response.body.items[0].balance_cents, null);
 });
+
+// --- POST /cross-account ---
+
+t.test('POST /cross-account — adds a net_worth tile with no account_id', async (t) => {
+    const app = makeApp();
+    const res = await request(app)
+        .post('/api/dashboard-config/cross-account')
+        .send({ tile_type: 'net_worth' })
+        .expect(201);
+
+    t.equal(res.body.account_id, null);
+    t.equal(res.body.tile_type, 'net_worth');
+});
+
+t.test('POST /cross-account — requires time_window for net_worth_chart', async () => {
+    const app = makeApp();
+    await request(app)
+        .post('/api/dashboard-config/cross-account')
+        .send({ tile_type: 'net_worth_chart' })
+        .expect(400);
+});
+
+t.test('POST /cross-account — rejects per-account tile types', async () => {
+    const app = makeApp();
+    await request(app)
+        .post('/api/dashboard-config/cross-account')
+        .send({ tile_type: 'transactions' })
+        .expect(400);
+});
+
+t.test('PATCH /:id — accepts null account_id for net_worth tile', async (t) => {
+    const app = makeApp();
+    const created = await request(app)
+        .post('/api/dashboard-config/cross-account')
+        .send({ tile_type: 'net_worth' })
+        .expect(201);
+
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${created.body.id}`)
+        .send({ account_id: null, tile_type: 'net_worth_chart', time_window: '3m', show_balance: false })
+        .expect(200);
+
+    t.equal(res.body.account_id, null);
+    t.equal(res.body.tile_type, 'net_worth_chart');
+    t.equal(res.body.time_window, '3m');
+});

@@ -25,7 +25,7 @@ describe('AccountForm', () => {
         render(<AccountForm title="New account" onSubmit={onSubmit} onCancel={vi.fn()} />);
         fireEvent.change(screen.getByRole('textbox'), { target: { value: '  Training  ' } });
         fireEvent.click(screen.getByRole('button', { name: /save/i }));
-        expect(onSubmit).toHaveBeenCalledWith('Training');
+        expect(onSubmit).toHaveBeenCalledWith({ name: 'Training', kind: 'asset', excludeFromNetWorth: false });
     });
 
     it('shows error and does not submit when name is empty', () => {
@@ -34,6 +34,31 @@ describe('AccountForm', () => {
         fireEvent.click(screen.getByRole('button', { name: /save/i }));
         expect(onSubmit).not.toHaveBeenCalled();
         expect(screen.getByText('Name is required.')).toBeTruthy();
+    });
+
+    it('submits selected kind and exclude_from_net_worth', () => {
+        const onSubmit = vi.fn();
+        render(<AccountForm title="New account" onSubmit={onSubmit} onCancel={vi.fn()} />);
+        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Visa' } });
+        fireEvent.change(screen.getByLabelText('Kind'), { target: { value: 'liability' } });
+        fireEvent.click(screen.getByLabelText(/exclude from net worth/i));
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        expect(onSubmit).toHaveBeenCalledWith({ name: 'Visa', kind: 'liability', excludeFromNetWorth: true });
+    });
+
+    it('pre-fills kind and exclude_from_net_worth from initial values', () => {
+        render(
+            <AccountForm
+                title="Rename account"
+                initialName="Play money"
+                initialKind="liability"
+                initialExcludeFromNetWorth={true}
+                onSubmit={vi.fn()}
+                onCancel={vi.fn()}
+            />,
+        );
+        expect((screen.getByLabelText('Kind') as HTMLSelectElement).value).toBe('liability');
+        expect((screen.getByLabelText(/exclude from net worth/i) as HTMLInputElement).checked).toBe(true);
     });
 
     it('calls onCancel when cancel is clicked', () => {

@@ -7,7 +7,9 @@ import BalanceChartTile from '../components/BalanceChartTile';
 import CategoryChartTile from '../components/CategoryChartTile';
 import IncomeVsExpenseChartTile from '../components/IncomeVsExpenseChartTile';
 import BudgetProgressTile from '../components/BudgetProgressTile';
-import AccountForm from '../components/AccountForm';
+import NetWorthTile from '../components/NetWorthTile';
+import NetWorthChartTile from '../components/NetWorthChartTile';
+import AccountForm, { type AccountFormValues } from '../components/AccountForm';
 import SkeletonCard from '../components/SkeletonCard';
 import TransactionForm from '../components/TransactionForm';
 import TransferForm from '../components/TransferForm';
@@ -53,7 +55,7 @@ export default function Dashboard() {
     const accountMap = new Map(dashboardAccounts.map((a) => [a.id, a]));
 
     const createMutation = useMutation({
-        mutationFn: (name: string) => createAccount(name),
+        mutationFn: (values: AccountFormValues) => createAccount(values.name, values.kind, values.excludeFromNetWorth),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
             queryClient.invalidateQueries({ queryKey: ['accounts-balances'] });
@@ -175,6 +177,14 @@ export default function Dashboard() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(310px,1fr))] gap-5">
                         {tileConfig.map((tile) => {
+                            if (tile.tile_type === 'net_worth') {
+                                return <NetWorthTile key={tile.id} />;
+                            }
+                            if (tile.tile_type === 'net_worth_chart') {
+                                return <NetWorthChartTile key={tile.id} window={tile.time_window ?? '30d'} />;
+                            }
+                            if (tile.account_id === null) return null;
+
                             if (tile.tile_type === 'transactions') {
                                 const account = accountMap.get(tile.account_id);
                                 if (!account) return null;
@@ -241,7 +251,7 @@ export default function Dashboard() {
             {modal?.type === 'create' && (
                 <AccountForm
                     title="New account"
-                    onSubmit={(name) => createMutation.mutate(name)}
+                    onSubmit={(values) => createMutation.mutate(values)}
                     onCancel={() => setModal(null)}
                 />
             )}

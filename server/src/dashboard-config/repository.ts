@@ -1,10 +1,19 @@
 import db from '../db';
 
-export type TileType = 'transactions' | 'balance_over_time' | 'totals_by_category' | 'income_vs_expense' | 'budget_progress';
+export type TileType =
+    | 'transactions'
+    | 'balance_over_time'
+    | 'totals_by_category'
+    | 'income_vs_expense'
+    | 'budget_progress'
+    | 'net_worth'
+    | 'net_worth_chart';
+
+export const CROSS_ACCOUNT_TILE_TYPES: TileType[] = ['net_worth', 'net_worth_chart'];
 
 export interface DashboardConfigItem {
     id: number;
-    account_id: number;
+    account_id: number | null;
     position: number;
     tile_type: TileType;
     time_window: string | null;
@@ -27,7 +36,7 @@ export function getAll(): DashboardConfigItem[] {
         .all() as DashboardConfigItem[];
 }
 
-export function add(accountId: number, tileType: TileType, timeWindow?: string): DashboardConfigItem {
+export function add(accountId: number | null, tileType: TileType, timeWindow?: string): DashboardConfigItem {
     const maxRow = db
         .prepare('SELECT COALESCE(MAX(position), 0) AS max_pos FROM dashboard_config')
         .get() as { max_pos: number };
@@ -56,7 +65,7 @@ export function reorder(tileIds: number[]): void {
 }
 
 export interface UpdateTileFields {
-    account_id: number;
+    account_id: number | null;
     tile_type: TileType;
     time_window: string | null;
     show_balance: boolean;
