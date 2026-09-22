@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { Transaction, RecurrenceFrequency, TagRef } from '../types/transaction';
 import type { AccountWithBalance } from '../types/account';
+import type { SplitRowPayload } from '../api/transactions';
 import { getCategories } from '../api/categories';
 import AttachmentManager from './AttachmentManager';
 import ConfirmDialog from './ConfirmDialog';
@@ -19,6 +20,17 @@ interface TransactionData {
     recurrence_end_date?: string | null;
     account_id?: number;
     tag_ids?: number[];
+    splits?: SplitRowPayload[];
+}
+
+interface SplitRow {
+    amount: string;
+    category: string;
+    notes: string;
+}
+
+function newSplitRow(): SplitRow {
+    return { amount: '', category: '', notes: '' };
 }
 
 interface Props {
@@ -66,10 +78,45 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
     const [recurrenceEndDate, setRecurrenceEndDate] = useState(initial?.recurrence_end_date ?? '');
     const [selectedTags, setSelectedTags] = useState<TagRef[]>(initial?.tags ?? []);
     const [errors, setErrors] = useState<FormErrors>({});
+    const [splitError, setSplitError] = useState('');
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
     const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
     const [addAnother, setAddAnother] = useState(() => localStorage.getItem('sid:addAnotherTransaction') === 'true');
+    const [splitEnabled, setSplitEnabled] = useState(false);
+    const [splitRows, setSplitRows] = useState<SplitRow[]>([newSplitRow(), newSplitRow()]);
     const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const canSplit = !initial;
+    const parsedAmount = parseFloat(amount);
+    const splitRowsTotal = splitRows.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+    const splitRemaining = !isNaN(parsedAmount) ? Math.round((parsedAmount - splitRowsTotal) * 100) / 100 : 0;
+
+    function updateSplitRow(index: number, field: keyof SplitRow, value: string) {
+        setSplitRows((rows) => rows.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
+        setSplitError('');
+    }
+
+    function addSplitRow() {
+        setSplitRows((rows) => [...rows, newSplitRow()]);
+    }
+
+    function removeSplitRow(index: number) {
+        setSplitRows((rows) => (rows.length <= 2 ? rows : rows.filter((_, i) => i !== index)));
+    }
+
+    function distributeEvenly() {
+        if (isNaN(parsedAmount) || parsedAmount <= 0 || splitRows.length === 0) return;
+        const totalCents = Math.round(parsedAmount * 100);
+        const baseShare = Math.floor(totalCents / splitRows.length);
+        const remainder = totalCents - baseShare * splitRows.length;
+        setSplitRows((rows) =>
+            rows.map((r, i) => ({
+                ...r,
+                amount: ((baseShare + (i === rows.length - 1 ? remainder : 0)) / 100).toFixed(2),
+            })),
+        );
+        setSplitError('');
+    }
 
     const today = new Date().toISOString().split('T')[0];
     const isDirty = initial
@@ -139,7 +186,29 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
             else if (recurrenceEndDate <= today) next.recurrence_end_date = 'End date must be in the future.';
         }
         setErrors(next);
-        return Object.keys(next).length === 0;
+
+        let splitOk = true;
+        if (splitEnabled && Object.keys(next).length === 0) {
+            if (splitRows.length < 2) {
+                setSplitError('A split needs at least 2 parts.');
+                splitOk = false;
+            } else if (splitRows.some((r) => !r.category.trim())) {
+                setSplitError('Every split needs a category.');
+                splitOk = false;
+            } else if (splitRows.some((r) => !r.amount || isNaN(parseFloat(r.amount)) || parseFloat(r.amount) <= 0)) {
+                setSplitError('Every split needs an amount greater than zero.');
+                splitOk = false;
+            } else if (splitRemaining !== 0) {
+                setSplitError(`Splits must sum to $${parsedAmount.toFixed(2)} (remaining $${splitRemaining.toFixed(2)}).`);
+                splitOk = false;
+            } else {
+                setSplitError('');
+            }
+        } else if (!splitEnabled) {
+            setSplitError('');
+        }
+
+        return Object.keys(next).length === 0 && splitOk;
     }
 
     function handleSubmit(e: React.FormEvent) {
@@ -157,6 +226,9 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                 recurrence_end_date: repeat && recurrenceEndDate ? recurrenceEndDate : null,
                 tag_ids: selectedTags.map((t) => t.id),
                 ...(accounts && selectedAccountId ? { account_id: parseInt(selectedAccountId) } : {}),
+                ...(splitEnabled
+                    ? { splits: splitRows.map((r) => ({ amount: parseFloat(r.amount), category: r.category.trim(), notes: r.notes.trim() || null })) }
+                    : {}),
             },
             pendingFiles,
             addAnother,
@@ -254,8 +326,9 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
 
                         {/* Amount */}
                         <div className="flex flex-col gap-[5px]">
-                            <label className="sid-label">Amount</label>
+                            <label htmlFor="amount" className="sid-label">Amount</label>
                             <input
+                                id="amount"
                                 type="number"
                                 min="0.01"
                                 step="0.01"
@@ -266,10 +339,76 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                             {errors.amount && <span className="text-xs text-[var(--red)]">{errors.amount}</span>}
                         </div>
 
+                        {/* Split */}
+                        {canSplit && amount.trim() !== '' && !isNaN(parsedAmount) && parsedAmount > 0 && (
+                            <div className="flex flex-col gap-3">
+                                <label className="flex items-center gap-2 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={splitEnabled}
+                                        onChange={(e) => { setSplitEnabled(e.target.checked); setSplitError(''); }}
+                                        className="w-4 h-4 accent-[var(--accent)]"
+                                    />
+                                    <span className="sid-label mb-0">Split transaction</span>
+                                </label>
+                                {splitEnabled && (
+                                    <div className="flex flex-col gap-2 pl-6">
+                                        {splitRows.map((row, i) => (
+                                            <div key={i} className="flex gap-2 items-start">
+                                                <input
+                                                    type="text"
+                                                    className="sid-input flex-1"
+                                                    placeholder="Category"
+                                                    value={row.category}
+                                                    onChange={(e) => updateSplitRow(i, 'category', e.target.value)}
+                                                />
+                                                <input
+                                                    type="number"
+                                                    min="0.01"
+                                                    step="0.01"
+                                                    className="sid-input w-28"
+                                                    placeholder="Amount"
+                                                    value={row.amount}
+                                                    onChange={(e) => updateSplitRow(i, 'amount', e.target.value)}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Remove split row ${i + 1}`}
+                                                    className="sid-icon-btn"
+                                                    disabled={splitRows.length <= 2}
+                                                    onClick={() => removeSplitRow(i)}
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex gap-2">
+                                                <button type="button" className="sid-btn sid-btn-ghost sid-btn-sm" onClick={addSplitRow}>
+                                                    + Add split
+                                                </button>
+                                                <button type="button" className="sid-btn sid-btn-ghost sid-btn-sm" onClick={distributeEvenly}>
+                                                    Distribute evenly
+                                                </button>
+                                            </div>
+                                            <span
+                                                className="text-xs font-semibold font-body"
+                                                style={{ color: splitRemaining === 0 ? 'var(--green)' : 'var(--red)' }}
+                                            >
+                                                Remaining: ${splitRemaining.toFixed(2)}
+                                            </span>
+                                        </div>
+                                        {splitError && <span className="text-xs text-[var(--red)]">{splitError}</span>}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Date */}
                         <div className="flex flex-col gap-[5px]">
-                            <label className="sid-label">Date</label>
+                            <label htmlFor="date" className="sid-label">Date</label>
                             <input
+                                id="date"
                                 type="date"
                                 className="sid-input"
                                 value={date}
@@ -360,7 +499,7 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                             )}
                             <div className="flex gap-2.5 ml-auto">
                                 <button type="button" className="sid-btn sid-btn-ghost" onClick={handleCancel}>Cancel</button>
-                                <button type="submit" className="sid-btn sid-btn-primary">Save transaction</button>
+                                <button type="submit" className="sid-btn sid-btn-primary" disabled={splitEnabled && splitRemaining !== 0}>Save transaction</button>
                             </div>
                         </div>
                     </form>

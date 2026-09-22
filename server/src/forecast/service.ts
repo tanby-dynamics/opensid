@@ -54,7 +54,7 @@ function addDays(dateStr: string, delta: number): string {
 
 function getStartingBalance(accountId: number): number {
     const row = db
-        .prepare(`SELECT COALESCE(SUM(amount_cents), 0) AS bal FROM transactions WHERE account_id = ? AND deleted_at IS NULL`)
+        .prepare(`SELECT COALESCE(SUM(amount_cents), 0) AS bal FROM transactions WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL`)
         .get(accountId) as { bal: number };
     return row.bal;
 }
@@ -66,7 +66,7 @@ export function averageDailyDiscretionary(accountId: number): number {
         .prepare(
             `SELECT COALESCE(SUM(amount_cents), 0) AS total
              FROM transactions
-             WHERE account_id = ? AND deleted_at IS NULL AND type = 'expense'
+             WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL AND type = 'expense'
                AND recurrence IS NULL AND recurrence_source_id IS NULL
                AND date >= ? AND date < ?`,
         )

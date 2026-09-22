@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
 import * as repo from './repository';
 import * as tagRepo from '../tags/repository';
 import { findById as findAccount } from '../accounts/repository';
@@ -31,6 +31,80 @@ export function parseFilters(query: Record<string, unknown>): repo.TransactionFi
     return filters;
 }
 
+export interface SplitRowInput {
+    amount?: number;
+    category?: string;
+    notes?: string;
+    tag_ids?: number[];
+}
+
+interface ValidatedSplitRow {
+    amount_cents: number;
+    category: string;
+    notes: string | null;
+    tag_ids: number[];
+}
+
+function formatDollars(cents: number): string {
+    return (Math.abs(cents) / 100).toFixed(2);
+}
+
+interface SplitParentShape {
+    amount_cents: number;
+    type: 'income' | 'expense' | 'transfer';
+    split_parent_id: number | null;
+}
+
+function validateSplits(parent: SplitParentShape, splits: unknown): { error: string; status?: number } | { rows: ValidatedSplitRow[] } {
+    if (parent.split_parent_id) {
+        return { error: 'This transaction is already a split — split its parent instead', status: 409 };
+    }
+    if (parent.type === 'transfer') {
+        return { error: 'Cannot split a transfer', status: 409 };
+    }
+    if (!Array.isArray(splits) || splits.length < 2) {
+        return { error: 'A split needs at least 2 parts' };
+    }
+
+    const rows: ValidatedSplitRow[] = [];
+    for (const raw of splits as SplitRowInput[]) {
+        if (!raw.category || raw.category.trim() === '') {
+            return { error: 'category is required' };
+        }
+        if (raw.amount === undefined || raw.amount === null || isNaN(Number(raw.amount)) || Number(raw.amount) <= 0) {
+            return { error: 'Amount must be greater than zero' };
+        }
+        rows.push({
+            amount_cents: repo.computeAmountCents(Number(raw.amount), parent.type),
+            category: raw.category.trim(),
+            notes: raw.notes?.trim() || null,
+            tag_ids: Array.isArray(raw.tag_ids) ? raw.tag_ids : [],
+        });
+    }
+
+    const sum = rows.reduce((acc, r) => acc + r.amount_cents, 0);
+    if (sum !== parent.amount_cents) {
+        const off = formatDollars(sum - parent.amount_cents);
+        const target = formatDollars(parent.amount_cents);
+        return { error: `Splits must sum to $${target} (off by $${off})` };
+    }
+
+    return { rows };
+}
+
+function applyValidatedSplits(parentId: number, rows: ValidatedSplitRow[]): repo.Transaction[] {
+    const children = repo.applySplits(
+        parentId,
+        rows.map((r) => ({ amount_cents: r.amount_cents, category: r.category, notes: r.notes })),
+    );
+    children.forEach((child, i) => {
+        if (rows[i].tag_ids.length > 0) {
+            tagRepo.setTagsForTransaction(child.id, rows[i].tag_ids);
+        }
+    });
+    return rows.some((r) => r.tag_ids.length > 0) ? repo.findChildren(parentId) : children;
+}
+
 const router = Router({ mergeParams: true });
 
 router.get<{ accountId: string }>('/', (req, res) => {
@@ -51,7 +125,7 @@ router.post<{ accountId: string }>('/', (req, res) => {
         return;
     }
 
-    const { category, description, amount, type, date, notes, recurrence, recurrence_end_date, tag_ids } = req.body as {
+    const { category, description, amount, type, date, notes, recurrence, recurrence_end_date, tag_ids, splits } = req.body as {
         category?: string;
         description?: string;
         amount?: number;
@@ -61,6 +135,7 @@ router.post<{ accountId: string }>('/', (req, res) => {
         recurrence?: string;
         recurrence_end_date?: string;
         tag_ids?: number[];
+        splits?: unknown;
     };
 
     if (!category || category.trim() === '') {
@@ -78,6 +153,19 @@ router.post<{ accountId: string }>('/', (req, res) => {
     if (!date || date.trim() === '') {
         res.status(400).json({ error: 'date is required' });
         return;
+    }
+
+    let validatedSplitRows: ValidatedSplitRow[] | undefined;
+    if (splits !== undefined) {
+        const result = validateSplits(
+            { amount_cents: repo.computeAmountCents(Number(amount), type as 'income' | 'expense'), type: type as 'income' | 'expense', split_parent_id: null },
+            splits,
+        );
+        if ('error' in result) {
+            res.status(result.status ?? 400).json({ error: result.error });
+            return;
+        }
+        validatedSplitRows = result.rows;
     }
 
     const VALID_RECURRENCES = ['daily', 'weekly', 'fortnightly', 'monthly', 'yearly'];
@@ -128,6 +216,10 @@ router.post<{ accountId: string }>('/', (req, res) => {
         }
     }
 
+    if (validatedSplitRows) {
+        applyValidatedSplits(transaction.id, validatedSplitRows);
+    }
+
     res.status(201).json(repo.findById(transaction.id));
 });
 
@@ -139,6 +231,56 @@ router.get<{ accountId: string; id: string }>('/:id', (req, res) => {
         return;
     }
     res.json(transaction);
+});
+
+router.get<{ accountId: string; id: string }>('/:id/split', (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    const transaction = repo.findById(id);
+    if (!transaction || transaction.account_id !== parseInt(req.params.accountId, 10)) {
+        res.status(404).json({ error: 'transaction not found' });
+        return;
+    }
+    res.json({ children: repo.findChildren(id) });
+});
+
+function handleApplySplit(req: Request<{ accountId: string; id: string }>, res: Response) {
+    const accountId = parseInt(req.params.accountId, 10);
+    const id = parseInt(req.params.id, 10);
+    const transaction = repo.findById(id);
+    if (!transaction || transaction.account_id !== accountId) {
+        res.status(404).json({ error: 'transaction not found' });
+        return;
+    }
+
+    const { splits } = req.body as { splits?: unknown };
+    const result = validateSplits(transaction, splits);
+    if ('error' in result) {
+        res.status(result.status ?? 400).json({ error: result.error });
+        return;
+    }
+
+    applyValidatedSplits(id, result.rows);
+    res.json({ parent: repo.findById(id), children: repo.findChildren(id) });
+}
+
+router.post<{ accountId: string; id: string }>('/:id/split', handleApplySplit);
+router.put<{ accountId: string; id: string }>('/:id/split', handleApplySplit);
+
+router.delete<{ accountId: string; id: string }>('/:id/split', (req, res) => {
+    const accountId = parseInt(req.params.accountId, 10);
+    const id = parseInt(req.params.id, 10);
+    const transaction = repo.findById(id);
+    if (!transaction || transaction.account_id !== accountId) {
+        res.status(404).json({ error: 'transaction not found' });
+        return;
+    }
+    if (transaction.split_count === 0) {
+        res.status(404).json({ error: 'this transaction has no split to remove' });
+        return;
+    }
+
+    const parent = repo.unsplit(id);
+    res.json(parent);
 });
 
 router.put<{ accountId: string; id: string }>('/:id', (req, res) => {

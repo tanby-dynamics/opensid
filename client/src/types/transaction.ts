@@ -23,5 +23,7 @@ export interface Transaction {
     recurrence_source_id: number | null;
     transfer_group_id: string | null;
     cleared_at: string | null;
+    split_parent_id: number | null;
+    split_count: number;
     tags: TagRef[];
 }

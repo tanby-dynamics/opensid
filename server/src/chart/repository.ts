@@ -1,4 +1,5 @@
 import db from '../db';
+import { REPORTING_ROWS_CTE } from '../reporting/view';
 
 export interface IncomeVsExpensePoint {
     month: string;
@@ -62,7 +63,7 @@ export function getBalanceOverTime(accountId: number, fromDate: string | null): 
             .prepare(
                 `SELECT COALESCE(SUM(amount_cents), 0) AS total
                  FROM transactions
-                 WHERE account_id = ? AND deleted_at IS NULL AND date < ?`,
+                 WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL AND date < ?`,
             )
             .get(accountId, fromDate) as { total: number };
         startingBalance = row.total;
@@ -74,7 +75,7 @@ export function getBalanceOverTime(accountId: number, fromDate: string | null): 
               .prepare(
                   `SELECT date, SUM(amount_cents) AS day_delta
                    FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL AND date >= ?
+                   WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL AND date >= ?
                    GROUP BY date
                    ORDER BY date ASC`,
               )
@@ -83,7 +84,7 @@ export function getBalanceOverTime(accountId: number, fromDate: string | null): 
               .prepare(
                   `SELECT date, SUM(amount_cents) AS day_delta
                    FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL
+                   WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL
                    GROUP BY date
                    ORDER BY date ASC`,
               )
@@ -116,7 +117,7 @@ export function getIncomeVsExpenseByMonth(accountId: number, fromDate: string | 
               .prepare(
                   `SELECT strftime('%Y-%m', date) as month, type, SUM(amount_cents) as total_cents
                    FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL AND type != 'transfer' AND date >= ?
+                   WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL AND type != 'transfer' AND date >= ?
                    GROUP BY month, type
                    ORDER BY month`,
               )
@@ -125,7 +126,7 @@ export function getIncomeVsExpenseByMonth(accountId: number, fromDate: string | 
               .prepare(
                   `SELECT strftime('%Y-%m', date) as month, type, SUM(amount_cents) as total_cents
                    FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL AND type != 'transfer'
+                   WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL AND type != 'transfer'
                    GROUP BY month, type
                    ORDER BY month`,
               )
@@ -168,9 +169,10 @@ export function getCategoryTotals(accountId: number, fromDate: string | null): C
     const rows = fromDate
         ? (db
               .prepare(
-                  `SELECT category, SUM(ABS(amount_cents)) AS total_cents
-                   FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL AND type = 'expense'
+                  `WITH ${REPORTING_ROWS_CTE}
+                   SELECT category, SUM(ABS(amount_cents)) AS total_cents
+                   FROM reporting_rows
+                   WHERE account_id = ? AND type = 'expense'
                      AND category IS NOT NULL AND date >= ?
                    GROUP BY category
                    ORDER BY total_cents DESC`,
@@ -178,9 +180,10 @@ export function getCategoryTotals(accountId: number, fromDate: string | null): C
               .all(accountId, fromDate) as CategoryTotal[])
         : (db
               .prepare(
-                  `SELECT category, SUM(ABS(amount_cents)) AS total_cents
-                   FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL AND type = 'expense'
+                  `WITH ${REPORTING_ROWS_CTE}
+                   SELECT category, SUM(ABS(amount_cents)) AS total_cents
+                   FROM reporting_rows
+                   WHERE account_id = ? AND type = 'expense'
                      AND category IS NOT NULL
                    GROUP BY category
                    ORDER BY total_cents DESC`,

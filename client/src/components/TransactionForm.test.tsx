@@ -21,6 +21,8 @@ const existing: Transaction = {
     recurrence_source_id: null,
     transfer_group_id: null,
     cleared_at: null,
+    split_parent_id: null,
+    split_count: 0,
     tags: [],
 };
 
@@ -140,5 +142,71 @@ describe('TransactionForm', () => {
         const incomeBtn = screen.getByRole('button', { name: /income/i });
         fireEvent.click(incomeBtn);
         expect((incomeBtn as HTMLButtonElement).style.background).toBe('var(--green)');
+    });
+
+    it('does not show the split toggle until an amount is entered', () => {
+        wrap(<TransactionForm onSubmit={vi.fn()} onCancel={vi.fn()} />);
+        expect(screen.queryByText('Split transaction')).toBeNull();
+        fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: '200' } });
+        expect(screen.getByText('Split transaction')).toBeTruthy();
+    });
+
+    it('does not offer splitting when editing an existing transaction', () => {
+        wrap(<TransactionForm initial={existing} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+        expect(screen.queryByText('Split transaction')).toBeNull();
+    });
+
+    it('disables save while split rows do not sum to the amount', () => {
+        wrap(<TransactionForm onSubmit={vi.fn()} onCancel={vi.fn()} />);
+        fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: '200' } });
+        fireEvent.click(screen.getByText('Split transaction'));
+
+        const saveBtn = screen.getByRole('button', { name: /save transaction/i }) as HTMLButtonElement;
+        expect(saveBtn.disabled).toBe(true);
+
+        const amountInputs = screen.getAllByPlaceholderText('Amount');
+        fireEvent.change(amountInputs[0], { target: { value: '150' } });
+        fireEvent.change(amountInputs[1], { target: { value: '50' } });
+        expect(saveBtn.disabled).toBe(false);
+    });
+
+    it('distribute evenly divides the amount across split rows', () => {
+        wrap(<TransactionForm onSubmit={vi.fn()} onCancel={vi.fn()} />);
+        fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: '10' } });
+        fireEvent.click(screen.getByText('Split transaction'));
+        fireEvent.click(screen.getByText('Distribute evenly'));
+
+        const amountInputs = screen.getAllByPlaceholderText('Amount') as HTMLInputElement[];
+        expect(amountInputs[0].value).toBe('5.00');
+        expect(amountInputs[1].value).toBe('5.00');
+    });
+
+    it('submits splits alongside the parent transaction', () => {
+        const onSubmit = vi.fn();
+        wrap(<TransactionForm onSubmit={onSubmit} onCancel={vi.fn()} />);
+        fireEvent.change(screen.getByLabelText(/category/i), { target: { value: 'Shopping' } });
+        fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: '200' } });
+        fireEvent.change(screen.getByLabelText(/date/i), { target: { value: '2026-05-01' } });
+        fireEvent.click(screen.getByText('Split transaction'));
+
+        const categoryInputs = screen.getAllByPlaceholderText('Category');
+        const amountInputs = screen.getAllByPlaceholderText('Amount');
+        fireEvent.change(categoryInputs[0], { target: { value: 'Groceries' } });
+        fireEvent.change(amountInputs[0], { target: { value: '150' } });
+        fireEvent.change(categoryInputs[1], { target: { value: 'Household' } });
+        fireEvent.change(amountInputs[1], { target: { value: '50' } });
+
+        fireEvent.submit(document.querySelector('form')!);
+
+        expect(onSubmit).toHaveBeenCalledWith(
+            expect.objectContaining({
+                splits: [
+                    { amount: 150, category: 'Groceries', notes: null },
+                    { amount: 50, category: 'Household', notes: null },
+                ],
+            }),
+            [],
+            expect.any(Boolean),
+        );
     });
 });

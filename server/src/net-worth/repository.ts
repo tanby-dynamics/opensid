@@ -41,7 +41,7 @@ export function getNetWorth(onDate?: string): NetWorth {
         .prepare(
             `SELECT account_id, COALESCE(SUM(amount_cents), 0) AS balance
              FROM transactions
-             WHERE deleted_at IS NULL AND date <= ?
+             WHERE deleted_at IS NULL AND split_parent_id IS NULL AND date <= ?
              GROUP BY account_id`,
         )
         .all(asOf) as { account_id: number; balance: number }[];
@@ -88,7 +88,7 @@ export function getNetWorthHistory(fromDate: string | null, toDate: string): Net
         .prepare(
             `SELECT account_id, COALESCE(SUM(amount_cents), 0) AS balance
              FROM transactions
-             WHERE deleted_at IS NULL AND date < ?
+             WHERE deleted_at IS NULL AND split_parent_id IS NULL AND date < ?
              GROUP BY account_id`,
         )
         .all(resolvedFrom) as { account_id: number; balance: number }[];
@@ -100,7 +100,7 @@ export function getNetWorthHistory(fromDate: string | null, toDate: string): Net
         .prepare(
             `SELECT account_id, date, SUM(amount_cents) AS day_delta
              FROM transactions
-             WHERE deleted_at IS NULL AND date >= ? AND date <= ?
+             WHERE deleted_at IS NULL AND split_parent_id IS NULL AND date >= ? AND date <= ?
              GROUP BY account_id, date
              ORDER BY date ASC`,
         )

@@ -26,7 +26,7 @@ export interface DashboardConfigItem {
 const SELECT_SQL = `
     SELECT dc.id, dc.account_id, dc.position, dc.tile_type, dc.time_window, dc.show_balance, dc.forecast_discretionary,
         CASE WHEN dc.tile_type IN ('transactions', 'balance_over_time')
-            THEN (SELECT COALESCE(SUM(t.amount_cents), 0) FROM transactions t WHERE t.account_id = dc.account_id AND t.deleted_at IS NULL)
+            THEN (SELECT COALESCE(SUM(t.amount_cents), 0) FROM transactions t WHERE t.account_id = dc.account_id AND t.deleted_at IS NULL AND t.split_parent_id IS NULL)
             ELSE NULL
         END AS balance_cents
     FROM dashboard_config dc

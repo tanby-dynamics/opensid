@@ -9,7 +9,7 @@ function formatTimestamp(d: Date): string {
 export function exportAll(): BackupPayload {
     const accounts = db.prepare(`SELECT id, name, created_at, deleted_at, kind, exclude_from_net_worth FROM accounts ORDER BY id`).all() as BackupAccount[];
 
-    const transactions = db.prepare(`SELECT id, account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, recurrence_source_id, transfer_group_id, cleared_at FROM transactions ORDER BY id`).all() as BackupTransaction[];
+    const transactions = db.prepare(`SELECT id, account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, recurrence_source_id, transfer_group_id, cleared_at, split_parent_id FROM transactions ORDER BY id`).all() as BackupTransaction[];
 
     const rawAttachments = db.prepare(`SELECT id, transaction_id, filename, mime_type, size_bytes, data, created_at, deleted_at FROM attachments ORDER BY id`).all() as (Omit<BackupAttachment, 'data'> & { data: Buffer })[];
 
@@ -31,7 +31,7 @@ export function exportAll(): BackupPayload {
     const rules = db.prepare(`SELECT id, name, priority, enabled, account_id, match_type, description_pattern, amount_min_cents, amount_max_cents, tx_type, set_category, add_tag_ids, notes_prefix, last_run_at, last_match_count, created_at, deleted_at FROM rules ORDER BY id`).all() as BackupRule[];
 
     return {
-        version: 7,
+        version: 8,
         exported_at: new Date().toISOString(),
         accounts,
         transactions,
@@ -48,7 +48,10 @@ export function exportAll(): BackupPayload {
 export function importMerge(payload: BackupPayload): ImportResult {
     const insertAccount = db.prepare(`INSERT INTO accounts (name, created_at, deleted_at, kind, exclude_from_net_worth) VALUES (?, ?, ?, ?, ?)`);
     const insertTransaction = db.prepare(`INSERT INTO transactions (account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, transfer_group_id, cleared_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    // split_parent_id and recurrence_source_id both reference other transactions and are wired up
+    // in a second pass below, once every row's remapped ID is known.
     const updateRecurrenceSource = db.prepare(`UPDATE transactions SET recurrence_source_id = ? WHERE id = ?`);
+    const updateSplitParent = db.prepare(`UPDATE transactions SET split_parent_id = ? WHERE id = ?`);
     const insertAttachment = db.prepare(`INSERT INTO attachments (transaction_id, filename, mime_type, size_bytes, data, created_at, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?)`);
     const findActiveByName = db.prepare(`SELECT id FROM accounts WHERE lower(name) = lower(?) AND deleted_at IS NULL`);
 
@@ -92,6 +95,16 @@ export function importMerge(payload: BackupPayload): ImportResult {
             const newSourceId = transactionIdMap.get(tx.recurrence_source_id);
             if (newId !== undefined && newSourceId !== undefined) {
                 updateRecurrenceSource.run(newSourceId, newId);
+            }
+        }
+
+        // Second pass: wire up split_parent_id using remapped IDs
+        for (const tx of p.transactions) {
+            if (!tx.split_parent_id) continue;
+            const newId = transactionIdMap.get(tx.id);
+            const newParentId = transactionIdMap.get(tx.split_parent_id);
+            if (newId !== undefined && newParentId !== undefined) {
+                updateSplitParent.run(newParentId, newId);
             }
         }
 
@@ -271,7 +284,7 @@ export function importMerge(payload: BackupPayload): ImportResult {
 
 export function importWipe(payload: BackupPayload): ImportResult {
     const insertAccount = db.prepare(`INSERT INTO accounts (id, name, created_at, deleted_at, kind, exclude_from_net_worth) VALUES (?, ?, ?, ?, ?, ?)`);
-    const insertTransaction = db.prepare(`INSERT INTO transactions (id, account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, recurrence_source_id, transfer_group_id, cleared_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    const insertTransaction = db.prepare(`INSERT INTO transactions (id, account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, recurrence_source_id, transfer_group_id, cleared_at, split_parent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     const insertAttachment = db.prepare(`INSERT INTO attachments (id, transaction_id, filename, mime_type, size_bytes, data, created_at, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
 
     const run = db.transaction((p: BackupPayload) => {
@@ -302,7 +315,7 @@ export function importWipe(payload: BackupPayload): ImportResult {
                 tx.id, tx.account_id, tx.category, tx.description, tx.amount_cents,
                 tx.type, tx.date, tx.notes, tx.created_at, tx.updated_at, tx.deleted_at,
                 tx.recurrence ?? null, tx.recurrence_end_date ?? null, tx.recurrence_source_id ?? null,
-                tx.transfer_group_id ?? null, tx.cleared_at ?? null,
+                tx.transfer_group_id ?? null, tx.cleared_at ?? null, tx.split_parent_id ?? null,
             );
         }
 

@@ -1,8 +1,19 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import TransactionRow from './TransactionRow';
 import type { Transaction } from '../types/transaction';
+
+vi.mock('../api/transactions', async () => {
+    const actual = await vi.importActual<object>('../api/transactions');
+    return { ...actual, getSplitChildren: vi.fn() };
+});
+vi.mock('../api/attachments', async () => {
+    const actual = await vi.importActual<object>('../api/attachments');
+    return { ...actual, listAttachments: vi.fn().mockResolvedValue([]) };
+});
+
+import * as txApi from '../api/transactions';
 
 const expense: Transaction = {
     id: 1,
@@ -21,6 +32,8 @@ const expense: Transaction = {
     recurrence_source_id: null,
     transfer_group_id: null,
     cleared_at: null,
+    split_parent_id: null,
+    split_count: 0,
     tags: [],
 };
 
@@ -48,6 +61,11 @@ function renderRow(t = expense, onEdit = vi.fn(), onDelete = vi.fn()) {
 }
 
 describe('TransactionRow', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.mocked(txApi.getSplitChildren).mockResolvedValue([]);
+    });
+
     it('renders description', () => {
         renderRow();
         expect(screen.getAllByText('Coffee').length).toBeGreaterThan(0);
@@ -82,5 +100,28 @@ describe('TransactionRow', () => {
         renderRow(expense, vi.fn(), onDelete);
         fireEvent.click(screen.getAllByRole('button', { name: /delete coffee/i })[0]);
         expect(onDelete).toHaveBeenCalledWith(expense);
+    });
+
+    it('does not show a split chip for a non-split transaction', () => {
+        renderRow();
+        expect(screen.queryByText(/Split into/)).toBeNull();
+    });
+
+    it('shows a split chip and expands to list children', async () => {
+        const splitParent: Transaction = { ...expense, split_count: 2 };
+        vi.mocked(txApi.getSplitChildren).mockResolvedValue([
+            { ...expense, id: 10, category: 'Groceries', amount_cents: -300, notes: null, split_parent_id: 1 },
+            { ...expense, id: 11, category: 'Household', amount_cents: -150, notes: null, split_parent_id: 1 },
+        ]);
+
+        renderRow(splitParent);
+        expect(screen.getAllByText('Split into 2').length).toBeGreaterThan(0);
+
+        fireEvent.click(screen.getAllByText('Coffee')[0]);
+
+        await waitFor(() => {
+            expect(screen.getByText('Groceries')).toBeTruthy();
+            expect(screen.getByText('Household')).toBeTruthy();
+        });
     });
 });

@@ -66,6 +66,13 @@ export async function getTransaction(accountId: number, id: number): Promise<Tra
     return data;
 }
 
+export interface SplitRowPayload {
+    amount: number;
+    category: string;
+    notes?: string | null;
+    tag_ids?: number[];
+}
+
 export interface TransactionPayload {
     category: string;
     description?: string;
@@ -77,6 +84,7 @@ export interface TransactionPayload {
     recurrence?: string | null;
     recurrence_end_date?: string | null;
     tag_ids?: number[];
+    splits?: SplitRowPayload[];
 }
 
 export async function createTransaction(
@@ -93,6 +101,16 @@ export async function updateTransaction(
     payload: Partial<TransactionPayload> & { scope?: 'one' | 'future' },
 ): Promise<Transaction> {
     const { data } = await axios.put<Transaction>(`${base(accountId)}/${id}`, payload);
+    return data;
+}
+
+export async function getSplitChildren(accountId: number, id: number): Promise<Transaction[]> {
+    const { data } = await axios.get<{ children: Transaction[] }>(`${base(accountId)}/${id}/split`);
+    return data.children;
+}
+
+export async function unsplitTransaction(accountId: number, id: number): Promise<Transaction> {
+    const { data } = await axios.delete<Transaction>(`${base(accountId)}/${id}/split`);
     return data;
 }
 

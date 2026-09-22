@@ -4,6 +4,7 @@ import type { Transaction } from '../types/transaction';
 import type { Attachment } from '../types/attachment';
 import { formatCents, formatDate, formatDateTime, balanceColor } from '../utils/format';
 import { listAttachments, downloadUrl } from '../api/attachments';
+import { getSplitChildren } from '../api/transactions';
 
 interface Props {
     transaction: Transaction;
@@ -45,6 +46,14 @@ export default function TransactionRow({ transaction, isLast, gridTemplate, onEd
         enabled: expanded,
     });
 
+    const isSplit = transaction.split_count > 0;
+
+    const { data: splitChildren = [] } = useQuery<Transaction[]>({
+        queryKey: ['split-children', transaction.id],
+        queryFn: () => getSplitChildren(transaction.account_id, transaction.id),
+        enabled: expanded && isSplit,
+    });
+
     const isTransfer = transaction.type === 'transfer';
     const isTemplate = !!transaction.recurrence && !transaction.recurrence_source_id;
     const isGenerated = !!transaction.recurrence_source_id;
@@ -69,6 +78,12 @@ export default function TransactionRow({ transaction, isLast, gridTemplate, onEd
             )}
         </span>
     );
+
+    const splitChip = isSplit ? (
+        <span className="inline-block px-2 py-[3px] rounded-full text-[11px] font-bold bg-[var(--cream-mid)] text-[var(--text-muted)]">
+            Split into {transaction.split_count}
+        </span>
+    ) : null;
 
     const clearedToggle = (
         <button
@@ -114,6 +129,7 @@ export default function TransactionRow({ transaction, isLast, gridTemplate, onEd
                                         <span>{transaction.category}</span>
                                     </>
                                 )}
+                                {splitChip && <>{splitChip}</>}
                             </div>
                             {transaction.tags && transaction.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-1">
@@ -178,6 +194,7 @@ export default function TransactionRow({ transaction, isLast, gridTemplate, onEd
                     <span className="text-xs text-[var(--text-muted)]">{transaction.category ?? ''}</span>
                     <span className="text-[13px] text-[var(--text-primary)] font-semibold">
                         {transaction.description}
+                        {splitChip && <span className="ml-2 inline-block">{splitChip}</span>}
                         {transaction.tags && transaction.tags.length > 0 && (
                             <span className="ml-2 inline-flex flex-wrap gap-1">
                                 {transaction.tags.map((tag) => (
@@ -234,6 +251,26 @@ export default function TransactionRow({ transaction, isLast, gridTemplate, onEd
                     )}
                     {isCleared && transaction.cleared_at && (
                         <p className="text-xs text-[var(--green)]">✓ Cleared {formatDateTime(transaction.cleared_at)}</p>
+                    )}
+                    {isSplit && (
+                        <div>
+                            <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em] mb-1">
+                                Split into {transaction.split_count} parts
+                            </div>
+                            <ul className="flex flex-col gap-1.5">
+                                {splitChildren.map((child) => (
+                                    <li key={child.id} className="flex items-center justify-between text-[13px] gap-3">
+                                        <span className="text-[var(--text-primary)] font-semibold">
+                                            {child.category}
+                                            {child.notes && <span className="ml-2 font-normal text-[var(--text-muted)]">{child.notes}</span>}
+                                        </span>
+                                        <span className="font-bold shrink-0" style={{ color: balanceColor(child.amount_cents) }}>
+                                            {formatCents(child.amount_cents)}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     )}
                     {transaction.tags && transaction.tags.length > 0 && (
                         <div>

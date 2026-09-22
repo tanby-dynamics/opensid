@@ -17,7 +17,7 @@ router.get('/balances', (_req, res) => {
         WITH balances AS (
             SELECT account_id, SUM(amount_cents) AS balance_cents
             FROM transactions
-            WHERE deleted_at IS NULL
+            WHERE deleted_at IS NULL AND split_parent_id IS NULL
             GROUP BY account_id
         )
         SELECT a.id, a.name, COALESCE(b.balance_cents, 0) AS balance_cents
@@ -62,7 +62,7 @@ router.get('/:id/cleared-balance', (req, res) => {
     }
     const row = db
         .prepare(
-            'SELECT COALESCE(SUM(amount_cents), 0) AS cleared_balance_cents FROM transactions WHERE account_id = ? AND cleared_at IS NOT NULL AND deleted_at IS NULL',
+            'SELECT COALESCE(SUM(amount_cents), 0) AS cleared_balance_cents FROM transactions WHERE account_id = ? AND cleared_at IS NOT NULL AND deleted_at IS NULL AND split_parent_id IS NULL',
         )
         .get(id) as { cleared_balance_cents: number };
     res.json({ cleared_balance_cents: row.cleared_balance_cents });

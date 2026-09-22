@@ -20,7 +20,15 @@ export interface Transaction {
     recurrence_source_id: number | null;
     transfer_group_id: string | null;
     cleared_at: string | null;
+    split_parent_id: number | null;
+    split_count: number;
     tags: TagRef[];
+}
+
+export interface SplitChildInput {
+    amount_cents: number;
+    category: string;
+    notes: string | null;
 }
 
 export interface CreateTransactionInput {
@@ -73,6 +81,10 @@ export interface TransactionFilters {
     tagIds?: number[];
     tagMode?: 'any' | 'all';
     cleared?: 'yes' | 'no';
+}
+
+function splitCountSql(alias = 'transactions'): string {
+    return `(SELECT COUNT(*) FROM transactions c WHERE c.split_parent_id = ${alias}.id AND c.deleted_at IS NULL) AS split_count`;
 }
 
 function stitchTags<T extends { id: number }>(rows: T[]): (T & { tags: TagRef[] })[] {
@@ -156,10 +168,10 @@ function buildFilterClauses(filters: TransactionFilters | undefined, tableAlias 
 
 export function findByAccount(accountId: number, filters?: TransactionFilters): Transaction[] {
     const { conditions, params } = buildFilterClauses(filters);
-    const allConditions = ['account_id = ?', 'deleted_at IS NULL', ...conditions];
+    const allConditions = ['account_id = ?', 'deleted_at IS NULL', 'split_parent_id IS NULL', ...conditions];
     const allParams = [accountId, ...params];
 
-    const sql = `SELECT * FROM transactions WHERE ${allConditions.join(' AND ')} ORDER BY date DESC, id DESC`;
+    const sql = `SELECT *, ${splitCountSql()} FROM transactions WHERE ${allConditions.join(' AND ')} ORDER BY date DESC, id DESC`;
     const rows = db.prepare(sql).all(...allParams) as Omit<Transaction, 'tags'>[];
     return stitchTags(rows) as Transaction[];
 }
@@ -170,9 +182,9 @@ export interface TransactionWithAccount extends Transaction {
 
 export function searchAll(filters?: TransactionFilters): TransactionWithAccount[] {
     const { conditions, params } = buildFilterClauses(filters, 't');
-    const allConditions = ['t.deleted_at IS NULL', 'a.deleted_at IS NULL', ...conditions];
+    const allConditions = ['t.deleted_at IS NULL', 'a.deleted_at IS NULL', 't.split_parent_id IS NULL', ...conditions];
 
-    const sql = `SELECT t.*, a.name AS account_name
+    const sql = `SELECT t.*, ${splitCountSql('t')}, a.name AS account_name
                  FROM transactions t
                  JOIN accounts a ON a.id = t.account_id
                  WHERE ${allConditions.join(' AND ')}
@@ -183,10 +195,17 @@ export function searchAll(filters?: TransactionFilters): TransactionWithAccount[
 
 export function findById(id: number): Transaction | undefined {
     const row = db
-        .prepare('SELECT * FROM transactions WHERE id = ? AND deleted_at IS NULL')
+        .prepare(`SELECT *, ${splitCountSql()} FROM transactions WHERE id = ? AND deleted_at IS NULL`)
         .get(id) as Omit<Transaction, 'tags'> | undefined;
     if (!row) return undefined;
     return stitchTags([row])[0] as Transaction;
+}
+
+export function findChildren(parentId: number): Transaction[] {
+    const rows = db
+        .prepare(`SELECT *, ${splitCountSql()} FROM transactions WHERE split_parent_id = ? AND deleted_at IS NULL ORDER BY id`)
+        .all(parentId) as Omit<Transaction, 'tags'>[];
+    return stitchTags(rows) as Transaction[];
 }
 
 export function create(input: CreateTransactionInput): Transaction {
@@ -315,7 +334,7 @@ export function updateTemplateEndDate(templateId: number, endDate: string): void
 export function getBalance(accountId: number): number {
     const row = db
         .prepare(
-            'SELECT COALESCE(SUM(amount_cents), 0) AS balance FROM transactions WHERE account_id = ? AND deleted_at IS NULL',
+            'SELECT COALESCE(SUM(amount_cents), 0) AS balance FROM transactions WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL',
         )
         .get(accountId) as { balance: number };
     return row.balance;
@@ -324,10 +343,69 @@ export function getBalance(accountId: number): number {
 export function getClearedBalance(accountId: number): number {
     const row = db
         .prepare(
-            'SELECT COALESCE(SUM(amount_cents), 0) AS balance FROM transactions WHERE account_id = ? AND cleared_at IS NOT NULL AND deleted_at IS NULL',
+            'SELECT COALESCE(SUM(amount_cents), 0) AS balance FROM transactions WHERE account_id = ? AND cleared_at IS NOT NULL AND deleted_at IS NULL AND split_parent_id IS NULL',
         )
         .get(accountId) as { balance: number };
     return row.balance;
+}
+
+export const SPLIT_CATEGORY = '(split)';
+export const UNCATEGORISED = '(uncategorised)';
+
+export function applySplits(parentId: number, children: SplitChildInput[]): Transaction[] {
+    const parent = findById(parentId);
+    if (!parent) throw new Error('parent transaction not found');
+
+    const softDeleteExisting = db.prepare(
+        `UPDATE transactions SET deleted_at = datetime('now') WHERE split_parent_id = ? AND deleted_at IS NULL`,
+    );
+    const insertChild = db.prepare(
+        `INSERT INTO transactions (account_id, category, description, amount_cents, type, date, notes, split_parent_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    );
+    const setParentCategory = db.prepare(`UPDATE transactions SET category = ? WHERE id = ?`);
+
+    const run = db.transaction(() => {
+        softDeleteExisting.run(parentId);
+        const ids: number[] = [];
+        for (const child of children) {
+            const result = insertChild.run(
+                parent.account_id,
+                child.category,
+                child.category,
+                child.amount_cents,
+                parent.type,
+                parent.date,
+                child.notes,
+                parentId,
+            );
+            ids.push(result.lastInsertRowid as number);
+        }
+        setParentCategory.run(SPLIT_CATEGORY, parentId);
+        return ids;
+    });
+
+    const ids = run() as number[];
+    return ids.map((id) => findById(id)!);
+}
+
+export function unsplit(parentId: number): Transaction | undefined {
+    const parent = findById(parentId);
+    if (!parent) return undefined;
+
+    const softDeleteExisting = db.prepare(
+        `UPDATE transactions SET deleted_at = datetime('now') WHERE split_parent_id = ? AND deleted_at IS NULL`,
+    );
+    const restoreCategory = db.prepare(`UPDATE transactions SET category = ? WHERE id = ?`);
+
+    db.transaction(() => {
+        softDeleteExisting.run(parentId);
+        if (parent.category === SPLIT_CATEGORY) {
+            restoreCategory.run(UNCATEGORISED, parentId);
+        }
+    })();
+
+    return findById(parentId);
 }
 
 export function clear(id: number): void {

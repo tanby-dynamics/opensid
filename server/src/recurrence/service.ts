@@ -78,6 +78,23 @@ export function generateDueOccurrences(): void {
          VALUES (?, ?, ?, ?, 'transfer', ?, ?, ?, ?)`,
     );
 
+    const findSplitChildren = db.prepare(
+        `SELECT category, description, amount_cents, notes FROM transactions
+         WHERE split_parent_id = ? AND deleted_at IS NULL`,
+    );
+
+    const insertChildStmt = db.prepare(
+        `INSERT INTO transactions (account_id, category, description, amount_cents, type, date, notes, split_parent_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    );
+
+    function replicateSplitChildren(templateId: number, occurrenceId: number, accountId: number, type: string, date: string) {
+        const children = findSplitChildren.all(templateId) as { category: string | null; description: string; amount_cents: number; notes: string | null }[];
+        for (const child of children) {
+            insertChildStmt.run(accountId, child.category, child.description, child.amount_cents, type, date, child.notes, occurrenceId);
+        }
+    }
+
     const run = db.transaction(() => {
         for (const tmpl of templates) {
             const lastRow = db
@@ -117,7 +134,7 @@ export function generateDueOccurrences(): void {
             } else {
                 let next = getNextDate(lastDate, tmpl.recurrence);
                 while (next <= ceiling) {
-                    insertStmt.run(
+                    const result = insertStmt.run(
                         tmpl.account_id,
                         tmpl.category,
                         tmpl.description,
@@ -127,6 +144,7 @@ export function generateDueOccurrences(): void {
                         tmpl.notes,
                         tmpl.id,
                     );
+                    replicateSplitChildren(tmpl.id, result.lastInsertRowid as number, tmpl.account_id, tmpl.type, next);
                     lastDate = next;
                     next = getNextDate(lastDate, tmpl.recurrence);
                 }

@@ -24,6 +24,7 @@ export interface BackupTransaction {
     recurrence_source_id: number | null;
     transfer_group_id: string | null;
     cleared_at: string | null;
+    split_parent_id: number | null;
 }
 
 export interface BackupAttachment {

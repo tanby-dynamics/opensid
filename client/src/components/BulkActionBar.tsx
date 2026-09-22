@@ -8,9 +8,11 @@ interface Props {
     onClear: () => void;
     availableTags?: TagRef[];
     onBulkTag?: (add: number[]) => void;
+    canUnsplit?: boolean;
+    onUnsplit?: () => void;
 }
 
-export default function BulkActionBar({ selectedCount, onDelete, onExport, onClear, availableTags = [], onBulkTag }: Props) {
+export default function BulkActionBar({ selectedCount, onDelete, onExport, onClear, availableTags = [], onBulkTag, canUnsplit = false, onUnsplit }: Props) {
     const [tagOpen, setTagOpen] = useState(false);
     const [tagSearch, setTagSearch] = useState('');
     const [pendingTagIds, setPendingTagIds] = useState<Set<number>>(new Set());
@@ -103,6 +105,11 @@ export default function BulkActionBar({ selectedCount, onDelete, onExport, onCle
                         </div>
                     )}
                 </div>
+            )}
+            {canUnsplit && onUnsplit && (
+                <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={onUnsplit}>
+                    Unsplit
+                </button>
             )}
             <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={onExport}>
                 Export selected

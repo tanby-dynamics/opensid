@@ -40,14 +40,14 @@ router.get('/', (_req, res) => {
         balances AS (
             SELECT account_id, SUM(amount_cents) AS balance_cents
             FROM transactions
-            WHERE deleted_at IS NULL
+            WHERE deleted_at IS NULL AND split_parent_id IS NULL
             GROUP BY account_id
         ),
         ranked AS (
             SELECT id, account_id, description, amount_cents, type, date,
                    ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY date DESC, id DESC) AS rn
             FROM transactions
-            WHERE deleted_at IS NULL
+            WHERE deleted_at IS NULL AND split_parent_id IS NULL
         )
         SELECT
             a.id,

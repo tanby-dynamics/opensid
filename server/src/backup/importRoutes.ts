@@ -63,7 +63,7 @@ router.post('/import', upload.single('file'), (req, res) => {
     }
 
     const version = (payload as Record<string, unknown>).version;
-    if (typeof version !== 'number' || version < 1 || version > 7) {
+    if (typeof version !== 'number' || version < 1 || version > 8) {
         res.status(422).json({ error: 'Invalid backup: unsupported version' });
         return;
     }

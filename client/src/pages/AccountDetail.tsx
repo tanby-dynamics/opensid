@@ -15,6 +15,7 @@ import {
     importTransactions,
     previewImport,
     commitImport,
+    unsplitTransaction,
     type TransactionPayload,
     type TransactionFilters,
     type PreviewPayload,
@@ -301,6 +302,10 @@ export default function AccountDetail() {
     const allSelected = visibleSelectedIds.size === transactions.length && transactions.length > 0;
     const someSelected = visibleSelectedIds.size > 0 && !allSelected;
 
+    const singleSelectedSplitTx = visibleSelectedIds.size === 1
+        ? transactions.find((t) => visibleSelectedIds.has(t.id) && t.split_count > 0)
+        : undefined;
+
     useEffect(() => {
         if (selectAllRef.current) {
             selectAllRef.current.indeterminate = someSelected;
@@ -370,6 +375,16 @@ export default function AccountDetail() {
             toast.success('Transactions deleted.');
         },
         onError: () => toast.error('Failed to delete transactions.'),
+    });
+
+    const unsplitMutation = useMutation({
+        mutationFn: (txId: number) => unsplitTransaction(accountId, txId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['transactions', accountId] });
+            setSelectedIds(new Set());
+            toast.success('Transaction unsplit.');
+        },
+        onError: () => toast.error('Failed to unsplit transaction.'),
     });
 
     const createTransferMutation = useMutation({
@@ -886,6 +901,8 @@ export default function AccountDetail() {
                 onClear={handleClearSelection}
                 availableTags={allTags}
                 onBulkTag={handleBulkTag}
+                canUnsplit={!!singleSelectedSplitTx}
+                onUnsplit={() => singleSelectedSplitTx && unsplitMutation.mutate(singleSelectedSplitTx.id)}
             />
 
             {txLoading && (

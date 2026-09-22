@@ -231,6 +231,11 @@ try {
     db.exec(`ALTER TABLE transactions ADD COLUMN cleared_at DATETIME`);
 } catch { /* column already exists */ }
 
+try {
+    db.exec(`ALTER TABLE transactions ADD COLUMN split_parent_id INTEGER REFERENCES transactions(id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS transactions_split_parent_id ON transactions(split_parent_id) WHERE split_parent_id IS NOT NULL`);
+} catch { /* column already exists */ }
+
 db.exec(`
     CREATE TABLE IF NOT EXISTS reconciliations (
         id                      INTEGER PRIMARY KEY AUTOINCREMENT,

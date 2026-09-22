@@ -1,4 +1,5 @@
 import db from '../db';
+import { REPORTING_ROWS_CTE } from '../reporting/view';
 
 export interface Budget {
     id: number;
@@ -56,10 +57,11 @@ export function getBudgetProgress(accountId: number): BudgetProgress[] {
         const periodStart = b.period === 'monthly' ? monthStart : weekStart;
         const row = db
             .prepare(
-                `SELECT COALESCE(SUM(ABS(amount_cents)), 0) AS spent_cents
-                 FROM transactions
+                `WITH ${REPORTING_ROWS_CTE}
+                 SELECT COALESCE(SUM(ABS(amount_cents)), 0) AS spent_cents
+                 FROM reporting_rows
                  WHERE account_id = ? AND category = ? AND type = 'expense'
-                   AND date >= ? AND deleted_at IS NULL`,
+                   AND date >= ?`,
             )
             .get(accountId, b.category, periodStart) as { spent_cents: number };
         const spent_cents = row.spent_cents;

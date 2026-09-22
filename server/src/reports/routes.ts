@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../db';
+import { REPORTING_ROWS_CTE } from '../reporting/view';
 
 const router = Router();
 
@@ -11,13 +12,13 @@ router.get('/spend-by-tag', (req, res) => {
     const accountId = account_id ? parseInt(account_id, 10) : null;
 
     const tagRows = db.prepare(`
+        WITH ${REPORTING_ROWS_CTE}
         SELECT t.id AS tag_id, t.name, t.colour,
                COUNT(tx.id) AS transaction_count,
                COALESCE(SUM(ABS(tx.amount_cents)), 0) AS total_cents
         FROM tags t
         LEFT JOIN transaction_tags tt ON tt.tag_id = t.id
-        LEFT JOIN transactions tx ON tx.id = tt.transaction_id
-            AND tx.deleted_at IS NULL
+        LEFT JOIN reporting_rows tx ON tx.id = tt.transaction_id
             AND tx.type = 'expense'
             AND (? IS NULL OR tx.date >= ?)
             AND (? IS NULL OR tx.date <= ?)
@@ -34,11 +35,11 @@ router.get('/spend-by-tag', (req, res) => {
     }[];
 
     const untaggedRow = db.prepare(`
+        WITH ${REPORTING_ROWS_CTE}
         SELECT COUNT(tx.id) AS transaction_count,
                COALESCE(SUM(ABS(tx.amount_cents)), 0) AS total_cents
-        FROM transactions tx
-        WHERE tx.deleted_at IS NULL
-            AND tx.type = 'expense'
+        FROM reporting_rows tx
+        WHERE tx.type = 'expense'
             AND NOT EXISTS (SELECT 1 FROM transaction_tags tt WHERE tt.transaction_id = tx.id)
             AND (? IS NULL OR tx.date >= ?)
             AND (? IS NULL OR tx.date <= ?)

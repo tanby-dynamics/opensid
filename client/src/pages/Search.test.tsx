@@ -37,6 +37,8 @@ function makeTx(over: Partial<TransactionWithAccount>): TransactionWithAccount {
         recurrence_source_id: null,
         transfer_group_id: null,
         cleared_at: null,
+        split_parent_id: null,
+        split_count: 0,
         tags: [],
         ...over,
     };
