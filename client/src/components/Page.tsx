@@ -19,7 +19,7 @@ export function Page({
                 <div className="max-w-[1100px] mx-auto px-4 sm:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                         <h1 className="font-display text-[22px] sm:text-[26px] font-bold text-[var(--teak-dark)] tracking-[-0.02em] leading-none shrink-0">
-                            <a href="/">Sid</a>
+                            <a href="/">OpenSid</a>
                         </h1>
                         <WaveIcon />
                         {pageTitle && (
@@ -37,17 +37,17 @@ export function Page({
                                 {formatCents(balance)}
                             </span>
                         )}
-                        <Link to="/search" aria-label="Search" className="sid-icon-btn">
+                        <Link to="/search" aria-label="Search" className="opensid-icon-btn">
                             <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fillRule="evenodd" d="M9 3a6 6 0 104.472 10.03l3.249 3.248a1 1 0 001.414-1.414l-3.249-3.248A6 6 0 009 3zM5 9a4 4 0 118 0 4 4 0 01-8 0z" clipRule="evenodd" />
                             </svg>
                         </Link>
-                        <Link to="/settings" aria-label="Settings" className="sid-icon-btn">
+                        <Link to="/settings" aria-label="Settings" className="opensid-icon-btn">
                             <GearIcon />
                         </Link>
                     </div>
                 </div>
-                <div className="sid-header-stripe" />
+                <div className="opensid-header-stripe" />
             </header>
             <main className="max-w-[1100px] mx-auto px-4 sm:px-8 pt-5 sm:pt-[36px] pb-20">
                 {children}

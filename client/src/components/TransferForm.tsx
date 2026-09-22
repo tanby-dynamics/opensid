@@ -103,10 +103,10 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
     }
 
     return (
-        <div className="sid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-            <div className="sid-modal anim-slide-up">
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body">
+        <div className="opensid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
+            <div className="opensid-modal anim-slide-up">
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body">
                     <h2 className="font-display text-lg font-bold text-[var(--teak-dark)] mb-5">
                         {isEdit ? 'Edit transfer' : 'New transfer'}
                     </h2>
@@ -115,7 +115,7 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
                             <div className="flex-1 flex flex-col gap-1">
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">From</label>
                                 <select
-                                    className={`sid-input${errors.source ? ' border-[var(--red)]' : ''}`}
+                                    className={`opensid-input${errors.source ? ' border-[var(--red)]' : ''}`}
                                     value={sourceId}
                                     onChange={(e) => handleSourceChange(e.target.value)}
                                 >
@@ -129,7 +129,7 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
                             <div className="flex-1 flex flex-col gap-1">
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">To</label>
                                 <select
-                                    className={`sid-input${errors.destination ? ' border-[var(--red)]' : ''}`}
+                                    className={`opensid-input${errors.destination ? ' border-[var(--red)]' : ''}`}
                                     value={destId}
                                     onChange={(e) => setDestId(e.target.value)}
                                 >
@@ -148,7 +148,7 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
                                     type="number"
                                     step="0.01"
                                     min="0.01"
-                                    className={`sid-input${errors.amount ? ' border-[var(--red)]' : ''}`}
+                                    className={`opensid-input${errors.amount ? ' border-[var(--red)]' : ''}`}
                                     placeholder="0.00"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
@@ -160,7 +160,7 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Date</label>
                                 <input
                                     type="date"
-                                    className={`sid-input${errors.date ? ' border-[var(--red)]' : ''}`}
+                                    className={`opensid-input${errors.date ? ' border-[var(--red)]' : ''}`}
                                     value={date}
                                     onChange={(e) => setDate(e.target.value)}
                                 />
@@ -172,7 +172,7 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
                             <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Description <span className="font-normal normal-case">(optional)</span></label>
                             <input
                                 type="text"
-                                className="sid-input"
+                                className="opensid-input"
                                 placeholder="Transfer"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
@@ -182,7 +182,7 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
                         <div className="flex flex-col gap-1">
                             <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Notes <span className="font-normal normal-case">(optional)</span></label>
                             <textarea
-                                className="sid-input resize-none"
+                                className="opensid-input resize-none"
                                 rows={2}
                                 placeholder="Any extra details…"
                                 value={notes}
@@ -205,7 +205,7 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
                                     <div className="flex flex-col gap-1">
                                         <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Frequency</label>
                                         <select
-                                            className="sid-input"
+                                            className="opensid-input"
                                             value={recurrence}
                                             onChange={(e) => setRecurrence(e.target.value as RecurrenceFrequency)}
                                         >
@@ -218,7 +218,7 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
                                         <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">End date <span className="font-normal normal-case">(optional)</span></label>
                                         <input
                                             type="date"
-                                            className={`sid-input${errors.recurrence_end_date ? ' border-[var(--red)]' : ''}`}
+                                            className={`opensid-input${errors.recurrence_end_date ? ' border-[var(--red)]' : ''}`}
                                             value={recurrenceEndDate}
                                             onChange={(e) => setRecurrenceEndDate(e.target.value)}
                                         />
@@ -231,8 +231,8 @@ export default function TransferForm({ accounts, initial, onSubmit, onCancel }: 
                         </div>
 
                         <div className="flex justify-end gap-2.5 pt-1">
-                            <button type="button" className="sid-btn sid-btn-ghost" onClick={onCancel}>Cancel</button>
-                            <button type="submit" className="sid-btn sid-btn-primary">
+                            <button type="button" className="opensid-btn opensid-btn-ghost" onClick={onCancel}>Cancel</button>
+                            <button type="submit" className="opensid-btn opensid-btn-primary">
                                 {isEdit ? 'Save changes' : 'Create transfer'}
                             </button>
                         </div>

@@ -27,7 +27,7 @@ npm run dev
 
 This starts both the Vite dev server (`http://localhost:5173`) and the Express API (`http://localhost:3000`) concurrently. The Vite server proxies `/api` requests to Express.
 
-The SQLite database (`sid.db`) is created automatically on first server start. Its path can be overridden with the `DATABASE_PATH` environment variable.
+The SQLite database (`opensid.db`) is created automatically on first server start. Its path can be overridden with the `DATABASE_PATH` environment variable.
 
 ## Tech stack
 
@@ -89,8 +89,8 @@ Both must pass before committing.
 
 | Variable | Default | Description |
 |---|---|---|
-| `DATABASE_PATH` | `sid.db` (repo root) | Path to the SQLite database file |
-| `CORS_ORIGIN` | `*` | Allowed CORS origin; restrict in production (e.g. `https://sid.example.com`) |
+| `DATABASE_PATH` | `opensid.db` (repo root) | Path to the SQLite database file |
+| `CORS_ORIGIN` | `*` | Allowed CORS origin; restrict in production (e.g. `https://opensid.example.com`) |
 
 In development, create a `.env` file in the repo root if you need to override these. The `.env` file is gitignored.
 

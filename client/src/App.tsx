@@ -40,7 +40,7 @@ export default function App() {
                         border: 'none',
                         padding: '10px 20px',
                     },
-                    classNames: { error: 'sid-toast-error' },
+                    classNames: { error: 'opensid-toast-error' },
                 }}
             />
         </QueryClientProvider>

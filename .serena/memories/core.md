@@ -1,6 +1,6 @@
-# Core — sid
+# Core — opensid
 
-Self-hosted single-user expense tracker. TypeScript npm workspaces monorepo at `/home/bec/development/tanby-dynamics/sid`.
+Self-hosted single-user expense tracker. TypeScript npm workspaces monorepo at `/home/bec/development/tanby-dynamics/opensid`.
 
 ## Workspace layout
 

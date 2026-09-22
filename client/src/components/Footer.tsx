@@ -3,16 +3,16 @@ export default function Footer() {
         <footer className="fixed bottom-0 left-0 right-0 py-4 text-center text-[12px] font-body text-[var(--text-muted)] bg-[var(--cream)] border-t border-[var(--border)] z-[50]">
             <div className="flex items-center justify-center gap-4">
                 <a
-                    href="https://sid.tanbydynamics.co"
+                    href="https://opensid.tanbydynamics.co"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-[var(--text-secondary)] transition-colors"
                 >
-                    sid.tanbydynamics.co
+                    opensid.tanbydynamics.co
                 </a>
                 <span className="text-[var(--cream-dark)]">·</span>
                 <a
-                    href="https://github.com/tanby-dynamics/sid"
+                    href="https://github.com/tanby-dynamics/opensid"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-[var(--text-secondary)] transition-colors"

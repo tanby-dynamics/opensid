@@ -13,10 +13,10 @@ export default function DateFormatPickerDialog({ onSelect, onCancel }: Props) {
     }, [onCancel]);
 
     return (
-        <div className="sid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-            <div className="sid-modal anim-slide-up">
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body">
+        <div className="opensid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
+            <div className="opensid-modal anim-slide-up">
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body">
                     <h2 className="font-display text-lg font-bold text-[var(--teak-dark)] mb-3">
                         Select date format
                     </h2>
@@ -25,20 +25,20 @@ export default function DateFormatPickerDialog({ onSelect, onCancel }: Props) {
                     </p>
                     <div className="flex flex-col gap-2.5 mb-6">
                         <button
-                            className="sid-btn sid-btn-ghost text-left justify-start"
+                            className="opensid-btn opensid-btn-ghost text-left justify-start"
                             onClick={() => onSelect('MDY')}
                         >
                             Month/Day/Year &mdash; <span className="text-[var(--text-muted)]">MM/dd/yyyy</span>
                         </button>
                         <button
-                            className="sid-btn sid-btn-ghost text-left justify-start"
+                            className="opensid-btn opensid-btn-ghost text-left justify-start"
                             onClick={() => onSelect('DMY')}
                         >
                             Day/Month/Year &mdash; <span className="text-[var(--text-muted)]">dd/MM/yyyy</span>
                         </button>
                     </div>
                     <div className="flex justify-end">
-                        <button className="sid-btn sid-btn-ghost" onClick={onCancel}>Cancel</button>
+                        <button className="opensid-btn opensid-btn-ghost" onClick={onCancel}>Cancel</button>
                     </div>
                 </div>
             </div>

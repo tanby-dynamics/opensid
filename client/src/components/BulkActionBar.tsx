@@ -53,14 +53,14 @@ export default function BulkActionBar({ selectedCount, onDelete, onExport, onCle
             </span>
             {onBulkTag && (
                 <div ref={dropdownRef} className="relative">
-                    <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={openTagDropdown}>
+                    <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={openTagDropdown}>
                         Tag selected
                     </button>
                     {tagOpen && (
                         <div className="absolute right-0 z-20 mt-1 w-[220px] rounded-xl bg-[var(--white)] [border:1.5px_solid_var(--border)] shadow-[var(--shadow-md)] p-2 flex flex-col gap-2">
                             <input
                                 type="text"
-                                className="sid-input text-[13px]"
+                                className="opensid-input text-[13px]"
                                 placeholder="Search tags…"
                                 value={tagSearch}
                                 onChange={(e) => setTagSearch(e.target.value)}
@@ -96,7 +96,7 @@ export default function BulkActionBar({ selectedCount, onDelete, onExport, onCle
                                 ))}
                             </ul>
                             <button
-                                className="sid-btn sid-btn-primary sid-btn-sm"
+                                className="opensid-btn opensid-btn-primary opensid-btn-sm"
                                 disabled={pendingTagIds.size === 0}
                                 onClick={applyTags}
                             >
@@ -107,19 +107,19 @@ export default function BulkActionBar({ selectedCount, onDelete, onExport, onCle
                 </div>
             )}
             {canUnsplit && onUnsplit && (
-                <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={onUnsplit}>
+                <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={onUnsplit}>
                     Unsplit
                 </button>
             )}
-            <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={onExport}>
+            <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={onExport}>
                 Export selected
             </button>
-            <button className="sid-btn sid-btn-danger sid-btn-sm" onClick={onDelete}>
+            <button className="opensid-btn opensid-btn-danger opensid-btn-sm" onClick={onDelete}>
                 Delete selected
             </button>
             <button
                 aria-label="Clear selection"
-                className="sid-icon-btn"
+                className="opensid-icon-btn"
                 onClick={onClear}
                 title="Clear selection"
             >

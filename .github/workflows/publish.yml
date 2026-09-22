@@ -33,7 +33,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/tanby-dynamics/sid
+          images: ghcr.io/tanby-dynamics/opensid
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest
@@ -42,7 +42,7 @@ jobs:
         id: meta_microsite
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/tanby-dynamics/sid-microsite
+          images: ghcr.io/tanby-dynamics/opensid-microsite
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest

@@ -146,7 +146,7 @@ export default function Dashboard() {
                     <p className="text-[var(--text-muted)] text-[15px] mb-5">
                         No accounts yet. Get started by adding one.
                     </p>
-                    <button className="sid-btn sid-btn-primary" onClick={() => setModal({ type: 'create' })}>
+                    <button className="opensid-btn opensid-btn-primary" onClick={() => setModal({ type: 'create' })}>
                         Create your first account
                     </button>
                 </div>
@@ -157,7 +157,7 @@ export default function Dashboard() {
                     <p className="text-[var(--text-muted)] text-[15px] mb-5">
                         No tiles are configured for the dashboard.
                     </p>
-                    <Link to="/settings?section=dashboard" className="sid-btn sid-btn-primary">
+                    <Link to="/settings?section=dashboard" className="opensid-btn opensid-btn-primary">
                         Configure dashboard
                     </Link>
                 </div>
@@ -168,10 +168,10 @@ export default function Dashboard() {
                     <div className="flex justify-between items-center mb-2">
                         <PageLink to="/accounts">All accounts → </PageLink>
                         <div className="flex gap-2">
-                            <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={() => setModal({ type: 'add-transfer' })}>
+                            <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={() => setModal({ type: 'add-transfer' })}>
                                 ↔ New transfer
                             </button>
-                            <button className="sid-btn sid-btn-primary sid-btn-sm" onClick={() => setModal({ type: 'add-transaction-global' })}>
+                            <button className="opensid-btn opensid-btn-primary opensid-btn-sm" onClick={() => setModal({ type: 'add-transaction-global' })}>
                                 New transaction
                             </button>
                         </div>

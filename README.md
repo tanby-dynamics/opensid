@@ -1,4 +1,4 @@
-# Sid
+# OpenSid
 
 An extremely basic, self-hosted expense tracker.
 
@@ -25,7 +25,7 @@ npm run dev
 
 Starts the Vite dev server on `http://localhost:5173` and the Express API on `http://localhost:3000` concurrently. API requests from the client are proxied to the server via `/api`.
 
-The SQLite database (`sid.db`) is created automatically on first server start.
+The SQLite database (`opensid.db`) is created automatically on first server start.
 
 ### Testing
 
@@ -55,8 +55,8 @@ Create `docker-compose.yml` (or copy it from `/docker-compose-example/docker-com
 
 ```yml
 services:
-  sid:
-    image: ghcr.io/tanby-dynamics/sid:latest
+  opensid:
+    image: ghcr.io/tanby-dynamics/opensid:latest
     ports:
       - "3000:3000"
     volumes:
@@ -69,7 +69,7 @@ services:
 Create `.env` (or copy and rename it from `/docker/.env.example`)
 
 ```
-DATABASE_PATH=/data/sid.db
+DATABASE_PATH=/data/opensid.db
 CORS_ORIGIN=*
 ```
 

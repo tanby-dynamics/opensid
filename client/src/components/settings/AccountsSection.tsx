@@ -90,7 +90,7 @@ export default function AccountsSection() {
                 <h2 className="font-display text-[22px] font-bold text-[var(--teak-dark)] m-0">
                     Accounts
                 </h2>
-                <button className="sid-btn sid-btn-primary" onClick={() => setModal({ type: 'create' })}>
+                <button className="opensid-btn opensid-btn-primary" onClick={() => setModal({ type: 'create' })}>
                     + New account
                 </button>
             </div>
@@ -102,7 +102,7 @@ export default function AccountsSection() {
             {!isLoading && accounts.length === 0 && (
                 <div className="text-center py-[60px]">
                     <p className="text-[var(--text-muted)] text-[15px] mb-5">No accounts yet.</p>
-                    <button className="sid-btn sid-btn-primary" onClick={() => setModal({ type: 'create' })}>
+                    <button className="opensid-btn opensid-btn-primary" onClick={() => setModal({ type: 'create' })}>
                         + New account
                     </button>
                 </div>
@@ -140,7 +140,7 @@ export default function AccountsSection() {
                                     <div className="flex gap-0.5 justify-end">
                                         <button
                                             aria-label={`Edit ${account.name}`}
-                                            className="sid-icon-btn"
+                                            className="opensid-icon-btn"
                                             onClick={() => setModal({ type: 'edit', account })}
                                             title='Edit account name'
                                         >
@@ -148,7 +148,7 @@ export default function AccountsSection() {
                                         </button>
                                         <button
                                             aria-label={`Delete ${account.name}`}
-                                            className="sid-icon-btn danger"
+                                            className="opensid-icon-btn danger"
                                             onClick={() => setModal({ type: 'delete', account })}
                                             title='Delete account'
                                         >

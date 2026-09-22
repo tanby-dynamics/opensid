@@ -333,11 +333,11 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                 )}
 
                 <div className="flex justify-end gap-2.5 mt-5">
-                    <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={handleCancel}>
+                    <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={handleCancel}>
                         Cancel
                     </button>
                     <button
-                        className="sid-btn sid-btn-primary sid-btn-sm"
+                        className="opensid-btn opensid-btn-primary opensid-btn-sm"
                         onClick={handleSave}
                         disabled={mutation.isPending}
                     >
@@ -402,7 +402,7 @@ function SortableRow({ item, index, totalCount, label, showGrip, onEdit, onMove,
                 <div className="flex gap-0.5 justify-end">
                     <button
                         aria-label={`Edit ${label}`}
-                        className="sid-icon-btn"
+                        className="opensid-icon-btn"
                         onClick={onEdit}
                         title="Edit"
                     >
@@ -410,7 +410,7 @@ function SortableRow({ item, index, totalCount, label, showGrip, onEdit, onMove,
                     </button>
                     <button
                         aria-label={`Move ${label} up`}
-                        className="sid-icon-btn"
+                        className="opensid-icon-btn"
                         onClick={() => onMove('up')}
                         disabled={index === 0}
                         title="Move up"
@@ -419,7 +419,7 @@ function SortableRow({ item, index, totalCount, label, showGrip, onEdit, onMove,
                     </button>
                     <button
                         aria-label={`Move ${label} down`}
-                        className="sid-icon-btn"
+                        className="opensid-icon-btn"
                         onClick={() => onMove('down')}
                         disabled={index === totalCount - 1}
                         title="Move down"
@@ -428,7 +428,7 @@ function SortableRow({ item, index, totalCount, label, showGrip, onEdit, onMove,
                     </button>
                     <button
                         aria-label={`Remove ${label} from dashboard`}
-                        className="sid-icon-btn danger"
+                        className="opensid-icon-btn danger"
                         onClick={onRemove}
                         title="Remove from dashboard"
                     >
@@ -802,7 +802,7 @@ export default function DashboardSection() {
                     )}
 
                     <button
-                        className="sid-btn sid-btn-ghost sid-btn-sm"
+                        className="opensid-btn opensid-btn-ghost opensid-btn-sm"
                         onClick={handleAdd}
                         disabled={!canAdd || addMutation.isPending}
                     >

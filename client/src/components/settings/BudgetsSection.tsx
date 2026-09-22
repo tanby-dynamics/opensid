@@ -15,7 +15,7 @@ import { getCategories } from '../../api/categories';
 import ConfirmDialog from '../ConfirmDialog';
 import { formatCents } from '../../utils/format';
 
-const inputCls = 'sid-input';
+const inputCls = 'opensid-input';
 
 const EditIcon = () => (
     <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor">
@@ -209,10 +209,10 @@ export default function BudgetsSection() {
                                         <td className="p-3 text-sm text-[var(--text-secondary)] font-body">{b.danger_threshold}%</td>
                                         <td className="p-3 pl-0">
                                             <div className="flex gap-0.5 justify-end">
-                                                <button aria-label={`Edit ${b.category} budget`} className="sid-icon-btn" onClick={() => openEdit(b)} title="Edit">
+                                                <button aria-label={`Edit ${b.category} budget`} className="opensid-icon-btn" onClick={() => openEdit(b)} title="Edit">
                                                     <EditIcon />
                                                 </button>
-                                                <button aria-label={`Delete ${b.category} budget`} className="sid-icon-btn danger" onClick={() => setModal({ type: 'delete', budget: b })} title="Delete">
+                                                <button aria-label={`Delete ${b.category} budget`} className="opensid-icon-btn danger" onClick={() => setModal({ type: 'delete', budget: b })} title="Delete">
                                                     <TrashIcon />
                                                 </button>
                                             </div>
@@ -289,7 +289,7 @@ export default function BudgetsSection() {
                                 />
                             </div>
                             <button
-                                className="sid-btn sid-btn-primary sid-btn-sm self-end"
+                                className="opensid-btn opensid-btn-primary opensid-btn-sm self-end"
                                 onClick={handleAdd}
                                 disabled={createMutation.isPending}
                             >
@@ -359,8 +359,8 @@ export default function BudgetsSection() {
                         </div>
                         {editError && <p className="mt-3 text-[13px] text-[var(--red)]">{editError}</p>}
                         <div className="flex justify-end gap-2 mt-5">
-                            <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={() => setModal(null)}>Cancel</button>
-                            <button className="sid-btn sid-btn-primary sid-btn-sm" onClick={handleEditSave} disabled={updateMutation.isPending}>
+                            <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={() => setModal(null)}>Cancel</button>
+                            <button className="opensid-btn opensid-btn-primary opensid-btn-sm" onClick={handleEditSave} disabled={updateMutation.isPending}>
                                 {updateMutation.isPending ? 'Saving…' : 'Save'}
                             </button>
                         </div>

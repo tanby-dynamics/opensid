@@ -85,9 +85,9 @@ export default function TagPicker({ selectedTags, onChange, allowCreate = true, 
 
     return (
         <div className="flex flex-col gap-[5px]">
-            <label className="sid-label">Tags (optional)</label>
+            <label className="opensid-label">Tags (optional)</label>
             <div
-                className="sid-input flex flex-wrap gap-1 items-center cursor-text min-h-[38px] py-1"
+                className="opensid-input flex flex-wrap gap-1 items-center cursor-text min-h-[38px] py-1"
                 onClick={() => inputRef.current?.focus()}
             >
                 {selectedTags.map((tag) => (
@@ -121,12 +121,12 @@ export default function TagPicker({ selectedTags, onChange, allowCreate = true, 
                 />
             </div>
             {open && (suggestions.length > 0 || showCreate) && (
-                <ul className="sid-suggestions" onMouseDown={handleSuggestionMouseDown}>
+                <ul className="opensid-suggestions" onMouseDown={handleSuggestionMouseDown}>
                     {suggestions.map((tag) => (
                         <li key={tag.id}>
                             <button
                                 type="button"
-                                className="sid-suggestion-item flex items-center gap-2"
+                                className="opensid-suggestion-item flex items-center gap-2"
                                 onMouseDown={() => addTag(tag)}
                             >
                                 <span
@@ -141,7 +141,7 @@ export default function TagPicker({ selectedTags, onChange, allowCreate = true, 
                         <li>
                             <button
                                 type="button"
-                                className="sid-suggestion-item text-[var(--teak)]"
+                                className="opensid-suggestion-item text-[var(--teak)]"
                                 onMouseDown={handleCreate}
                             >
                                 Create "{input.trim()}"

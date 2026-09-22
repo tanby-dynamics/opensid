@@ -2,7 +2,7 @@
 
 ## Summary
 
-Sid runs in a desktop browser today; users often want to add a transaction the moment they pay for something, from their phone. This feature ships Sid as an installable Progressive Web App with offline support. Reads are served from a local cache; writes are queued in IndexedDB while offline and replayed on reconnect. The user can install Sid to the home screen, launch standalone, and capture entries in the field.
+OpenSid runs in a desktop browser today; users often want to add a transaction the moment they pay for something, from their phone. This feature ships OpenSid as an installable Progressive Web App with offline support. Reads are served from a local cache; writes are queued in IndexedDB while offline and replayed on reconnect. The user can install OpenSid to the home screen, launch standalone, and capture entries in the field.
 
 ## Requirements
 
@@ -33,7 +33,7 @@ Sid runs in a desktop browser today; users often want to add a transaction the m
 
 ### Offline queue
 
-A single IndexedDB database `sid-offline` with object stores:
+A single IndexedDB database `opensid-offline` with object stores:
 
 ```ts
 queue: {
@@ -87,7 +87,7 @@ The server is the source of truth. Optimistic updates that conflict (e.g. accoun
 
 ### Auth interaction
 
-Sid is single-user, no auth today. If multi-user (feature 15) lands, the queue is namespaced by user id and cleared on user change. For the MVP single-user case, no namespacing is required.
+OpenSid is single-user, no auth today. If multi-user (feature 15) lands, the queue is namespaced by user id and cleared on user change. For the MVP single-user case, no namespacing is required.
 
 ### Constraints
 
@@ -96,7 +96,7 @@ Sid is single-user, no auth today. If multi-user (feature 15) lands, the queue i
 
 ## User stories
 
-- As a user, I want to install Sid to my phone's home screen, so that it opens like a native app.
+- As a user, I want to install OpenSid to my phone's home screen, so that it opens like a native app.
 - As a user, I want to add a transaction while offline, so that I don't forget purchases away from coverage.
 - As a user, I want my offline entries to sync automatically when I'm back online, so that I don't have to think about it.
 - As a user, I want a clear indicator when something failed to sync, so that I can fix it before it's forgotten.
@@ -146,7 +146,7 @@ sequenceDiagram
 Feature: PWA and offline
 
   Scenario: Install prompt
-    When I open Sid in a supported browser
+    When I open OpenSid in a supported browser
     Then I can install it to the home screen and launch it standalone
 
   Scenario: Offline add
@@ -190,7 +190,7 @@ Feature: PWA and offline
 
 ## Manual test steps
 
-1. Open Sid in Chrome/Edge on a phone. Install to home screen. Launch from the home screen; confirm standalone (no browser chrome).
+1. Open OpenSid in Chrome/Edge on a phone. Install to home screen. Launch from the home screen; confirm standalone (no browser chrome).
 2. Go offline (airplane mode). Add a transaction; confirm the row appears with a "Pending" pill and the footer says "Offline — 1 queued".
 3. Edit that transaction (still offline); confirm the optimistic update.
 4. Re-enable connectivity; confirm the queue replays automatically; the pill clears; balances update.

@@ -11,7 +11,7 @@ export async function exportBackup(): Promise<void> {
 
     const cd = (response.headers['content-disposition'] as string | undefined) ?? '';
     const match = cd.match(/filename="?([^";\n]+)"?/);
-    const filename = match?.[1] ?? 'sid-backup.zip';
+    const filename = match?.[1] ?? 'opensid-backup.zip';
 
     const url = URL.createObjectURL(response.data as Blob);
     const a = document.createElement('a');

@@ -8,7 +8,7 @@ Manual backup export already exists at `/api/backup`. For a self-hosted single-u
 
 - Cron-driven daily backup (configurable schedule)
 - Output written to a configurable directory (env: `BACKUP_DIR`)
-- File naming: `sid-backup-YYYY-MM-DDTHH-mm-ss.json` (optionally `.json.gz` when `BACKUP_GZIP=true`)
+- File naming: `opensid-backup-YYYY-MM-DDTHH-mm-ss.json` (optionally `.json.gz` when `BACKUP_GZIP=true`)
 - Retention: keep the most recent N (`BACKUP_RETAIN`, default 14); delete older
 - Disabled by default (no `BACKUP_DIR` set means feature off)
 - Status surfaced in Settings: last successful, last attempted, last error, file list
@@ -45,7 +45,7 @@ async function runScheduledBackup(): Promise<BackupRunResult> {
     await fs.promises.mkdir(dir, { recursive: true });
     const payload = buildBackupPayload();
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const base = `sid-backup-${stamp}`;
+    const base = `opensid-backup-${stamp}`;
     const path = process.env.BACKUP_GZIP === 'false'
         ? `${dir}/${base}.json`
         : `${dir}/${base}.json.gz`;
@@ -97,7 +97,7 @@ The section is read-only because env vars are how the user configures it (consis
 
 ### Retention
 
-On each successful write, list files in `BACKUP_DIR` matching `sid-backup-*.json{,.gz}`, sort by mtime desc, delete beyond index `N-1`. Failures during pruning are logged but do not fail the backup.
+On each successful write, list files in `BACKUP_DIR` matching `opensid-backup-*.json{,.gz}`, sort by mtime desc, delete beyond index `N-1`. Failures during pruning are logged but do not fail the backup.
 
 ### Failure modes
 
@@ -111,7 +111,7 @@ Existing `/api/backup` (import) handles `.json.gz` by content-type sniffing: if 
 
 ## User stories
 
-- As an operator self-hosting Sid, I want automatic nightly backups, so that disk-loss doesn't lose my data.
+- As an operator self-hosting OpenSid, I want automatic nightly backups, so that disk-loss doesn't lose my data.
 - As an operator, I want old backups pruned automatically, so that my disk doesn't fill up.
 - As a user, I want to see when my last backup happened, so that I trust it's running.
 - As a user, I want a manual "Run now" button, so that I can take a fresh backup before a risky change.
@@ -170,7 +170,7 @@ Feature: Scheduled backups
   Scenario: Daily backup writes a gzipped file
     Given BACKUP_DIR=/data/backups and BACKUP_GZIP defaults to true
     When the cron schedule fires
-    Then a file sid-backup-YYYY-MM-DDTHH-mm-ss.json.gz appears in the directory
+    Then a file opensid-backup-YYYY-MM-DDTHH-mm-ss.json.gz appears in the directory
     And a backup_runs row is inserted with ok=1
 
   Scenario: Retention prunes old files
@@ -194,7 +194,7 @@ Feature: Scheduled backups
     Then I see "Backup is already running"
 
   Scenario: Restore from a gzipped backup
-    Given a sid-backup-….json.gz file
+    Given a opensid-backup-….json.gz file
     When I upload it via the existing Import flow
     Then the file is gunzipped and applied like a regular backup
 ```

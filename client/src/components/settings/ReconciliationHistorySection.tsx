@@ -33,7 +33,7 @@ export default function ReconciliationHistorySection() {
             <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Account</label>
                 <select
-                    className="sid-input"
+                    className="opensid-input"
                     value={selectedAccountId ?? ''}
                     onChange={(e) => setSelectedAccountId(e.target.value ? Number(e.target.value) : null)}
                 >
@@ -132,17 +132,17 @@ function ReconciliationSnapshotDialog({ reconciliation, accountId, onClose }: {
 
     return (
         <div
-            className="sid-modal-overlay anim-fade"
+            className="opensid-modal-overlay anim-fade"
             onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
-            <div className="sid-modal anim-slide-up" style={{ maxWidth: 640 }}>
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body">
+            <div className="opensid-modal anim-slide-up" style={{ maxWidth: 640 }}>
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="font-display text-lg font-bold text-[var(--teak-dark)]">
                             Cleared as of {formatDate(reconciliation.statement_date)}
                         </h2>
-                        <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={onClose}>Close</button>
+                        <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={onClose}>Close</button>
                     </div>
                     <p className="text-sm text-[var(--text-secondary)] mb-4">
                         Statement balance: <strong>{formatCents(reconciliation.statement_balance_cents)}</strong>

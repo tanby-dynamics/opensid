@@ -128,7 +128,7 @@ export default function ViewsDropdown({ scope, accountId, currentFilters, isFilt
     return (
         <div ref={ref} className="relative">
             <button
-                className="sid-btn sid-btn-ghost sid-btn-sm"
+                className="opensid-btn opensid-btn-ghost opensid-btn-sm"
                 onClick={() => setOpen((o) => !o)}
                 aria-label="Saved views"
             >
@@ -325,18 +325,18 @@ function NamePrompt({
 
     return (
         <div
-            className="sid-modal-overlay anim-fade"
+            className="opensid-modal-overlay anim-fade"
             onMouseDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
             }}
         >
-            <div className="sid-modal anim-slide-up">
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body">
+            <div className="opensid-modal anim-slide-up">
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body">
                     <h2 className="font-display text-lg font-bold text-[var(--teak-dark)] mb-3">{title}</h2>
                     <input
                         type="text"
-                        className="sid-input w-full"
+                        className="opensid-input w-full"
                         placeholder="View name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -348,11 +348,11 @@ function NamePrompt({
                         }}
                     />
                     <div className="flex justify-end gap-2 mt-5">
-                        <button className="sid-btn sid-btn-ghost" onClick={onCancel} disabled={busy}>
+                        <button className="opensid-btn opensid-btn-ghost" onClick={onCancel} disabled={busy}>
                             Cancel
                         </button>
                         <button
-                            className="sid-btn sid-btn-primary"
+                            className="opensid-btn opensid-btn-primary"
                             onClick={() => onSubmit(trimmed)}
                             disabled={!canSubmit}
                         >

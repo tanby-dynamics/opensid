@@ -104,7 +104,7 @@ The OCR result itself is not stored on the transaction beyond what the user save
 - As a user, I want to upload a receipt and have a transaction pre-fill, so that I don't type the amount manually.
 - As a user, I want to see which extracted fields are uncertain, so that I focus my review there.
 - As a user, I want to re-run OCR on an old attachment, so that I can fix a missed extraction later.
-- As an operator self-hosting Sid, I want to choose whether OCR runs locally or via an external service, so that I can balance privacy and accuracy.
+- As an operator self-hosting OpenSid, I want to choose whether OCR runs locally or via an external service, so that I can balance privacy and accuracy.
 
 ## Key decisions
 

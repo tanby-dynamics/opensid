@@ -17,7 +17,7 @@ router.get('/', (_req, res) => {
     zip.addFile('backup.json', Buffer.from(json, 'utf-8'));
     const zipBuffer = zip.toBuffer();
 
-    const filename = `sid-backup-${formatTimestamp(new Date())}.zip`;
+    const filename = `opensid-backup-${formatTimestamp(new Date())}.zip`;
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(zipBuffer);

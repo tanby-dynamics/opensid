@@ -1,6 +1,6 @@
 # Add "new transaction" button to the dashboard
 
-https://github.com/tanby-dynamics/sid/issues/32
+https://github.com/tanby-dynamics/opensid/issues/32
 
 ## Summary
 
@@ -18,7 +18,7 @@ The button is only rendered when the dashboard has accounts and at least one til
 
 When the button is tapped, a new modal variant — distinct from the existing per-account `add-transaction` modal — is opened. This variant passes the full list of accounts to `TransactionForm` via a new optional prop, triggering the account selector to render.
 
-The account selector appears at the top of the form, above all other fields, as a labelled `<select>` using the `.sid-input` / `.sid-label` design system classes. It lists all accounts returned by the existing `listAccountsWithBalances` query (already loaded on the dashboard). The placeholder option is "Select account…" with no value.
+The account selector appears at the top of the form, above all other fields, as a labelled `<select>` using the `.opensid-input` / `.opensid-label` design system classes. It lists all accounts returned by the existing `listAccountsWithBalances` query (already loaded on the dashboard). The placeholder option is "Select account…" with no value.
 
 ### Account persistence
 
@@ -179,7 +179,7 @@ Feature: New transaction button on dashboard
    - Add `selectedAccountId` to component state, initialised from `initialAccountId` if provided.
 
 6. **Render the account selector in [TransactionForm.tsx](client/src/components/TransactionForm.tsx)**
-   - When `accounts` prop is present, render a labelled `<select className="sid-input">` above all other form fields.
+   - When `accounts` prop is present, render a labelled `<select className="opensid-input">` above all other form fields.
    - First option: `<option value="">Select account…</option>`.
    - Remaining options: one per entry in `accounts`.
    - Bind to `selectedAccountId` state.

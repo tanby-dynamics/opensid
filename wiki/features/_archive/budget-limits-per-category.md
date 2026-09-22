@@ -2,7 +2,7 @@
 
 ## Summary
 
-Sid currently tracks spending by category but provides no feedback on whether spending is on track. This feature adds per-account, per-category budget limits with configurable warning and danger thresholds. A new Settings section allows users to create, edit, and delete budgets. A new dashboard tile displays each budget as a progress bar showing spend vs. limit for the current period, with colour-coded warnings as limits are approached or exceeded.
+OpenSid currently tracks spending by category but provides no feedback on whether spending is on track. This feature adds per-account, per-category budget limits with configurable warning and danger thresholds. A new Settings section allows users to create, edit, and delete budgets. A new dashboard tile displays each budget as a progress bar showing spend vs. limit for the current period, with colour-coded warnings as limits are approached or exceeded.
 
 ## Requirements
 

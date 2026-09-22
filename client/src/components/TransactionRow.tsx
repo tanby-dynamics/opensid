@@ -157,14 +157,14 @@ export default function TransactionRow({ transaction, isLast, gridTemplate, onEd
                         <button
                             aria-label={`Edit ${transaction.description}`}
                             onClick={(e) => { e.stopPropagation(); onEdit(transaction); }}
-                            className="sid-icon-btn"
+                            className="opensid-icon-btn"
                         >
                             <EditIcon />
                         </button>
                         <button
                             aria-label={`Delete ${transaction.description}`}
                             onClick={(e) => { e.stopPropagation(); onDelete(transaction); }}
-                            className="sid-icon-btn danger"
+                            className="opensid-icon-btn danger"
                         >
                             <TrashIcon />
                         </button>
@@ -217,14 +217,14 @@ export default function TransactionRow({ transaction, isLast, gridTemplate, onEd
                         <button
                             aria-label={`Edit ${transaction.description}`}
                             onClick={(e) => { e.stopPropagation(); onEdit(transaction); }}
-                            className="sid-icon-btn"
+                            className="opensid-icon-btn"
                         >
                             <EditIcon />
                         </button>
                         <button
                             aria-label={`Delete ${transaction.description}`}
                             onClick={(e) => { e.stopPropagation(); onDelete(transaction); }}
-                            className="sid-icon-btn danger"
+                            className="opensid-icon-btn danger"
                         >
                             <TrashIcon />
                         </button>

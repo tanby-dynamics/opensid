@@ -58,7 +58,7 @@ export default function ImportExportSection() {
                     Download a full backup of all accounts, transactions, and attachments (including deleted records) as a ZIP file.
                 </p>
                 <button
-                    className="sid-btn sid-btn-primary"
+                    className="opensid-btn opensid-btn-primary"
                     onClick={handleExport}
                     disabled={exportLoading}
                 >
@@ -72,23 +72,23 @@ export default function ImportExportSection() {
             <div>
                 <span className="text-[13px] font-semibold text-[var(--text-secondary)] font-body mb-1 block">Import</span>
                 <p className="text-[13px] text-[var(--text-muted)] font-body mb-4">
-                    Restore or merge data from a Sid backup ZIP file.
+                    Restore or merge data from a OpenSid backup ZIP file.
                 </p>
 
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-[5px]">
-                        <label className="sid-label">Backup file</label>
+                        <label className="opensid-label">Backup file</label>
                         <input
                             ref={fileInputRef}
                             type="file"
                             accept=".zip"
-                            className="sid-input cursor-pointer"
+                            className="opensid-input cursor-pointer"
                             onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
                         />
                     </div>
 
                     <div className="flex flex-col gap-2.5">
-                        <label className="sid-label">Import mode</label>
+                        <label className="opensid-label">Import mode</label>
                         <label className="flex items-start gap-2.5 cursor-pointer">
                             <input
                                 type="radio"
@@ -125,7 +125,7 @@ export default function ImportExportSection() {
 
                     <div>
                         <button
-                            className="sid-btn sid-btn-primary"
+                            className="opensid-btn opensid-btn-primary"
                             disabled={!selectedFile || importMutation.isPending}
                             onClick={() => importMutation.mutate()}
                         >

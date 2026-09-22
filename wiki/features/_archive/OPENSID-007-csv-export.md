@@ -1,4 +1,4 @@
-# SID-007 — CSV export
+# OPENSID-007 — CSV export
 
 ## Summary
 
@@ -68,4 +68,4 @@ The download is triggered by setting `window.location.href` or using a temporary
 
 3. **Export dialog component** — `client/src/components/ExportDialog.tsx`: modal with "From" and "To" date inputs (type=`date`); client-side validation (`from <= to`, both filled); "Download" button builds the export URL and triggers download via `<a>` tag; "Cancel" closes modal.
 
-4. **Wire into AccountView** — import `ExportDialog` in `AccountView.tsx` (SID-006 task 6); pass `accountId` and `accountName` as props; toggle visibility with local state.
+4. **Wire into AccountView** — import `ExportDialog` in `AccountView.tsx` (OPENSID-006 task 6); pass `accountId` and `accountName` as props; toggle visibility with local state.

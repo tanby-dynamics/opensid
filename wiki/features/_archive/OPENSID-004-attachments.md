@@ -1,4 +1,4 @@
-# SID-004 — Attachments
+# OPENSID-004 — Attachments
 
 ## Summary
 
@@ -65,7 +65,7 @@ sequenceDiagram
 
 ## Implementation tasks
 
-1. **DB schema** — add attachments table to `db.ts` init SQL (depends on SID-001).
+1. **DB schema** — add attachments table to `db.ts` init SQL (depends on OPENSID-001).
 
 2. **Attachment repository** — `server/src/attachments/repository.ts`: `findByTransaction(txId)` (metadata only, exclude blob), `create(txId, filename, mimeType, data)`, `findBlobById(id)` (full row), `softDelete(id)`.
 
@@ -79,4 +79,4 @@ sequenceDiagram
 
 7. **Integration into TransactionForm** — after a successful create/update, call `uploadAttachments` for any pending files; handle upload errors without rolling back the transaction (show warning).
 
-8. **Soft-delete cascade** — confirm that `softDelete` in the transaction repository (SID-003 task 2) correctly sets `deleted_at` on all child attachments.
+8. **Soft-delete cascade** — confirm that `softDelete` in the transaction repository (OPENSID-003 task 2) correctly sets `deleted_at` on all child attachments.

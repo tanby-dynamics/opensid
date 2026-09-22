@@ -140,10 +140,10 @@ export default function RulesSection() {
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="font-display text-lg font-bold text-[var(--teak-dark)]">Rules</h2>
                     <div className="flex gap-2">
-                        <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={() => setShowRunDialog(true)}>
+                        <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={() => setShowRunDialog(true)}>
                             Run rules now
                         </button>
-                        <button className="sid-btn sid-btn-primary sid-btn-sm" onClick={() => setEditingRule('new')}>
+                        <button className="opensid-btn opensid-btn-primary opensid-btn-sm" onClick={() => setEditingRule('new')}>
                             + New rule
                         </button>
                     </div>
@@ -212,14 +212,14 @@ export default function RulesSection() {
                                 </div>
                                 <div className="flex justify-end gap-1">
                                     <button
-                                        className="sid-icon-btn"
+                                        className="opensid-icon-btn"
                                         aria-label={`Edit rule ${rule.name}`}
                                         onClick={() => setEditingRule(rule)}
                                     >
                                         <EditIcon />
                                     </button>
                                     <button
-                                        className="sid-icon-btn danger"
+                                        className="opensid-icon-btn danger"
                                         aria-label={`Delete rule ${rule.name}`}
                                         onClick={() => setDeleteTarget(rule)}
                                     >
@@ -281,26 +281,26 @@ function RunRulesDialog({ accounts, onClose }: { accounts: Account[]; onClose: (
     });
 
     return (
-        <div className="sid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-            <div className="sid-modal anim-slide-up" style={{ maxWidth: 480 }}>
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body flex flex-col gap-4">
+        <div className="opensid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+            <div className="opensid-modal anim-slide-up" style={{ maxWidth: 480 }}>
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body flex flex-col gap-4">
                     <h3 className="font-display text-base font-bold text-[var(--teak-dark)]">Run rules</h3>
 
                     <div className="flex flex-col gap-3">
                         <div className="grid grid-cols-2 gap-3">
                             <div className="flex flex-col gap-1 min-w-0">
-                                <label className="sid-label">From date</label>
-                                <input type="date" className="sid-input w-full" value={from} onChange={(e) => setFrom(e.target.value)} />
+                                <label className="opensid-label">From date</label>
+                                <input type="date" className="opensid-input w-full" value={from} onChange={(e) => setFrom(e.target.value)} />
                             </div>
                             <div className="flex flex-col gap-1 min-w-0">
-                                <label className="sid-label">To date</label>
-                                <input type="date" className="sid-input w-full" value={to} onChange={(e) => setTo(e.target.value)} />
+                                <label className="opensid-label">To date</label>
+                                <input type="date" className="opensid-input w-full" value={to} onChange={(e) => setTo(e.target.value)} />
                             </div>
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="sid-label">Account</label>
-                            <select className="sid-input" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                            <label className="opensid-label">Account</label>
+                            <select className="opensid-input" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
                                 <option value="">All accounts</option>
                                 {accounts.map((a) => (
                                     <option key={a.id} value={String(a.id)}>{a.name}</option>
@@ -336,13 +336,13 @@ function RunRulesDialog({ accounts, onClose }: { accounts: Account[]; onClose: (
 
                     <div className="flex gap-2">
                         <button
-                            className="sid-btn sid-btn-primary"
+                            className="opensid-btn opensid-btn-primary"
                             onClick={() => runMutation.mutate()}
                             disabled={runMutation.isPending}
                         >
                             {runMutation.isPending ? 'Running…' : dryRun ? 'Preview' : 'Apply rules'}
                         </button>
-                        <button className="sid-btn sid-btn-ghost" onClick={onClose}>
+                        <button className="opensid-btn opensid-btn-ghost" onClick={onClose}>
                             Close
                         </button>
                     </div>

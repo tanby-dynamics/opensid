@@ -1,6 +1,6 @@
 services:
-  sid:
-    image: ghcr.io/tanby-dynamics/sid:latest
+  opensid:
+    image: ghcr.io/tanby-dynamics/opensid:latest
     ports:
       - "3000:3000"
     volumes:

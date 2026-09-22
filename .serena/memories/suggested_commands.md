@@ -1,6 +1,6 @@
 # Suggested Commands
 
-All commands run from the repo root `/home/bec/development/tanby-dynamics/sid` unless noted.
+All commands run from the repo root `/home/bec/development/tanby-dynamics/opensid` unless noted.
 
 ## Development
 

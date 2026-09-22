@@ -1,4 +1,4 @@
-# SID-006 — Account view
+# OPENSID-006 — Account view
 
 ## Summary
 
@@ -10,7 +10,7 @@ As a user, I want to see all transactions in an account in one place so that I c
 
 ## REST API
 
-Relies on existing endpoints from SID-002 and SID-003:
+Relies on existing endpoints from OPENSID-002 and OPENSID-003:
 
 - `GET /api/accounts/:id` — account name
 - `GET /api/accounts/:id/transactions` — all non-deleted transactions, `date DESC, id DESC`
@@ -61,16 +61,16 @@ sequenceDiagram
 
 ## Implementation tasks
 
-1. **Account view page** — `client/src/pages/AccountView.tsx`: reads `:id` from route params; fetches account + transactions on mount; computes balance from transaction list; renders header, table, and action buttons. (Depends on SID-003 API client.)
+1. **Account view page** — `client/src/pages/AccountView.tsx`: reads `:id` from route params; fetches account + transactions on mount; computes balance from transaction list; renders header, table, and action buttons. (Depends on OPENSID-003 API client.)
 
-2. **Transaction table** — render `TransactionRow` (SID-003) for each transaction; empty state when list is empty.
+2. **Transaction table** — render `TransactionRow` (OPENSID-003) for each transaction; empty state when list is empty.
 
 3. **Inline edit** — clicking edit icon opens `TransactionForm` in edit mode (modal or route `/accounts/:id/transactions/:txId/edit`); on save, refreshes transaction list.
 
-4. **Inline delete** — opens `ConfirmDialog` (SID-002); on confirm, calls DELETE and removes row; recalculates displayed balance.
+4. **Inline delete** — opens `ConfirmDialog` (OPENSID-002); on confirm, calls DELETE and removes row; recalculates displayed balance.
 
 5. **New transaction button** — opens `TransactionForm` in create mode with `account_id` pre-set; on save, prepends new transaction to list and recalculates balance.
 
-6. **Export CSV button** — opens the export dialog (SID-007); placed in the page header next to "New transaction".
+6. **Export CSV button** — opens the export dialog (OPENSID-007); placed in the page header next to "New transaction".
 
 7. **Back navigation** — breadcrumb or back link to `/` (dashboard).

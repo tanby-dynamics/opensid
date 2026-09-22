@@ -20,7 +20,7 @@ The dev container gives you a pre-configured Node 20 environment without install
    ```
 5. VS Code will prompt to open the forwarded ports. The Vite dev server opens automatically in your browser at `http://localhost:5173`.
 
-The SQLite database (`sid.db`) is created in the container's workspace on first start and persists for the lifetime of the container volume.
+The SQLite database (`opensid.db`) is created in the container's workspace on first start and persists for the lifetime of the container volume.
 
 ---
 

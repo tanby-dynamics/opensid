@@ -81,7 +81,7 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
     const [splitError, setSplitError] = useState('');
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
     const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
-    const [addAnother, setAddAnother] = useState(() => localStorage.getItem('sid:addAnotherTransaction') === 'true');
+    const [addAnother, setAddAnother] = useState(() => localStorage.getItem('opensid:addAnotherTransaction') === 'true');
     const [splitEnabled, setSplitEnabled] = useState(false);
     const [splitRows, setSplitRows] = useState<SplitRow[]>([newSplitRow(), newSplitRow()]);
     const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -237,20 +237,20 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
 
     return (
         <>
-        <div className="sid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) handleCancel(); }}>
-            <div className="sid-modal anim-slide-up" style={{ maxWidth: '460px' }}>
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body">
-                    <h2 className="sid-modal-title">
+        <div className="opensid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) handleCancel(); }}>
+            <div className="opensid-modal anim-slide-up" style={{ maxWidth: '460px' }}>
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body">
+                    <h2 className="opensid-modal-title">
                         {initial ? 'Edit transaction' : 'New transaction'}
                     </h2>
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                         {/* Account selector — only shown when opened from dashboard */}
                         {accounts && (
                             <div className="flex flex-col gap-[5px]">
-                                <label className="sid-label">Account</label>
+                                <label className="opensid-label">Account</label>
                                 <select
-                                    className="sid-input"
+                                    className="opensid-input"
                                     value={selectedAccountId}
                                     onChange={(e) => { setSelectedAccountId(e.target.value); setErrors((p) => ({ ...p, account: undefined })); }}
                                 >
@@ -280,12 +280,12 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                         {/* Category */}
                         <div className="relative">
                             <div className="flex flex-col gap-[5px]">
-                                <label htmlFor="category" className="sid-label">Category</label>
+                                <label htmlFor="category" className="opensid-label">Category</label>
                                 <input
                                     id="category"
                                     type="text"
                                     autoComplete="off"
-                                    className="sid-input"
+                                    className="opensid-input"
                                     placeholder="e.g. Shopping"
                                     value={category}
                                     onChange={(e) => { const v = e.target.value; setCategory(v); if (!descriptionTouched) setDescription(v); setShowSuggestions(true); setErrors((p) => ({ ...p, category: undefined })); }}
@@ -296,10 +296,10 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                                 {errors.category && <span className="text-xs text-[var(--red)]">{errors.category}</span>}
                             </div>
                             {showSuggestions && suggestions.length > 0 && (
-                                <ul className="sid-suggestions">
+                                <ul className="opensid-suggestions">
                                     {suggestions.map((c) => (
                                         <li key={c}>
-                                            <button type="button" onMouseDown={() => handleSuggestionClick(c)} className="sid-suggestion-item">
+                                            <button type="button" onMouseDown={() => handleSuggestionClick(c)} className="opensid-suggestion-item">
                                                 {c}
                                             </button>
                                         </li>
@@ -313,11 +313,11 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
 
                         {/* Description */}
                         <div className="flex flex-col gap-[5px]">
-                            <label htmlFor="description" className="sid-label">Description (optional)</label>
+                            <label htmlFor="description" className="opensid-label">Description (optional)</label>
                             <input
                                 id="description"
                                 type="text"
-                                className="sid-input"
+                                className="opensid-input"
                                 placeholder="Defaults to category if left blank"
                                 value={description}
                                 onChange={(e) => { setDescriptionTouched(true); setDescription(e.target.value); }}
@@ -326,13 +326,13 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
 
                         {/* Amount */}
                         <div className="flex flex-col gap-[5px]">
-                            <label htmlFor="amount" className="sid-label">Amount</label>
+                            <label htmlFor="amount" className="opensid-label">Amount</label>
                             <input
                                 id="amount"
                                 type="number"
                                 min="0.01"
                                 step="0.01"
-                                className="sid-input"
+                                className="opensid-input"
                                 value={amount}
                                 onChange={(e) => { setAmount(e.target.value); setErrors((p) => ({ ...p, amount: undefined })); }}
                             />
@@ -349,7 +349,7 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                                         onChange={(e) => { setSplitEnabled(e.target.checked); setSplitError(''); }}
                                         className="w-4 h-4 accent-[var(--accent)]"
                                     />
-                                    <span className="sid-label mb-0">Split transaction</span>
+                                    <span className="opensid-label mb-0">Split transaction</span>
                                 </label>
                                 {splitEnabled && (
                                     <div className="flex flex-col gap-2 pl-6">
@@ -357,7 +357,7 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                                             <div key={i} className="flex gap-2 items-start">
                                                 <input
                                                     type="text"
-                                                    className="sid-input flex-1"
+                                                    className="opensid-input flex-1"
                                                     placeholder="Category"
                                                     value={row.category}
                                                     onChange={(e) => updateSplitRow(i, 'category', e.target.value)}
@@ -366,7 +366,7 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                                                     type="number"
                                                     min="0.01"
                                                     step="0.01"
-                                                    className="sid-input w-28"
+                                                    className="opensid-input w-28"
                                                     placeholder="Amount"
                                                     value={row.amount}
                                                     onChange={(e) => updateSplitRow(i, 'amount', e.target.value)}
@@ -374,7 +374,7 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                                                 <button
                                                     type="button"
                                                     aria-label={`Remove split row ${i + 1}`}
-                                                    className="sid-icon-btn"
+                                                    className="opensid-icon-btn"
                                                     disabled={splitRows.length <= 2}
                                                     onClick={() => removeSplitRow(i)}
                                                 >
@@ -384,10 +384,10 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                                         ))}
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="flex gap-2">
-                                                <button type="button" className="sid-btn sid-btn-ghost sid-btn-sm" onClick={addSplitRow}>
+                                                <button type="button" className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={addSplitRow}>
                                                     + Add split
                                                 </button>
-                                                <button type="button" className="sid-btn sid-btn-ghost sid-btn-sm" onClick={distributeEvenly}>
+                                                <button type="button" className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={distributeEvenly}>
                                                     Distribute evenly
                                                 </button>
                                             </div>
@@ -406,11 +406,11 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
 
                         {/* Date */}
                         <div className="flex flex-col gap-[5px]">
-                            <label htmlFor="date" className="sid-label">Date</label>
+                            <label htmlFor="date" className="opensid-label">Date</label>
                             <input
                                 id="date"
                                 type="date"
-                                className="sid-input"
+                                className="opensid-input"
                                 value={date}
                                 onChange={(e) => { setDate(e.target.value); setErrors((p) => ({ ...p, date: undefined })); }}
                             />
@@ -419,10 +419,10 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
 
                         {/* Notes */}
                         <div className="flex flex-col gap-[5px]">
-                            <label className="sid-label">Notes (optional)</label>
+                            <label className="opensid-label">Notes (optional)</label>
                             <textarea
                                 rows={2}
-                                className="sid-input resize-y"
+                                className="opensid-input resize-y"
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
                             />
@@ -438,14 +438,14 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                                         onChange={(e) => setRepeat(e.target.checked)}
                                         className="w-4 h-4 accent-[var(--accent)]"
                                     />
-                                    <span className="sid-label mb-0">Repeat</span>
+                                    <span className="opensid-label mb-0">Repeat</span>
                                 </label>
                                 {repeat && (
                                     <div className="flex flex-col gap-3 pl-6">
                                         <div className="flex flex-col gap-[5px]">
-                                            <label className="sid-label">Frequency</label>
+                                            <label className="opensid-label">Frequency</label>
                                             <select
-                                                className="sid-input"
+                                                className="opensid-input"
                                                 value={recurrence}
                                                 onChange={(e) => setRecurrence(e.target.value as RecurrenceFrequency)}
                                             >
@@ -455,10 +455,10 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                                             </select>
                                         </div>
                                         <div className="flex flex-col gap-[5px]">
-                                            <label className="sid-label">End date (optional)</label>
+                                            <label className="opensid-label">End date (optional)</label>
                                             <input
                                                 type="date"
-                                                className="sid-input"
+                                                className="opensid-input"
                                                 value={recurrenceEndDate}
                                                 onChange={(e) => { setRecurrenceEndDate(e.target.value); setErrors((p) => ({ ...p, recurrence_end_date: undefined })); }}
                                             />
@@ -490,16 +490,16 @@ export default function TransactionForm({ initial, accounts, initialAccountId, o
                                         checked={addAnother}
                                         onChange={(e) => {
                                             setAddAnother(e.target.checked);
-                                            localStorage.setItem('sid:addAnotherTransaction', String(e.target.checked));
+                                            localStorage.setItem('opensid:addAnotherTransaction', String(e.target.checked));
                                         }}
                                         className="w-4 h-4 accent-[var(--accent)]"
                                     />
-                                    <span className="sid-label mb-0">Add another</span>
+                                    <span className="opensid-label mb-0">Add another</span>
                                 </label>
                             )}
                             <div className="flex gap-2.5 ml-auto">
-                                <button type="button" className="sid-btn sid-btn-ghost" onClick={handleCancel}>Cancel</button>
-                                <button type="submit" className="sid-btn sid-btn-primary" disabled={splitEnabled && splitRemaining !== 0}>Save transaction</button>
+                                <button type="button" className="opensid-btn opensid-btn-ghost" onClick={handleCancel}>Cancel</button>
+                                <button type="submit" className="opensid-btn opensid-btn-primary" disabled={splitEnabled && splitRemaining !== 0}>Save transaction</button>
                             </div>
                         </div>
                     </form>

@@ -31,12 +31,12 @@ export default function ReconcileSetupDialog({ onSubmit, onCancel }: Props) {
 
     return (
         <div
-            className="sid-modal-overlay anim-fade"
+            className="opensid-modal-overlay anim-fade"
             onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
         >
-            <div className="sid-modal anim-slide-up">
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body">
+            <div className="opensid-modal anim-slide-up">
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body">
                     <h2 className="font-display text-lg font-bold text-[var(--teak-dark)] mb-1">
                         Reconcile account
                     </h2>
@@ -51,7 +51,7 @@ export default function ReconcileSetupDialog({ onSubmit, onCancel }: Props) {
                             </label>
                             <input
                                 type="date"
-                                className="sid-input"
+                                className="opensid-input"
                                 value={statementDate}
                                 max={today}
                                 onChange={(e) => { setStatementDate(e.target.value); setError(''); }}
@@ -66,7 +66,7 @@ export default function ReconcileSetupDialog({ onSubmit, onCancel }: Props) {
                             <input
                                 type="number"
                                 step="0.01"
-                                className="sid-input"
+                                className="opensid-input"
                                 placeholder="e.g. 1500.00"
                                 value={balanceStr}
                                 onChange={(e) => { setBalanceStr(e.target.value); setError(''); }}
@@ -80,10 +80,10 @@ export default function ReconcileSetupDialog({ onSubmit, onCancel }: Props) {
                         )}
 
                         <div className="flex justify-end gap-2 pt-1">
-                            <button type="button" className="sid-btn sid-btn-ghost" onClick={onCancel}>
+                            <button type="button" className="opensid-btn opensid-btn-ghost" onClick={onCancel}>
                                 Cancel
                             </button>
-                            <button type="submit" className="sid-btn sid-btn-primary">
+                            <button type="submit" className="opensid-btn opensid-btn-primary">
                                 Start reconciling
                             </button>
                         </div>

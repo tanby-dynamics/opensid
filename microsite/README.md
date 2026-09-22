@@ -1,6 +1,6 @@
-# Sid Microsite
+# OpenSid Microsite
 
-Static marketing page for Sid, packaged as a standalone container image.
+Static marketing page for OpenSid, packaged as a standalone container image.
 
 ## Contents
 
@@ -16,8 +16,8 @@ Static marketing page for Sid, packaged as a standalone container image.
 From the repository root:
 
 ```bash
-docker build -f microsite/Dockerfile microsite -t sid-microsite:local
-docker run --rm -p 8080:80 sid-microsite:local
+docker build -f microsite/Dockerfile microsite -t opensid-microsite:local
+docker run --rm -p 8080:80 opensid-microsite:local
 ```
 
 Then open:
@@ -41,8 +41,8 @@ Then open:
 
 The GitHub workflow builds and pushes this microsite image on version tags:
 
-- `ghcr.io/tanby-dynamics/sid-microsite:<version>`
-- `ghcr.io/tanby-dynamics/sid-microsite:latest`
+- `ghcr.io/tanby-dynamics/opensid-microsite:<version>`
+- `ghcr.io/tanby-dynamics/opensid-microsite:latest`
 
 Workflow file:
 

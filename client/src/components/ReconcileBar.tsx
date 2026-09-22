@@ -56,14 +56,14 @@ export default function ReconcileBar({
             </div>
             <div className="flex items-center gap-2 shrink-0">
                 <button
-                    className="sid-btn sid-btn-ghost sid-btn-sm"
+                    className="opensid-btn opensid-btn-ghost opensid-btn-sm"
                     style={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}
                     onClick={onExit}
                 >
                     Exit
                 </button>
                 <button
-                    className="sid-btn sid-btn-sm"
+                    className="opensid-btn opensid-btn-sm"
                     style={{
                         background: balanced ? '#16a34a' : 'rgba(255,255,255,0.15)',
                         color: balanced ? 'white' : 'rgba(255,255,255,0.4)',

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sid - Self-hosted expense tracker</title>
-  <meta name="description" content="Sid is an extremely basic, self-hosted expense tracker. Run it yourself with Docker in minutes." />
+  <title>OpenSid - Self-hosted expense tracker</title>
+  <meta name="description" content="OpenSid is an extremely basic, self-hosted expense tracker. Run it yourself with Docker in minutes." />
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -355,13 +355,13 @@
   <div class="wood-header"></div>
 
   <nav>
-    <a class="nav-logo" href="#" aria-label="Sid home"><img src="./logo.svg" alt="Sid" /></a>
+    <a class="nav-logo" href="#" aria-label="OpenSid home"><img src="./logo.svg" alt="OpenSid" /></a>
     <ul class="nav-links">
       <li><a href="#screenshots">Screenshots</a></li>
       <li><a href="#setup">Setup</a></li>
       <li><a href="#support">Support</a></li>
       <li>
-        <a href="https://github.com/tanby-dynamics/sid" target="_blank" rel="noopener" class="btn-nav">
+        <a href="https://github.com/tanby-dynamics/opensid" target="_blank" rel="noopener" class="btn-nav">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub
         </a>
@@ -373,10 +373,10 @@
     <div class="hero-text">
       <span class="hero-eyebrow">Open source · Self-hosted · Docker</span>
       <h1>Track expenses.<br /><em>Own your data.</em></h1>
-      <p class="hero-desc">Sid is an extremely basic, no-fuss expense tracker you run yourself. No subscriptions, no cloud, no lock-in - just a Docker container and a SQLite database you control.</p>
+      <p class="hero-desc">OpenSid is an extremely basic, no-fuss expense tracker you run yourself. No subscriptions, no cloud, no lock-in - just a Docker container and a SQLite database you control.</p>
       <div class="hero-cta">
         <a href="#setup" class="btn-primary">Get started</a>
-        <a href="https://github.com/tanby-dynamics/sid" target="_blank" rel="noopener" class="btn-secondary">
+        <a href="https://github.com/tanby-dynamics/opensid" target="_blank" rel="noopener" class="btn-secondary">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           View on GitHub
         </a>
@@ -384,7 +384,7 @@
     </div>
 
     <div class="hero-visuals" aria-hidden="true">
-      <div class="shot shot-dashboard"><img src="./screenshots/dashboard.png" alt="Sid dashboard" loading="eager" /></div>
+      <div class="shot shot-dashboard"><img src="./screenshots/dashboard.png" alt="OpenSid dashboard" loading="eager" /></div>
       <div class="shot shot-form"><img src="./screenshots/new-transaction.png" alt="New transaction form" loading="eager" /></div>
     </div>
   </section>
@@ -392,7 +392,7 @@
   <div class="gold-stripe"></div>
 
   <section class="features">
-    <div class="section-label">Why Sid</div>
+    <div class="section-label">Why OpenSid</div>
     <h2 class="section-title">Simple by design</h2>
     <div class="features-grid">
       <div class="feature-card">
@@ -454,8 +454,8 @@
         <h3>Create your <code>docker-compose.yml</code></h3>
         <p>Copy this into a new directory on your server:</p>
         <pre><span class="key">services</span><span class="cmd">:
-  </span><span class="key">sid</span><span class="cmd">:
-    </span><span class="key">image</span><span class="cmd">: </span><span class="val">ghcr.io/tanby-dynamics/sid:latest</span><span class="cmd">
+  </span><span class="key">opensid</span><span class="cmd">:
+    </span><span class="key">image</span><span class="cmd">: </span><span class="val">ghcr.io/tanby-dynamics/opensid:latest</span><span class="cmd">
     </span><span class="key">ports</span><span class="cmd">:
       - </span><span class="val">"3000:3000"</span><span class="cmd">
     </span><span class="key">volumes</span><span class="cmd">:
@@ -469,10 +469,10 @@
         <h3>Create <code>.env</code></h3>
         <p>Configure your environment - adjust <code>CORS_ORIGIN</code> to match your domain:</p>
         <pre><span class="comment"># SQLite path inside the container</span>
-<span class="key">DATABASE_PATH</span><span class="cmd">=</span><span class="val">/data/sid.db</span>
+<span class="key">DATABASE_PATH</span><span class="cmd">=</span><span class="val">/data/opensid.db</span>
 
 <span class="comment"># Restrict to your origin, or use * for open</span>
-<span class="key">CORS_ORIGIN</span><span class="cmd">=</span><span class="val">https://sid.example.com</span></pre>
+<span class="key">CORS_ORIGIN</span><span class="cmd">=</span><span class="val">https://opensid.example.com</span></pre>
       </div>
       <div class="setup-step">
         <div class="step-num">3</div>
@@ -480,7 +480,7 @@
         <p>Create the data directory and bring the stack up:</p>
         <pre><span class="dollar">$ </span><span class="cmd">mkdir data
 </span><span class="dollar">$ </span><span class="cmd">docker compose up -d</span></pre>
-        <p style="margin-top:0.75rem">Sid will be available at <code>http://localhost:3000</code>.</p>
+        <p style="margin-top:0.75rem">OpenSid will be available at <code>http://localhost:3000</code>.</p>
       </div>
       <div class="setup-step">
         <div class="step-num" style="background: var(--brown-200, #e0c4a0);">↓</div>
@@ -499,8 +499,8 @@
     <div class="support-inner">
       <div class="section-label">Support</div>
       <h2 class="section-title" style="text-align:center">Need help?</h2>
-      <p>Found a bug or have a feature request? Open an issue on GitHub. Sid is a personal project - responses may take a little while, but all issues are read.</p>
-      <a href="https://github.com/tanby-dynamics/sid/issues" target="_blank" rel="noopener" class="btn-primary" style="display:inline-flex">
+      <p>Found a bug or have a feature request? Open an issue on GitHub. OpenSid is a personal project - responses may take a little while, but all issues are read.</p>
+      <a href="https://github.com/tanby-dynamics/opensid/issues" target="_blank" rel="noopener" class="btn-primary" style="display:inline-flex">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style="flex-shrink:0"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         Raise an issue on GitHub
       </a>
@@ -508,9 +508,9 @@
   </section>
 
   <footer>
-    <div class="footer-brand"><img src="./logo.svg" alt="Sid" /></div>
+    <div class="footer-brand"><img src="./logo.svg" alt="OpenSid" /></div>
     <ul class="footer-links">
-      <li><a href="https://github.com/tanby-dynamics/sid" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://github.com/tanby-dynamics/opensid" target="_blank" rel="noopener">GitHub</a></li>
       <li><a href="https://tanbydynamics.co" target="_blank" rel="noopener">Tanby Dynamics</a></li>
       <li><a href="https://becdetat.com" target="_blank" rel="noopener">becdetat.com</a></li>
     </ul>

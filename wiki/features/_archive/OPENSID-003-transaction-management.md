@@ -1,4 +1,4 @@
-# SID-003 — Transaction management
+# OPENSID-003 — Transaction management
 
 ## Summary
 
@@ -48,7 +48,7 @@ flowchart TD
     C --> D[Enter amount - positive number *]
     D --> E[Pick date *]
     E --> F[Enter notes - optional]
-    F --> G[Attach files - optional - see SID-004]
+    F --> G[Attach files - optional - see OPENSID-004]
     G --> H{Valid?}
     H -- No --> I[Show inline errors]
     H -- Yes --> J[POST or PUT]
@@ -64,7 +64,7 @@ flowchart TD
 
 ## Implementation tasks
 
-1. **DB schema** — add transactions table to `db.ts` init SQL (depends on SID-001).
+1. **DB schema** — add transactions table to `db.ts` init SQL (depends on OPENSID-001).
 
 2. **Transaction repository** — `server/src/transactions/repository.ts`: `findByAccount(accountId)`, `findById(id)`, `create(data)`, `update(id, data)`, `softDelete(id)`. `softDelete` sets `deleted_at` on the transaction and all its attachments in one DB transaction. `create`/`update` derive `amount_cents` from `amount` + `type`.
 
@@ -78,6 +78,6 @@ flowchart TD
 
 7. **Transaction row component** — `client/src/components/TransactionRow.tsx`: displays date, description, type badge, signed amount (colour-coded), edit and delete icons.
 
-8. **Delete confirmation** — reuse `ConfirmDialog` from SID-002; on confirm, calls DELETE and removes row.
+8. **Delete confirmation** — reuse `ConfirmDialog` from OPENSID-002; on confirm, calls DELETE and removes row.
 
 9. **Edit routing** — clicking edit on a transaction opens the form pre-populated; PUT on submit.

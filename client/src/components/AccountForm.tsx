@@ -44,17 +44,17 @@ export default function AccountForm({
     }
 
     return (
-        <div className="sid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-            <div className="sid-modal anim-slide-up">
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body">
-                    <h2 className="sid-modal-title">{title}</h2>
+        <div className="opensid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
+            <div className="opensid-modal anim-slide-up">
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body">
+                    <h2 className="opensid-modal-title">{title}</h2>
                     <form onSubmit={handleSubmit}>
                         <div className="flex flex-col gap-[5px]">
-                            <label className="sid-label">Account name</label>
+                            <label className="opensid-label">Account name</label>
                             <input
                                 type="text"
-                                className="sid-input"
+                                className="opensid-input"
                                 placeholder="e.g. Office expenses"
                                 value={name}
                                 onChange={(e) => { setName(e.target.value); setError(''); }}
@@ -63,10 +63,10 @@ export default function AccountForm({
                             {(error || serverError) && <span className="text-xs text-[var(--red)]">{error || serverError}</span>}
                         </div>
                         <div className="flex flex-col gap-[5px] mt-3">
-                            <label className="sid-label" htmlFor="account-kind">Kind</label>
+                            <label className="opensid-label" htmlFor="account-kind">Kind</label>
                             <select
                                 id="account-kind"
-                                className="sid-input"
+                                className="opensid-input"
                                 value={kind}
                                 onChange={(e) => setKind(e.target.value as AccountKind)}
                             >
@@ -83,8 +83,8 @@ export default function AccountForm({
                             Exclude from net worth
                         </label>
                         <div className="flex justify-end gap-2.5 mt-5">
-                            <button type="button" className="sid-btn sid-btn-ghost" onClick={onCancel}>Cancel</button>
-                            <button type="submit" className="sid-btn sid-btn-primary">Save</button>
+                            <button type="button" className="opensid-btn opensid-btn-ghost" onClick={onCancel}>Cancel</button>
+                            <button type="submit" className="opensid-btn opensid-btn-primary">Save</button>
                         </div>
                     </form>
                 </div>

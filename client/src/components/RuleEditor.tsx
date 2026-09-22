@@ -113,10 +113,10 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
             {/* Name + meta */}
             <div className="flex flex-wrap gap-3">
                 <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
-                    <label className="sid-label">Rule name *</label>
+                    <label className="opensid-label">Rule name *</label>
                     <input
                         type="text"
-                        className="sid-input"
+                        className="opensid-input"
                         maxLength={60}
                         placeholder="e.g. Uber → Transport"
                         value={name}
@@ -125,10 +125,10 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                     />
                 </div>
                 <div className="flex flex-col gap-1 w-24">
-                    <label className="sid-label">Priority</label>
+                    <label className="opensid-label">Priority</label>
                     <input
                         type="number"
-                        className="sid-input"
+                        className="opensid-input"
                         min={1}
                         max={9999}
                         value={priority}
@@ -136,7 +136,7 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                     />
                 </div>
                 <div className="flex flex-col gap-1 justify-end">
-                    <label className="sid-label invisible">Enabled</label>
+                    <label className="opensid-label invisible">Enabled</label>
                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                         <input
                             type="checkbox"
@@ -156,10 +156,10 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                     {/* Description pattern */}
                     <div className="flex flex-wrap gap-2 items-end">
                         <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
-                            <label className="sid-label">Description</label>
+                            <label className="opensid-label">Description</label>
                             <input
                                 type="text"
-                                className={`sid-input ${regexError ? 'border-[var(--red)]' : ''}`}
+                                className={`opensid-input ${regexError ? 'border-[var(--red)]' : ''}`}
                                 placeholder={matchType === 'regex' ? 'e.g. uber.*trip' : 'e.g. uber'}
                                 maxLength={200}
                                 value={descPattern}
@@ -170,9 +170,9 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                             )}
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="sid-label">Match type</label>
+                            <label className="opensid-label">Match type</label>
                             <select
-                                className="sid-input"
+                                className="opensid-input"
                                 value={matchType}
                                 onChange={(e) => setMatchType(e.target.value as 'substring' | 'regex')}
                             >
@@ -185,10 +185,10 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                     {/* Amount range */}
                     <div className="flex flex-wrap gap-2 items-end">
                         <div className="flex flex-col gap-1">
-                            <label className="sid-label">Min amount ($)</label>
+                            <label className="opensid-label">Min amount ($)</label>
                             <input
                                 type="number"
-                                className="sid-input w-28"
+                                className="opensid-input w-28"
                                 min={0}
                                 step={0.01}
                                 placeholder="any"
@@ -197,10 +197,10 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="sid-label">Max amount ($)</label>
+                            <label className="opensid-label">Max amount ($)</label>
                             <input
                                 type="number"
-                                className="sid-input w-28"
+                                className="opensid-input w-28"
                                 min={0}
                                 step={0.01}
                                 placeholder="any"
@@ -209,9 +209,9 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="sid-label">Type</label>
+                            <label className="opensid-label">Type</label>
                             <select
-                                className="sid-input"
+                                className="opensid-input"
                                 value={txType}
                                 onChange={(e) => setTxType(e.target.value)}
                             >
@@ -222,9 +222,9 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                             </select>
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="sid-label">Account</label>
+                            <label className="opensid-label">Account</label>
                             <select
-                                className="sid-input"
+                                className="opensid-input"
                                 value={accountId}
                                 onChange={(e) => setAccountId(e.target.value)}
                             >
@@ -259,10 +259,10 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                 <div className="flex flex-col gap-3">
                     <div className="flex flex-wrap gap-2 items-end">
                         <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
-                            <label className="sid-label">Set category</label>
+                            <label className="opensid-label">Set category</label>
                             <input
                                 list="rule-categories"
-                                className="sid-input"
+                                className="opensid-input"
                                 placeholder="e.g. Transport"
                                 value={setCategory}
                                 onChange={(e) => setSetCategory(e.target.value)}
@@ -272,10 +272,10 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
                             </datalist>
                         </div>
                         <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
-                            <label className="sid-label">Notes prefix</label>
+                            <label className="opensid-label">Notes prefix</label>
                             <input
                                 type="text"
-                                className="sid-input"
+                                className="opensid-input"
                                 placeholder="e.g. [auto]"
                                 value={notesPrefix}
                                 onChange={(e) => setNotesPrefix(e.target.value)}
@@ -285,7 +285,7 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
 
                     {tags.length > 0 && (
                         <div className="flex flex-col gap-1">
-                            <label className="sid-label">Add tags</label>
+                            <label className="opensid-label">Add tags</label>
                             <div className="flex flex-wrap gap-1.5">
                                 {tags.map((tag) => {
                                     const selected = addTagIds.includes(tag.id);
@@ -311,10 +311,10 @@ export default function RuleEditor({ initial, onSave, onCancel, isSaving }: Prop
             </fieldset>
 
             <div className="flex gap-2 pt-1">
-                <button type="submit" className="sid-btn sid-btn-primary" disabled={isSaving || !name.trim() || !!regexError}>
+                <button type="submit" className="opensid-btn opensid-btn-primary" disabled={isSaving || !name.trim() || !!regexError}>
                     {isSaving ? 'Saving…' : 'Save rule'}
                 </button>
-                <button type="button" className="sid-btn sid-btn-ghost" onClick={onCancel}>
+                <button type="button" className="opensid-btn opensid-btn-ghost" onClick={onCancel}>
                     Cancel
                 </button>
             </div>

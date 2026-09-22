@@ -1,4 +1,4 @@
-# Sid Changelog
+# OpenSid Changelog
 
 ## 0.2.0
 

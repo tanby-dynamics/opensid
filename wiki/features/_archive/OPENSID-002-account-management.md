@@ -1,4 +1,4 @@
-# SID-002 — Account management
+# OPENSID-002 — Account management
 
 ## Summary
 
@@ -51,7 +51,7 @@ stateDiagram-v2
 
 ## Implementation tasks
 
-1. **DB schema** — add accounts table to `db.ts` init SQL (depends on SID-001).
+1. **DB schema** — add accounts table to `db.ts` init SQL (depends on OPENSID-001).
 
 2. **Account repository** — `server/src/accounts/repository.ts`: `findAll()`, `findById()`, `create(name)`, `update(id, name)`, `softDelete(id)`. The `softDelete` method runs a single DB transaction setting `deleted_at` on accounts, transactions, and attachments.
 
@@ -59,10 +59,10 @@ stateDiagram-v2
 
 4. **API client** — `client/src/api/accounts.ts`: typed fetch helpers for all 5 endpoints using shared `Account` type.
 
-5. **Account list component** — `client/src/components/AccountCard.tsx`: displays name, balance placeholder (wired in SID-005), edit and delete buttons.
+5. **Account list component** — `client/src/components/AccountCard.tsx`: displays name, balance placeholder (wired in OPENSID-005), edit and delete buttons.
 
 6. **Create/edit form** — modal or inline form with a single name field; client-side validation (non-empty); calls create or update API; closes and refreshes list on success.
 
 7. **Delete confirmation dialog** — reusable `ConfirmDialog` component; shown before delete; calls delete API on confirm; removes card from list on success.
 
-8. **Routing** — add route `/accounts/:id` as placeholder (implemented in SID-006); dashboard links each card to it.
+8. **Routing** — add route `/accounts/:id` as placeholder (implemented in OPENSID-006); dashboard links each card to it.

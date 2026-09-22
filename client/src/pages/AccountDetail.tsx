@@ -98,7 +98,7 @@ function ActionsDropdown({
     return (
         <div ref={ref} className="relative">
             <button
-                className="sid-btn sid-btn-ghost sid-btn-sm"
+                className="opensid-btn opensid-btn-ghost opensid-btn-sm"
                 onClick={() => setOpen((o) => !o)}
                 disabled={isImporting}
             >
@@ -654,16 +654,16 @@ export default function AccountDetail() {
                     isImporting={isImporting || isPreviewLoading}
                 />
                 <button
-                    className="sid-btn sid-btn-ghost sid-btn-sm"
+                    className="opensid-btn opensid-btn-ghost opensid-btn-sm"
                     onClick={() => setModal({ type: 'reconcile-setup' })}
                     disabled={reconcileSetup !== null}
                 >
                     ⊘ Reconcile
                 </button>
-                <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={() => setModal({ type: 'add-transfer' })}>
+                <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={() => setModal({ type: 'add-transfer' })}>
                     ↔ New transfer
                 </button>
-                <button className="sid-btn sid-btn-primary sid-btn-sm" onClick={() => setModal({ type: 'create' })}>
+                <button className="opensid-btn opensid-btn-primary opensid-btn-sm" onClick={() => setModal({ type: 'create' })}>
                     + New transaction
                 </button>
             </div>
@@ -723,7 +723,7 @@ export default function AccountDetail() {
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Search</label>
                                 <input
                                     type="text"
-                                    className="sid-input"
+                                    className="opensid-input"
                                     placeholder="Description, notes or category…"
                                     value={keyword}
                                     onChange={(e) => setKeyword(e.target.value)}
@@ -733,7 +733,7 @@ export default function AccountDetail() {
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">From</label>
                                 <input
                                     type="date"
-                                    className="sid-input"
+                                    className="opensid-input"
                                     value={filterFrom}
                                     onChange={(e) => setFilterFrom(e.target.value)}
                                 />
@@ -742,7 +742,7 @@ export default function AccountDetail() {
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">To</label>
                                 <input
                                     type="date"
-                                    className="sid-input"
+                                    className="opensid-input"
                                     value={filterTo}
                                     onChange={(e) => setFilterTo(e.target.value)}
                                 />
@@ -750,7 +750,7 @@ export default function AccountDetail() {
                             <div className="flex flex-col gap-1">
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Category</label>
                                 <select
-                                    className="sid-input"
+                                    className="opensid-input"
                                     value={filterCategory}
                                     onChange={(e) => setFilterCategory(e.target.value)}
                                 >
@@ -763,7 +763,7 @@ export default function AccountDetail() {
                             <div className="flex flex-col gap-1">
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Type</label>
                                 <select
-                                    className="sid-input"
+                                    className="opensid-input"
                                     value={filterType}
                                     onChange={(e) => setFilterType(e.target.value as 'income' | 'expense' | '')}
                                 >
@@ -777,7 +777,7 @@ export default function AccountDetail() {
                                 <div className="flex items-center gap-1">
                                     <input
                                         type="number"
-                                        className="sid-input w-24"
+                                        className="opensid-input w-24"
                                         placeholder="Min"
                                         min="0"
                                         value={amountMin}
@@ -786,7 +786,7 @@ export default function AccountDetail() {
                                     <span className="text-[var(--text-muted)] text-sm">–</span>
                                     <input
                                         type="number"
-                                        className="sid-input w-24"
+                                        className="opensid-input w-24"
                                         placeholder="Max"
                                         min="0"
                                         value={amountMax}
@@ -797,7 +797,7 @@ export default function AccountDetail() {
                             <div className="flex flex-col gap-1">
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Attachment</label>
                                 <select
-                                    className="sid-input"
+                                    className="opensid-input"
                                     value={filterHasAttachment}
                                     onChange={(e) => setFilterHasAttachment(e.target.value as 'yes' | 'no' | '')}
                                 >
@@ -809,7 +809,7 @@ export default function AccountDetail() {
                             <div className="flex flex-col gap-1">
                                 <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Cleared</label>
                                 <select
-                                    className="sid-input"
+                                    className="opensid-input"
                                     value={filterCleared}
                                     onChange={(e) => setFilterCleared(e.target.value as 'yes' | 'no' | '')}
                                 >
@@ -829,7 +829,7 @@ export default function AccountDetail() {
                             </label>
                             {isFiltered && (
                                 <button
-                                    className="sid-btn sid-btn-ghost sid-btn-sm self-end"
+                                    className="opensid-btn opensid-btn-ghost opensid-btn-sm self-end"
                                     onClick={clearFilters}
                                 >
                                     Clear filters
@@ -914,14 +914,14 @@ export default function AccountDetail() {
                     {isFiltered ? (
                         <>
                             <p className="text-[var(--text-muted)] text-sm mb-4">No transactions match your filters.</p>
-                            <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={clearFilters}>
+                            <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={clearFilters}>
                                 Clear filters
                             </button>
                         </>
                     ) : (
                         <>
                             <p className="text-[var(--text-muted)] text-sm mb-4">No transactions yet.</p>
-                            <button className="sid-btn sid-btn-primary sid-btn-sm" onClick={() => setModal({ type: 'create' })}>
+                            <button className="opensid-btn opensid-btn-primary opensid-btn-sm" onClick={() => setModal({ type: 'create' })}>
                                 Add first transaction
                             </button>
                         </>
@@ -1093,10 +1093,10 @@ export default function AccountDetail() {
                 />
             )}
             {modal?.type === 'import-errors' && (
-                <div className="sid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) setModal(null); }}>
-                    <div className="sid-modal anim-slide-up">
-                        <div className="sid-modal-trim" />
-                        <div className="sid-modal-body">
+                <div className="opensid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) setModal(null); }}>
+                    <div className="opensid-modal anim-slide-up">
+                        <div className="opensid-modal-trim" />
+                        <div className="opensid-modal-body">
                             <h2 className="font-display text-lg font-bold text-[var(--teak-dark)] mb-3">
                                 Import failed
                             </h2>
@@ -1109,7 +1109,7 @@ export default function AccountDetail() {
                                 ))}
                             </ul>
                             <div className="flex justify-end">
-                                <button className="sid-btn sid-btn-ghost" onClick={() => setModal(null)}>Close</button>
+                                <button className="opensid-btn opensid-btn-ghost" onClick={() => setModal(null)}>Close</button>
                             </div>
                         </div>
                     </div>

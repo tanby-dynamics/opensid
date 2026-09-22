@@ -2,7 +2,7 @@
 
 ## Summary
 
-To support easy backups and migration between Sid instances, users can export the entire database as a zipped JSON file (including attachments encoded as Base64 strings) and import that file into any Sid instance. Import supports two modes: **merge** (additive, new IDs generated) and **wipe and restore** (destructive, original IDs preserved). Account name conflicts during merge are resolved by appending a timestamp to the imported account name.
+To support easy backups and migration between OpenSid instances, users can export the entire database as a zipped JSON file (including attachments encoded as Base64 strings) and import that file into any OpenSid instance. Import supports two modes: **merge** (additive, new IDs generated) and **wipe and restore** (destructive, original IDs preserved). Account name conflicts during merge are resolved by appending a timestamp to the imported account name.
 
 ---
 
@@ -12,7 +12,7 @@ To support easy backups and migration between Sid instances, users can export th
 
 A single button in the Settings page triggers a full database export. The server reads all records from the `accounts`, `transactions`, and `attachments` tables — including soft-deleted records — serialises them as JSON, encodes attachment binary data as Base64, and packages the result into a ZIP file. The file is streamed back to the browser as a download.
 
-**Export filename:** `sid-backup-yyyyMMddHHmmss.zip`
+**Export filename:** `opensid-backup-yyyyMMddHHmmss.zip`
 
 **ZIP contents:** a single file `backup.json` with the following structure:
 
@@ -99,10 +99,10 @@ The import is executed inside a single SQLite database transaction. If any step 
 
 ## User stories
 
-- As a Sid user, I want to export my entire database as a ZIP file so that I can keep an offline backup of all my accounts, transactions, and attachments.
-- As a Sid user, I want to import a backup ZIP into a new Sid instance so that I can migrate my data without manually re-entering anything.
-- As a Sid user, I want to choose between merging imported data with my existing data or wiping and fully restoring from a backup, so that I can handle both migration and recovery scenarios.
-- As a Sid user, I want conflicting account names to be automatically renamed during a merge import so that I don't lose any data from either instance.
+- As a OpenSid user, I want to export my entire database as a ZIP file so that I can keep an offline backup of all my accounts, transactions, and attachments.
+- As a OpenSid user, I want to import a backup ZIP into a new OpenSid instance so that I can migrate my data without manually re-entering anything.
+- As a OpenSid user, I want to choose between merging imported data with my existing data or wiping and fully restoring from a backup, so that I can handle both migration and recovery scenarios.
+- As a OpenSid user, I want conflicting account names to be automatically renamed during a merge import so that I don't lose any data from either instance.
 
 ---
 
@@ -127,7 +127,7 @@ sequenceDiagram
     API->>API: Encode attachment data as Base64
     API->>API: Serialise to backup.json
     API->>API: Package into ZIP
-    API-->>Settings: ZIP binary (attachment; filename=sid-backup-*.zip)
+    API-->>Settings: ZIP binary (attachment; filename=opensid-backup-*.zip)
     Settings->>Settings: Trigger browser download
     Settings->>Settings: Hide spinner
 ```
@@ -198,7 +198,7 @@ Feature: Export database
     Given I am on the Settings page
     When I click "Export" in the Import / Export section
     Then the export button shows a loading spinner
-    And a ZIP file named "sid-backup-<timestamp>.zip" is downloaded
+    And a ZIP file named "opensid-backup-<timestamp>.zip" is downloaded
     And the ZIP contains a file named "backup.json"
     And backup.json includes all accounts, including soft-deleted ones
     And backup.json includes all transactions, including soft-deleted ones
@@ -213,7 +213,7 @@ Feature: Import database — merge
 
   Scenario: Successful merge import
     Given I am on the Settings page
-    And I have selected a valid Sid backup ZIP
+    And I have selected a valid OpenSid backup ZIP
     And I have selected "Merge"
     When I click "Import"
     Then all accounts from the backup are added to the existing accounts
@@ -239,7 +239,7 @@ Feature: Import database — wipe and restore
 
   Scenario: Successful wipe and restore
     Given I am on the Settings page
-    And I have selected a valid Sid backup ZIP
+    And I have selected a valid OpenSid backup ZIP
     And I have selected "Wipe and restore"
     When I confirm the warning and click "Import"
     Then all existing accounts, transactions, and attachments are removed
@@ -280,22 +280,22 @@ Feature: Import validation
 
 ### Export
 
-1. Open Sid in a browser and navigate to **Settings** using the gear icon.
+1. Open OpenSid in a browser and navigate to **Settings** using the gear icon.
 2. In the left sidebar, click **Import / Export**.
 3. Click the **Export** button.
 4. Confirm the button shows a spinner while the download prepares.
-5. Confirm a file named `sid-backup-<timestamp>.zip` downloads to your computer.
+5. Confirm a file named `opensid-backup-<timestamp>.zip` downloads to your computer.
 6. Open the ZIP and verify it contains a file named `backup.json`.
-7. Open `backup.json` and verify it contains `accounts`, `transactions`, and `attachments` arrays matching the data in Sid.
+7. Open `backup.json` and verify it contains `accounts`, `transactions`, and `attachments` arrays matching the data in OpenSid.
 8. For an account with attachments, find the attachment entry in the JSON and confirm the `data` field is a non-empty Base64 string.
 9. Confirm any soft-deleted accounts or transactions appear in the JSON with a non-null `deleted_at`.
 
 ### Import — merge
 
-1. Have a destination Sid instance (can be a freshly started one).
+1. Have a destination OpenSid instance (can be a freshly started one).
 2. Note the current accounts in the destination.
 3. Navigate to **Settings → Import / Export**.
-4. Click **Choose file** and select a valid Sid backup ZIP.
+4. Click **Choose file** and select a valid OpenSid backup ZIP.
 5. Select **Merge**.
 6. Click **Import**.
 7. Confirm a success toast appears showing the number of imported accounts, transactions, and attachments.
@@ -305,8 +305,8 @@ Feature: Import validation
 
 ### Import — wipe and restore
 
-1. Navigate to **Settings → Import / Export** on a Sid instance that has existing data.
-2. Click **Choose file** and select a valid Sid backup ZIP.
+1. Navigate to **Settings → Import / Export** on a OpenSid instance that has existing data.
+2. Click **Choose file** and select a valid OpenSid backup ZIP.
 3. Select **Wipe and restore**.
 4. Confirm a warning message is displayed.
 5. Click the confirmation/import button.
@@ -349,7 +349,7 @@ Follow the query style in `server/src/export/routes.ts` (direct `db.prepare(...)
 
 **New file:** `server/src/backup/exportRoutes.ts`
 
-`GET /` — calls `exportAll()`, serialises to JSON, packages into a ZIP using `adm-zip`, sets headers `Content-Type: application/zip` and `Content-Disposition: attachment; filename="sid-backup-<timestamp>.zip"`, sends the ZIP buffer. Timestamp format: `yyyyMMddHHmmss`.
+`GET /` — calls `exportAll()`, serialises to JSON, packages into a ZIP using `adm-zip`, sets headers `Content-Type: application/zip` and `Content-Disposition: attachment; filename="opensid-backup-<timestamp>.zip"`, sends the ZIP buffer. Timestamp format: `yyyyMMddHHmmss`.
 
 Follow the response pattern in `server/src/export/routes.ts`.
 

@@ -1,4 +1,4 @@
-# SID-001 — Dev environment setup
+# OPENSID-001 — Dev environment setup
 
 ## Summary
 
@@ -36,7 +36,7 @@ sequenceDiagram
     Dev->>Root: npm run dev
     Root->>Server: start (tsx watch)
     Root->>Client: start (vite)
-    Server->>SQLite: open sid.db
+    Server->>SQLite: open opensid.db
     SQLite-->>Server: connection
     Server->>SQLite: run schema init SQL (IF NOT EXISTS)
     Server-->>Dev: listening on :3000
@@ -48,7 +48,7 @@ sequenceDiagram
 
 2. **Server scaffold** — `npm init` in `/server`; install `express`, `better-sqlite3`, `cors`; install dev deps `typescript`, `tsx`, `@types/express`, `@types/better-sqlite3`, `@types/cors`, `@types/node`; add `tsconfig.json`; add `dev` script using `tsx watch src/index.ts`.
 
-3. **DB init** — create `server/src/db.ts` that opens `sid.db` (path configurable via `DATABASE_PATH` env var) and runs `CREATE TABLE IF NOT EXISTS` statements for `accounts`, `transactions`, and `attachments` (see data model in [index.md](index.md)).
+3. **DB init** — create `server/src/db.ts` that opens `opensid.db` (path configurable via `DATABASE_PATH` env var) and runs `CREATE TABLE IF NOT EXISTS` statements for `accounts`, `transactions`, and `attachments` (see data model in [index.md](index.md)).
 
 4. **Express entry point** — create `server/src/index.ts` with `cors()` middleware, JSON body parser, placeholder `/api/health` route, and import of `db.ts` to trigger init on start.
 

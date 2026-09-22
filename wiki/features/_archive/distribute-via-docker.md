@@ -2,7 +2,7 @@
 
 ## Summary
 
-Package Sid as a single Docker image that serves both the React frontend (as compiled static files) and the Express API from one Node process on one port. A GitHub Actions workflow publishes multi-platform images to GHCR on every Git tag push. A `docker/` directory provides a ready-to-use `docker-compose.yml` and `.env.example` for self-hosters.
+Package OpenSid as a single Docker image that serves both the React frontend (as compiled static files) and the Express API from one Node process on one port. A GitHub Actions workflow publishes multi-platform images to GHCR on every Git tag push. A `docker/` directory provides a ready-to-use `docker-compose.yml` and `.env.example` for self-hosters.
 
 ---
 
@@ -56,8 +56,8 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 
 ```yaml
 services:
-  sid:
-    image: ghcr.io/tanby-dynamics/sid:latest
+  opensid:
+    image: ghcr.io/tanby-dynamics/opensid:latest
     ports:
       - "3000:3000"
     volumes:
@@ -72,11 +72,11 @@ The `./data` host directory persists the SQLite database across container restar
 ### Environment variables (`docker/.env.example`)
 
 ```
-# Path inside the container where sid.db is stored.
+# Path inside the container where opensid.db is stored.
 # Must match the volume mount in docker-compose.yml.
-DATABASE_PATH=/data/sid.db
+DATABASE_PATH=/data/opensid.db
 
-# Restrict CORS to a specific origin, e.g. https://sid.example.com
+# Restrict CORS to a specific origin, e.g. https://opensid.example.com
 # Leave unset or use * to allow all origins.
 CORS_ORIGIN=*
 ```
@@ -89,8 +89,8 @@ The `docker/.env` file (user-created from the example) is gitignored.
 - **Platforms:** `linux/amd64`, `linux/arm64`
 - **Registry:** `ghcr.io`, authenticated via `GITHUB_TOKEN`
 - **Image tags:**
-  - `ghcr.io/tanby-dynamics/sid:latest`
-  - `ghcr.io/tanby-dynamics/sid:<git-tag>` (e.g. `v1.2.0`)
+  - `ghcr.io/tanby-dynamics/opensid:latest`
+  - `ghcr.io/tanby-dynamics/opensid:<git-tag>` (e.g. `v1.2.0`)
 - **Steps:** checkout → QEMU setup → Buildx setup → GHCR login → extract metadata → build and push
 
 ### README additions
@@ -116,9 +116,9 @@ A "Releasing a new version" section documents the tag-and-push flow. A "Self-hos
 
 ## User stories
 
-**As a maintainer,** I want to push a Git tag and have a versioned Docker image automatically published to GHCR, so that I can release Sid without manual build steps.
+**As a maintainer,** I want to push a Git tag and have a versioned Docker image automatically published to GHCR, so that I can release OpenSid without manual build steps.
 
-**As a self-hoster,** I want to run Sid with `docker compose up` using a provided `docker-compose.yml`, so that I can host the app without a local Node.js environment or build toolchain.
+**As a self-hoster,** I want to run OpenSid with `docker compose up` using a provided `docker-compose.yml`, so that I can host the app without a local Node.js environment or build toolchain.
 
 ---
 
@@ -126,7 +126,7 @@ A "Releasing a new version" section documents the tag-and-push flow. A "Self-hos
 
 ### Local image build and smoke test
 
-1. From the repo root, run `docker build -t sid:local .`
+1. From the repo root, run `docker build -t opensid:local .`
 2. Create `docker/data/` directory and a minimal `.env` file copied from `docker/.env.example`
 3. Run `docker compose -f docker/docker-compose.yml up`
 4. Open `http://localhost:3000` — the React app should load
@@ -144,13 +144,13 @@ A "Releasing a new version" section documents the tag-and-push flow. A "Self-hos
 
 ### Multi-platform (if Docker Buildx available locally)
 
-10. Run `docker buildx build --platform linux/arm64 -t sid:arm64-test --load .` — image should build without error
+10. Run `docker buildx build --platform linux/arm64 -t opensid:arm64-test --load .` — image should build without error
 
 ### GH Actions publish
 
 11. Push a tag: `git tag v0.0.1-test && git push origin v0.0.1-test`
-12. Check the Actions tab — workflow should trigger, complete successfully, and publish `ghcr.io/tanby-dynamics/sid:v0.0.1-test` and `ghcr.io/tanby-dynamics/sid:latest` to GHCR
-13. Pull and run the published image: `docker pull ghcr.io/tanby-dynamics/sid:v0.0.1-test`
+12. Check the Actions tab — workflow should trigger, complete successfully, and publish `ghcr.io/tanby-dynamics/opensid:v0.0.1-test` and `ghcr.io/tanby-dynamics/opensid:latest` to GHCR
+13. Pull and run the published image: `docker pull ghcr.io/tanby-dynamics/opensid:v0.0.1-test`
 
 ---
 
@@ -170,13 +170,13 @@ No dependencies.
 
 **File:** `server/src/index.ts`
 
-Update the existing `app.use(cors())` call (added in SID-001) to read `CORS_ORIGIN`:
+Update the existing `app.use(cors())` call (added in OPENSID-001) to read `CORS_ORIGIN`:
 
 ```ts
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 ```
 
-Depends on: SID-001 server scaffold.
+Depends on: OPENSID-001 server scaffold.
 
 ---
 
@@ -186,7 +186,7 @@ Depends on: SID-001 server scaffold.
 
 Add `import fs from 'fs'` and `import path from 'path'`. After all `/api` route registrations, add the static file serving block (see Detailed description). The catch-all must be last to avoid intercepting API routes.
 
-Depends on: task 1 (so `__dirname` is known to resolve correctly in compiled JS), SID-001.
+Depends on: task 1 (so `__dirname` is known to resolve correctly in compiled JS), OPENSID-001.
 
 ---
 
@@ -206,7 +206,7 @@ Depends on: tasks 1, 3.
 
 **Files:** `docker/docker-compose.yml`, `docker/.env.example`
 
-See content in Detailed description above. Add `docker/.env` to the root `.gitignore` (the existing `.gitignore` from SID-001 covers `.env` at root; confirm it also covers `docker/.env`, or add an explicit entry).
+See content in Detailed description above. Add `docker/.env` to the root `.gitignore` (the existing `.gitignore` from OPENSID-001 covers `.env` at root; confirm it also covers `docker/.env`, or add an explicit entry).
 
 Depends on: task 4.
 

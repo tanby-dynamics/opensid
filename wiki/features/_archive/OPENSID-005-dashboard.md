@@ -1,4 +1,4 @@
-# SID-005 — Dashboard
+# OPENSID-005 — Dashboard
 
 ## Summary
 
@@ -43,7 +43,7 @@ The backend computes `balance_cents` via `SUM(amount_cents)` and fetches the las
 ```mermaid
 graph TD
     subgraph Dashboard
-        H[Header: Sid + New Account button]
+        H[Header: OpenSid + New Account button]
         subgraph Cards[Account cards - responsive grid]
             C1[Account card 1]
             C2[Account card 2]
@@ -82,10 +82,10 @@ graph TD
 
 3. **Dashboard page** — `client/src/pages/Dashboard.tsx`: fetches on mount; renders responsive CSS grid of `AccountCard` components; shows empty state when no accounts.
 
-4. **AccountCard component** — `client/src/components/AccountCard.tsx` (extend from SID-002): add balance display and recent transaction list; link account name / "View all" to `/accounts/:id`; include edit and delete affordances (wired to SID-002 handlers).
+4. **AccountCard component** — `client/src/components/AccountCard.tsx` (extend from OPENSID-002): add balance display and recent transaction list; link account name / "View all" to `/accounts/:id`; include edit and delete affordances (wired to OPENSID-002 handlers).
 
 5. **Balance formatter** — shared utility `client/src/utils/currency.ts`: converts cents to `$0.00` string; accepts negative values and returns signed display string.
 
 6. **Skeleton loader** — simple placeholder cards shown while `getDashboard()` is in-flight.
 
-7. **App routing** — set up React Router (`react-router-dom`) with `/` → Dashboard and `/accounts/:id` → AccountView (SID-006); add router to `main.tsx`.
+7. **App routing** — set up React Router (`react-router-dom`) with `/` → Dashboard and `/accounts/:id` → AccountView (OPENSID-006); add router to `main.tsx`.

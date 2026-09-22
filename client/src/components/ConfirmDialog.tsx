@@ -15,10 +15,10 @@ export default function ConfirmDialog({ message, onConfirm, onCancel, confirmLab
     }, [onCancel]);
 
     return (
-        <div className="sid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-            <div className="sid-modal anim-slide-up">
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body">
+        <div className="opensid-modal-overlay anim-fade" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
+            <div className="opensid-modal anim-slide-up">
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body">
                     <h2 className="font-display text-lg font-bold text-[var(--teak-dark)] mb-3">
                         Are you sure?
                     </h2>
@@ -26,8 +26,8 @@ export default function ConfirmDialog({ message, onConfirm, onCancel, confirmLab
                         {message}
                     </p>
                     <div className="flex justify-end gap-2.5">
-                        <button className="sid-btn sid-btn-ghost" onClick={onCancel}>Cancel</button>
-                        <button className="sid-btn sid-btn-danger" onClick={onConfirm}>{confirmLabel}</button>
+                        <button className="opensid-btn opensid-btn-ghost" onClick={onCancel}>Cancel</button>
+                        <button className="opensid-btn opensid-btn-danger" onClick={onConfirm}>{confirmLabel}</button>
                     </div>
                 </div>
             </div>

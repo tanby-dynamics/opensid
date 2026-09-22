@@ -1,13 +1,13 @@
-# Sid — Agent guidelines
+# OpenSid — Agent guidelines
 
 ## Application overview
 
-Sid is a self-hosted, single-user expense tracker. It is a TypeScript monorepo with two workspaces:
+OpenSid is a self-hosted, single-user expense tracker. It is a TypeScript monorepo with two workspaces:
 
 - `/client` — Vite + React + TypeScript + TailwindCSS, served on port 5173. Proxies `/api` requests to the server.
 - `/server` — Node + Express + TypeScript + better-sqlite3, served on port 3000.
 
-The database is SQLite (`sid.db`). All deletes are soft-deletes: accounts, transactions, and attachments each have a `deleted_at` timestamp. Deleting an account cascades soft-deletes to its transactions and their attachments.
+The database is SQLite (`opensid.db`). All deletes are soft-deletes: accounts, transactions, and attachments each have a `deleted_at` timestamp. Deleting an account cascades soft-deletes to its transactions and their attachments.
 
 ### Data model (abbreviated)
 

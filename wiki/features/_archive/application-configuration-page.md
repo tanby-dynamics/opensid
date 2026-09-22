@@ -14,7 +14,7 @@ A gear icon is added to the right side of the Dashboard header, linking to `/set
 
 ### Page layout
 
-The settings page follows the same header pattern as the Dashboard (sticky, with the Sid wordmark and stripe). Below the header, the page uses a two-column layout:
+The settings page follows the same header pattern as the Dashboard (sticky, with the OpenSid wordmark and stripe). Below the header, the page uses a two-column layout:
 
 - **Sidebar** (left, fixed-width ~200px): vertical list of section links. "Accounts" is the only section initially, shown as active. Additional sections will be added here in future.
 - **Content panel** (right, flex-grow): renders the active section's content.
@@ -29,7 +29,7 @@ The account list is displayed as a simple table/list with two columns:
 - **Account name** (text)
 - **Transactions** (integer count of non-deleted transactions)
 
-Each row has two icon buttons on the right: edit (pencil) and delete (trash, danger style), matching the existing `sid-icon-btn` pattern.
+Each row has two icon buttons on the right: edit (pencil) and delete (trash, danger style), matching the existing `opensid-icon-btn` pattern.
 
 The list is sorted alphabetically by name (consistent with the server's `ORDER BY name`).
 
@@ -400,7 +400,7 @@ Tasks are ordered by dependency. Each task notes the primary files to modify and
 
 **Task 7 — Create Settings page shell with sidebar layout**
 - File: `client/src/pages/Settings.tsx` (new file)
-- Follows page structure of `Dashboard.tsx`: sticky header (Sid wordmark + back/home link), then a two-column layout (sidebar ~200px + content panel flex-grow).
+- Follows page structure of `Dashboard.tsx`: sticky header (OpenSid wordmark + back/home link), then a two-column layout (sidebar ~200px + content panel flex-grow).
 - Sidebar renders a nav list; initial item is "Accounts" (always active for now).
 - Content panel renders `<AccountsSection />` (Task 8).
 
@@ -425,7 +425,7 @@ Tasks are ordered by dependency. Each task notes the primary files to modify and
 **Task 10 — Add gear icon and link to Dashboard header**
 - File: `client/src/pages/Dashboard.tsx`
 - Add a `GearIcon` SVG component (inline, similar to existing icon components in the file).
-- Add a `<Link to="/settings">` wrapping a `sid-icon-btn` with the gear icon, placed in the header's right-side flex container (before the "+ New account" button).
+- Add a `<Link to="/settings">` wrapping a `opensid-icon-btn` with the gear icon, placed in the header's right-side flex container (before the "+ New account" button).
 
 ### Client — Dashboard cleanup
 

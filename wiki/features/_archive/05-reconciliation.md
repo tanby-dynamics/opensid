@@ -2,7 +2,7 @@
 
 ## Summary
 
-When the user checks their bank statement, they want to confirm Sid's records agree with the bank. This feature adds a per-transaction **cleared** state and a per-account **statement reconciliation** flow: the user enters the statement's closing balance and date, ticks off transactions that appear on the statement, and Sid shows running and target totals so they know when the books balance. It catches missed transactions and silent typos that drift the account balance from reality.
+When the user checks their bank statement, they want to confirm OpenSid's records agree with the bank. This feature adds a per-transaction **cleared** state and a per-account **statement reconciliation** flow: the user enters the statement's closing balance and date, ticks off transactions that appear on the statement, and OpenSid shows running and target totals so they know when the books balance. It catches missed transactions and silent typos that drift the account balance from reality.
 
 ## Requirements
 
@@ -72,7 +72,7 @@ A new Settings section lists past reconciliations per account: date, statement b
 
 ## User stories
 
-- As a user, I want to tick off transactions that match my bank statement, so that I can trust Sid's balance.
+- As a user, I want to tick off transactions that match my bank statement, so that I can trust OpenSid's balance.
 - As a user, I want a "you're off by $X" indicator while reconciling, so that I know when I'm done.
 - As a user, I want to filter to uncleared transactions, so that I can chase down stale items.
 - As a user, I want past reconciliations recorded, so that I have an audit trail of when the account agreed with the bank.

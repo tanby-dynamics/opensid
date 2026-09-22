@@ -97,10 +97,10 @@ export default function TagsSection() {
                 {/* Create form */}
                 <form onSubmit={handleCreate} className="flex items-end gap-2 mb-4">
                     <div className="flex flex-col gap-1 flex-1">
-                        <label className="sid-label">New tag name</label>
+                        <label className="opensid-label">New tag name</label>
                         <input
                             type="text"
-                            className="sid-input"
+                            className="opensid-input"
                             placeholder="e.g. work"
                             maxLength={40}
                             value={newName}
@@ -108,7 +108,7 @@ export default function TagsSection() {
                         />
                     </div>
                     <div className="flex flex-col gap-1">
-                        <label className="sid-label">Colour (optional)</label>
+                        <label className="opensid-label">Colour (optional)</label>
                         <div className="flex items-center gap-2">
                             <input
                                 type="color"
@@ -123,7 +123,7 @@ export default function TagsSection() {
                             )}
                         </div>
                     </div>
-                    <button type="submit" className="sid-btn sid-btn-primary" disabled={!newName.trim() || createMutation.isPending}>
+                    <button type="submit" className="opensid-btn opensid-btn-primary" disabled={!newName.trim() || createMutation.isPending}>
                         Add tag
                     </button>
                 </form>
@@ -139,7 +139,7 @@ export default function TagsSection() {
                                     <>
                                         <input
                                             type="text"
-                                            className="sid-input flex-1 text-[13px]"
+                                            className="opensid-input flex-1 text-[13px]"
                                             value={editState.name}
                                             maxLength={40}
                                             onChange={(e) => setEditState({ ...editState, name: e.target.value })}
@@ -152,13 +152,13 @@ export default function TagsSection() {
                                             onChange={(e) => setEditState({ ...editState, colour: e.target.value })}
                                         />
                                         <button
-                                            className="sid-btn sid-btn-primary sid-btn-sm"
+                                            className="opensid-btn opensid-btn-primary opensid-btn-sm"
                                             onClick={() => updateMutation.mutate(editState)}
                                             disabled={!editState.name.trim()}
                                         >
                                             Save
                                         </button>
-                                        <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={() => setEditState(null)}>
+                                        <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={() => setEditState(null)}>
                                             Cancel
                                         </button>
                                     </>
@@ -168,14 +168,14 @@ export default function TagsSection() {
                                         <span className="text-xs text-[var(--text-muted)] ml-1">{tag.usage_count} use{tag.usage_count !== 1 ? 's' : ''}</span>
                                         <div className="ml-auto flex gap-1">
                                             <button
-                                                className="sid-icon-btn"
+                                                className="opensid-icon-btn"
                                                 aria-label={`Edit tag ${tag.name}`}
                                                 onClick={() => setEditState({ id: tag.id, name: tag.name, colour: tag.colour ?? '' })}
                                             >
                                                 <EditIcon />
                                             </button>
                                             <button
-                                                className="sid-icon-btn danger"
+                                                className="opensid-icon-btn danger"
                                                 aria-label={`Delete tag ${tag.name}`}
                                                 onClick={() => setDeleteTarget(tag)}
                                             >
@@ -226,16 +226,16 @@ function SpendByTagReport() {
 
             <div className="flex flex-wrap gap-3 mb-4">
                 <div className="flex flex-col gap-1">
-                    <label className="sid-label">From</label>
-                    <input type="date" className="sid-input" value={from} onChange={(e) => setFrom(e.target.value)} />
+                    <label className="opensid-label">From</label>
+                    <input type="date" className="opensid-input" value={from} onChange={(e) => setFrom(e.target.value)} />
                 </div>
                 <div className="flex flex-col gap-1">
-                    <label className="sid-label">To</label>
-                    <input type="date" className="sid-input" value={to} onChange={(e) => setTo(e.target.value)} />
+                    <label className="opensid-label">To</label>
+                    <input type="date" className="opensid-input" value={to} onChange={(e) => setTo(e.target.value)} />
                 </div>
                 <div className="flex flex-col gap-1">
-                    <label className="sid-label">Account</label>
-                    <select className="sid-input" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                    <label className="opensid-label">Account</label>
+                    <select className="opensid-input" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
                         <option value="">All accounts</option>
                         {accounts.map((a) => (
                             <option key={a.id} value={String(a.id)}>{a.name}</option>

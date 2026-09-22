@@ -60,13 +60,13 @@ body {
   background: linear-gradient(90deg, var(--teak) 0%, var(--teak-light) 40%, var(--teak) 100%);
 }
 
-.sid-header-stripe {
+.opensid-header-stripe {
   height: 3px;
   background: linear-gradient(90deg, var(--yellow) 0%, var(--yellow-dark) 100%);
 }
 
 /* Buttons */
-.sid-btn {
+.opensid-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -79,28 +79,28 @@ body {
   border: none;
   transition: all 0.15s ease;
 }
-.sid-btn-sm { font-size: 12px; padding: 6px 14px; }
-.sid-btn-primary {
+.opensid-btn-sm { font-size: 12px; padding: 6px 14px; }
+.opensid-btn-primary {
   background: var(--yellow);
   color: var(--teak-dark);
   box-shadow: 0 2px 0 var(--yellow-dark), 0 3px 8px rgba(232,185,58,0.3);
 }
-.sid-btn-primary:hover:not(:disabled) {
+.opensid-btn-primary:hover:not(:disabled) {
   background: var(--yellow-dark);
   color: #fff;
 }
-.sid-btn-ghost {
+.opensid-btn-ghost {
   background: transparent;
   color: var(--text-secondary);
   border: 1.5px solid var(--border);
 }
-.sid-btn-ghost:hover:not(:disabled) { background: var(--cream); }
-.sid-btn-danger { background: var(--red); color: #fff; }
-.sid-btn-danger:hover:not(:disabled) { background: #a93226; }
-.sid-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.opensid-btn-ghost:hover:not(:disabled) { background: var(--cream); }
+.opensid-btn-danger { background: var(--red); color: #fff; }
+.opensid-btn-danger:hover:not(:disabled) { background: #a93226; }
+.opensid-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
 /* Inputs */
-.sid-input {
+.opensid-input {
   font-family: var(--font-body);
   font-size: 14px;
   border: 1.5px solid var(--border);
@@ -112,9 +112,9 @@ body {
   outline: none;
   transition: border-color 0.15s;
 }
-.sid-input:focus { border-color: var(--teak-light); }
+.opensid-input:focus { border-color: var(--teak-light); }
 
-.sid-label {
+.opensid-label {
   font-size: 11px;
   font-weight: 700;
   color: var(--text-secondary);
@@ -123,7 +123,7 @@ body {
 }
 
 /* Icon button */
-.sid-icon-btn {
+.opensid-icon-btn {
   border: none;
   background: transparent;
   color: var(--text-muted);
@@ -134,11 +134,11 @@ body {
   align-items: center;
   transition: all 0.13s;
 }
-.sid-icon-btn:hover { background: var(--cream-mid); color: var(--teak); }
-.sid-icon-btn.danger:hover { background: var(--red-light); color: var(--red); }
+.opensid-icon-btn:hover { background: var(--cream-mid); color: var(--teak); }
+.opensid-icon-btn.danger:hover { background: var(--red-light); color: var(--red); }
 
 /* Modal */
-.sid-modal-overlay {
+.opensid-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
@@ -148,7 +148,7 @@ body {
   justify-content: center;
   padding: 24px;
 }
-.sid-modal {
+.opensid-modal {
   background: var(--white);
   border-radius: 24px;
   box-shadow: var(--shadow-lg);
@@ -158,14 +158,14 @@ body {
   overflow-y: auto;
   border: 1.5px solid var(--cream-dark);
 }
-.sid-modal-trim {
+.opensid-modal-trim {
   height: 24px;
   background: linear-gradient(90deg, var(--teak) 0%, var(--teak-light) 50%, var(--teak) 100%);
   border-radius: 24px 24px 0 0;
   flex-shrink: 0;
 }
-.sid-modal-body { padding: 24px; }
-.sid-modal-title {
+.opensid-modal-body { padding: 24px; }
+.opensid-modal-title {
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 700;
@@ -174,7 +174,7 @@ body {
 }
 
 /* Category suggestions */
-.sid-suggestions {
+.opensid-suggestions {
   position: absolute;
   z-index: 10;
   margin-top: 2px;
@@ -186,7 +186,7 @@ body {
   max-height: 160px;
   overflow-y: auto;
 }
-.sid-suggestion-item {
+.opensid-suggestion-item {
   width: 100%;
   text-align: left;
   padding: 8px 12px;
@@ -198,7 +198,7 @@ body {
   cursor: pointer;
   transition: background 0.1s;
 }
-.sid-suggestion-item:hover { background: var(--cream); color: var(--teak); }
+.opensid-suggestion-item:hover { background: var(--cream); color: var(--teak); }
 
 /* Font utilities */
 .font-display { font-family: var(--font-display); }
@@ -206,6 +206,6 @@ body {
 
 /* Mobile: prevent iOS input zoom (font-size must be ≥16px) */
 @media (max-width: 640px) {
-  .sid-input { font-size: 16px; }
-  .sid-modal-overlay { padding: 16px; }
+  .opensid-input { font-size: 16px; }
+  .opensid-modal-overlay { padding: 16px; }
 }

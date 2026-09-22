@@ -1,6 +1,6 @@
-# Sid Style Guide
+# OpenSid Style Guide
 
-Sid uses a warm parchment aesthetic — earthy, calm, and analogue in feel. The palette draws from aged paper, chestnut wood, and amber honey. Tailwind CSS v4 with a custom `@theme` block in `index.css` defines all tokens.
+OpenSid uses a warm parchment aesthetic — earthy, calm, and analogue in feel. The palette draws from aged paper, chestnut wood, and amber honey. Tailwind CSS v4 with a custom `@theme` block in `index.css` defines all tokens.
 
 ---
 

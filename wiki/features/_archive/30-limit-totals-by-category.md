@@ -1,6 +1,6 @@
 # Limit Totals by Category to Top 5
 
-https://github.com/tanby-dynamics/sid/issues/30
+https://github.com/tanby-dynamics/opensid/issues/30
 
 ## Summary
 

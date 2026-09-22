@@ -1,6 +1,6 @@
 # Improve Transaction Import Handling
 
-https://github.com/tanby-dynamics/sid/issues/29
+https://github.com/tanby-dynamics/opensid/issues/29
 
 ## Summary
 

@@ -2,7 +2,7 @@
 
 ## Epic summary
 
-Build **Sid**, a self-hosted, single-user budget tracker. Users manage named accounts (e.g. "Office expenses"), record income and expense transactions against those accounts, and view balances and transaction history. The app is a TypeScript monorepo with a React/TailwindCSS frontend and a Node/Express REST backend backed by SQLite.
+Build **OpenSid**, a self-hosted, single-user budget tracker. Users manage named accounts (e.g. "Office expenses"), record income and expense transactions against those accounts, and view balances and transaction history. The app is a TypeScript monorepo with a React/TailwindCSS frontend and a Node/Express REST backend backed by SQLite.
 
 ---
 
@@ -129,10 +129,10 @@ graph TD
 
 | Feature code | Filename | Title | Summary |
 |--------------|----------|-------|---------|
-| SID-001 | [SID-001-dev-environment.md](SID-001-dev-environment.md) | Dev environment setup | Monorepo scaffold, tooling, DB init, dev server |
-| SID-002 | [SID-002-account-management.md](SID-002-account-management.md) | Account management | Create, edit, soft-delete accounts with cascade |
-| SID-003 | [SID-003-transaction-management.md](SID-003-transaction-management.md) | Transaction management | Create, edit, soft-delete income/expense transactions |
-| SID-004 | [SID-004-attachments.md](SID-004-attachments.md) | Attachments | Upload, download, delete file blobs on transactions |
-| SID-005 | [SID-005-dashboard.md](SID-005-dashboard.md) | Dashboard | Home screen with account balances and recent transactions |
-| SID-006 | [SID-006-account-view.md](SID-006-account-view.md) | Account view | Full transaction list for a single account |
-| SID-007 | [SID-007-csv-export.md](SID-007-csv-export.md) | CSV export | Download transactions as CSV within a date range |
+| OPENSID-001 | [OPENSID-001-dev-environment.md](OPENSID-001-dev-environment.md) | Dev environment setup | Monorepo scaffold, tooling, DB init, dev server |
+| OPENSID-002 | [OPENSID-002-account-management.md](OPENSID-002-account-management.md) | Account management | Create, edit, soft-delete accounts with cascade |
+| OPENSID-003 | [OPENSID-003-transaction-management.md](OPENSID-003-transaction-management.md) | Transaction management | Create, edit, soft-delete income/expense transactions |
+| OPENSID-004 | [OPENSID-004-attachments.md](OPENSID-004-attachments.md) | Attachments | Upload, download, delete file blobs on transactions |
+| OPENSID-005 | [OPENSID-005-dashboard.md](OPENSID-005-dashboard.md) | Dashboard | Home screen with account balances and recent transactions |
+| OPENSID-006 | [OPENSID-006-account-view.md](OPENSID-006-account-view.md) | Account view | Full transaction list for a single account |
+| OPENSID-007 | [OPENSID-007-csv-export.md](OPENSID-007-csv-export.md) | CSV export | Download transactions as CSV within a date range |

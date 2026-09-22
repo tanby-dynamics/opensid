@@ -156,7 +156,7 @@ export default function Search() {
                             <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Search</label>
                             <input
                                 type="text"
-                                className="sid-input"
+                                className="opensid-input"
                                 placeholder="Description, notes or category…"
                                 value={keyword}
                                 onChange={(e) => setKeyword(e.target.value)}
@@ -165,15 +165,15 @@ export default function Search() {
                         </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">From</label>
-                            <input type="date" className="sid-input" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
+                            <input type="date" className="opensid-input" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
                         </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">To</label>
-                            <input type="date" className="sid-input" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
+                            <input type="date" className="opensid-input" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
                         </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Category</label>
-                            <select className="sid-input" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+                            <select className="opensid-input" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
                                 <option value="">All</option>
                                 {categories.map((c) => (
                                     <option key={c} value={c}>{c}</option>
@@ -183,7 +183,7 @@ export default function Search() {
                         <div className="flex flex-col gap-1">
                             <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Type</label>
                             <select
-                                className="sid-input"
+                                className="opensid-input"
                                 value={filterType}
                                 onChange={(e) => setFilterType(e.target.value as 'income' | 'expense' | '')}
                             >
@@ -195,15 +195,15 @@ export default function Search() {
                         <div className="flex flex-col gap-1">
                             <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Amount</label>
                             <div className="flex items-center gap-1">
-                                <input type="number" className="sid-input w-24" placeholder="Min" min="0" value={amountMin} onChange={(e) => setAmountMin(e.target.value)} />
+                                <input type="number" className="opensid-input w-24" placeholder="Min" min="0" value={amountMin} onChange={(e) => setAmountMin(e.target.value)} />
                                 <span className="text-[var(--text-muted)] text-sm">–</span>
-                                <input type="number" className="sid-input w-24" placeholder="Max" min="0" value={amountMax} onChange={(e) => setAmountMax(e.target.value)} />
+                                <input type="number" className="opensid-input w-24" placeholder="Max" min="0" value={amountMax} onChange={(e) => setAmountMax(e.target.value)} />
                             </div>
                         </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.07em]">Attachment</label>
                             <select
-                                className="sid-input"
+                                className="opensid-input"
                                 value={filterHasAttachment}
                                 onChange={(e) => setFilterHasAttachment(e.target.value as 'yes' | 'no' | '')}
                             >
@@ -222,7 +222,7 @@ export default function Search() {
                             Recurring only
                         </label>
                         {isFiltered && (
-                            <button className="sid-btn sid-btn-ghost sid-btn-sm self-end" onClick={clearFilters}>
+                            <button className="opensid-btn opensid-btn-ghost opensid-btn-sm self-end" onClick={clearFilters}>
                                 Clear filters
                             </button>
                         )}

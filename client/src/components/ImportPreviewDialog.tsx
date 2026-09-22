@@ -60,10 +60,10 @@ export default function ImportPreviewDialog({ preview, isCommitting, onCommit, o
     }
 
     return (
-        <div className="sid-modal-overlay anim-fade">
-            <div className="sid-modal anim-slide-up" style={{ maxWidth: 1080 }}>
-                <div className="sid-modal-trim" />
-                <div className="sid-modal-body">
+        <div className="opensid-modal-overlay anim-fade">
+            <div className="opensid-modal anim-slide-up" style={{ maxWidth: 1080 }}>
+                <div className="opensid-modal-trim" />
+                <div className="opensid-modal-body">
                     <h2 className="font-display text-lg font-bold text-[var(--teak-dark)] mb-1">Smart import preview</h2>
                     <p className="text-sm text-[var(--text-secondary)] mb-4">
                         {preview.summary.total} row{preview.summary.total !== 1 ? 's' : ''} ·{' '}
@@ -76,13 +76,13 @@ export default function ImportPreviewDialog({ preview, isCommitting, onCommit, o
                             Importing {counts.importing} · Skipping {counts.skipping} · Updating {counts.updating}
                         </span>
                         <div className="flex flex-wrap gap-2">
-                            <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={skipAllDuplicates}>
+                            <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={skipAllDuplicates}>
                                 Skip all duplicates
                             </button>
-                            <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={importAll}>
+                            <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={importAll}>
                                 Import all
                             </button>
-                            <button className="sid-btn sid-btn-ghost sid-btn-sm" onClick={applySuggestedCategories}>
+                            <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={applySuggestedCategories}>
                                 Apply suggested categories
                             </button>
                         </div>
@@ -107,7 +107,7 @@ export default function ImportPreviewDialog({ preview, isCommitting, onCommit, o
                                         <td className="px-3 py-2 whitespace-nowrap">{row.date}</td>
                                         <td className="px-3 py-2 min-w-[180px]">
                                             <input
-                                                className="sid-input !py-[6px] !text-[13px] w-full"
+                                                className="opensid-input !py-[6px] !text-[13px] w-full"
                                                 value={row.description}
                                                 onChange={(e) => updateRow(i, { description: e.target.value })}
                                             />
@@ -118,7 +118,7 @@ export default function ImportPreviewDialog({ preview, isCommitting, onCommit, o
                                         <td className="px-3 py-2 capitalize">{row.type}</td>
                                         <td className="px-3 py-2 min-w-[160px]">
                                             <input
-                                                className="sid-input !py-[6px] !text-[13px] w-full"
+                                                className="opensid-input !py-[6px] !text-[13px] w-full"
                                                 value={row.category ?? ''}
                                                 placeholder={row.suggested_category ?? ''}
                                                 onChange={(e) => updateRow(i, { category: e.target.value })}
@@ -136,7 +136,7 @@ export default function ImportPreviewDialog({ preview, isCommitting, onCommit, o
                                         <td className="px-3 py-2"><StatusChip row={row} /></td>
                                         <td className="px-3 py-2">
                                             <select
-                                                className="sid-input !py-[6px] !text-[13px]"
+                                                className="opensid-input !py-[6px] !text-[13px]"
                                                 value={row.action}
                                                 onChange={(e) => updateRow(i, { action: e.target.value as PreviewAction })}
                                             >
@@ -154,11 +154,11 @@ export default function ImportPreviewDialog({ preview, isCommitting, onCommit, o
                     </div>
 
                     <div className="flex justify-end gap-2.5 mt-5">
-                        <button className="sid-btn sid-btn-ghost" onClick={onCancel} disabled={isCommitting}>
+                        <button className="opensid-btn opensid-btn-ghost" onClick={onCancel} disabled={isCommitting}>
                             Cancel
                         </button>
                         <button
-                            className="sid-btn sid-btn-primary"
+                            className="opensid-btn opensid-btn-primary"
                             onClick={() => onCommit(rows)}
                             disabled={isCommitting}
                         >
