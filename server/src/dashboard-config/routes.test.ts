@@ -9,8 +9,8 @@ function resetDatabase() {
         DELETE FROM attachments;
         DELETE FROM transactions;
         DELETE FROM budgets;
-        DELETE FROM saved_views;
         DELETE FROM dashboard_config;
+        DELETE FROM saved_views;
         DELETE FROM accounts;
     `);
 }
@@ -244,6 +244,94 @@ t.test('PATCH /:id — updates forecast_discretionary', async (t) => {
 
     t.equal(res.body.time_window, '90d');
     t.equal(res.body.forecast_discretionary, true);
+});
+
+// --- saved_view_id ---
+
+function insertSavedView(scope: 'account' | 'global', accountId: number | null, name = 'My view'): number {
+    return Number(
+        db.prepare(
+            `INSERT INTO saved_views (scope, account_id, name, filters) VALUES (?, ?, ?, ?)`,
+        ).run(scope, accountId, name, '{}').lastInsertRowid,
+    );
+}
+
+t.test('PATCH /:id — persists a global saved_view_id on a filterable tile type', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+    const viewId = insertSavedView('global', null);
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, saved_view_id: viewId })
+        .expect(200);
+
+    t.equal(res.body.saved_view_id, viewId);
+});
+
+t.test('PATCH /:id — persists an account-scoped saved_view_id matching the tile account', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+    const viewId = insertSavedView('account', accountId);
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, saved_view_id: viewId })
+        .expect(200);
+
+    t.equal(res.body.saved_view_id, viewId);
+});
+
+t.test('PATCH /:id — rejects a saved_view_id scoped to a different account', async () => {
+    const accountA = insertAccount('Savings');
+    const accountB = insertAccount('Checking');
+    const tileId = insertTile(accountA, 'transactions');
+    const viewId = insertSavedView('account', accountB);
+
+    const app = makeApp();
+    await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountA, tile_type: 'transactions', show_balance: false, saved_view_id: viewId })
+        .expect(400);
+});
+
+t.test('PATCH /:id — rejects a saved_view_id that does not exist', async () => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, saved_view_id: 9999 })
+        .expect(400);
+});
+
+t.test('PATCH /:id — silently clears saved_view_id for a non-filterable tile type', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'budget_progress', show_balance: false, saved_view_id: 9999 })
+        .expect(200);
+
+    t.equal(res.body.saved_view_id, null);
+});
+
+t.test('PATCH /:id — omitting saved_view_id defaults to null', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false })
+        .expect(200);
+
+    t.equal(res.body.saved_view_id, null);
 });
 
 t.test('PATCH /:id — accepts null account_id for net_worth tile', async (t) => {

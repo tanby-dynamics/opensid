@@ -17,6 +17,7 @@ interface Props {
     accountId: number;
     accountName: string;
     window: string;
+    savedViewId: number | null;
 }
 
 interface CategoryChartEntry extends CategoryTotal {
@@ -57,10 +58,10 @@ function CustomTooltip({ active, payload, label }: TooltipContentProps) {
     );
 }
 
-export default function CategoryChartTile({ accountId, accountName, window }: Props) {
+export default function CategoryChartTile({ accountId, accountName, window, savedViewId }: Props) {
     const { data = [], isLoading } = useQuery({
-        queryKey: ['chart-categories', accountId, window],
-        queryFn: () => getCategoryChart(accountId, window),
+        queryKey: ['chart-categories', accountId, window, savedViewId],
+        queryFn: () => getCategoryChart(accountId, window, savedViewId),
     });
 
     const chartData: CategoryChartEntry[] = data.length >= 7

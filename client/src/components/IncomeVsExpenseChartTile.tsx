@@ -17,6 +17,7 @@ interface Props {
     accountId: number;
     accountName: string;
     window: string;
+    savedViewId: number | null;
 }
 
 function formatYAxis(value: number): string {
@@ -50,10 +51,10 @@ function CustomTooltip({ active, payload, label }: TooltipContentProps) {
     );
 }
 
-export default function IncomeVsExpenseChartTile({ accountId, accountName, window }: Props) {
+export default function IncomeVsExpenseChartTile({ accountId, accountName, window, savedViewId }: Props) {
     const { data = [], isLoading } = useQuery({
-        queryKey: ['chart-income-vs-expense', accountId, window],
-        queryFn: () => getIncomeVsExpenseChart(accountId, window),
+        queryKey: ['chart-income-vs-expense', accountId, window, savedViewId],
+        queryFn: () => getIncomeVsExpenseChart(accountId, window, savedViewId),
     });
     const windowLabel = formatChartWindow(window);
 

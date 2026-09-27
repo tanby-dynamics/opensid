@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import * as repo from './repository';
 import * as accountRepo from '../accounts/repository';
-import { CROSS_ACCOUNT_TILE_TYPES, type TileType, type DashboardConfigItem, type UpdateTileFields } from './repository';
+import { findById as findSavedView } from '../saved-views/repository';
+import { CROSS_ACCOUNT_TILE_TYPES, FILTERABLE_TILE_TYPES, type TileType, type DashboardConfigItem, type UpdateTileFields } from './repository';
 
 const router = Router();
 
@@ -27,6 +28,30 @@ function isValidWindow(w: string): boolean {
 function isValidWindowForType(tileType: TileType, w: string): boolean {
     if (tileType === 'forecast') return FORECAST_WINDOWS.includes(w);
     return isValidWindow(w);
+}
+
+// Resolves and validates saved_view_id for a tile update. Non-filterable tile types silently
+// drop it (mirrors how time_window is silently cleared for types that don't need it). For
+// filterable types, an incompatible or missing view is a 400 — see ADR-0001 / ticket 40 grilling.
+function resolveSavedViewId(tileType: TileType, accountId: number | null, raw: unknown): { ok: true; value: number | null } | { ok: false; error: string } {
+    if (!FILTERABLE_TILE_TYPES.includes(tileType)) {
+        return { ok: true, value: null };
+    }
+    if (raw === null || raw === undefined) {
+        return { ok: true, value: null };
+    }
+    if (typeof raw !== 'number') {
+        return { ok: false, error: 'saved_view_id must be a number or null' };
+    }
+    const view = findSavedView(raw);
+    if (!view) {
+        return { ok: false, error: 'saved view not found' };
+    }
+    const compatible = view.scope === 'global' || view.account_id === accountId;
+    if (!compatible) {
+        return { ok: false, error: 'saved_view_id is not compatible with this tile\'s account' };
+    }
+    return { ok: true, value: raw };
 }
 
 function toClientItem(item: DashboardConfigItem) {
@@ -104,12 +129,13 @@ router.patch('/:id/show-balance', (req, res) => {
 
 router.patch('/:id', (req, res) => {
     const tileId = parseInt(req.params.id, 10);
-    const { account_id, tile_type, time_window, show_balance, forecast_discretionary } = req.body as {
+    const { account_id, tile_type, time_window, show_balance, forecast_discretionary, saved_view_id } = req.body as {
         account_id?: unknown;
         tile_type?: unknown;
         time_window?: unknown;
         show_balance?: unknown;
         forecast_discretionary?: unknown;
+        saved_view_id?: unknown;
     };
 
     if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType)) {
@@ -151,12 +177,20 @@ router.patch('/:id', (req, res) => {
         return;
     }
 
+    const resolvedAccountId = crossAccount ? null : (account_id as number);
+    const savedView = resolveSavedViewId(tileType, resolvedAccountId, saved_view_id);
+    if (!savedView.ok) {
+        res.status(400).json({ error: savedView.error });
+        return;
+    }
+
     const fields: UpdateTileFields = {
-        account_id: crossAccount ? null : (account_id as number),
+        account_id: resolvedAccountId,
         tile_type: tileType,
         time_window: needsWindow && typeof time_window === 'string' ? time_window : null,
         show_balance,
         forecast_discretionary: forecast_discretionary === true,
+        saved_view_id: savedView.value,
     };
     const updated = repo.updateTile(tileId, fields);
     if (!updated) {

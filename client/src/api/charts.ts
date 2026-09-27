@@ -10,16 +10,16 @@ export interface CategoryTotal {
     total_cents: number;
 }
 
-export async function getBalanceChart(accountId: number, window: string): Promise<BalancePoint[]> {
+export async function getBalanceChart(accountId: number, window: string, savedViewId?: number | null): Promise<BalancePoint[]> {
     const { data } = await axios.get<BalancePoint[]>(`/api/accounts/${accountId}/chart/balance`, {
-        params: { window },
+        params: { window, saved_view_id: savedViewId ?? undefined },
     });
     return data;
 }
 
-export async function getCategoryChart(accountId: number, window: string): Promise<CategoryTotal[]> {
+export async function getCategoryChart(accountId: number, window: string, savedViewId?: number | null): Promise<CategoryTotal[]> {
     const { data } = await axios.get<CategoryTotal[]>(`/api/accounts/${accountId}/chart/categories`, {
-        params: { window },
+        params: { window, saved_view_id: savedViewId ?? undefined },
     });
     return data;
 }
@@ -30,9 +30,9 @@ export interface IncomeVsExpenseDataPoint {
     expense_cents: number;
 }
 
-export async function getIncomeVsExpenseChart(accountId: number, window: string): Promise<IncomeVsExpenseDataPoint[]> {
+export async function getIncomeVsExpenseChart(accountId: number, window: string, savedViewId?: number | null): Promise<IncomeVsExpenseDataPoint[]> {
     const { data } = await axios.get<IncomeVsExpenseDataPoint[]>(`/api/accounts/${accountId}/chart/income-vs-expense`, {
-        params: { window },
+        params: { window, saved_view_id: savedViewId ?? undefined },
     });
     return data;
 }

@@ -14,6 +14,7 @@ vi.mock('../../api/dashboardConfig', () => ({
     updateShowBalance: vi.fn(),
     updateTile: vi.fn(),
     CROSS_ACCOUNT_TILE_TYPES: ['net_worth', 'net_worth_chart'],
+    FILTERABLE_TILE_TYPES: ['transactions', 'balance_over_time', 'totals_by_category', 'income_vs_expense'],
 }));
 
 
@@ -21,13 +22,17 @@ vi.mock('../../api/accounts', () => ({
     listAccounts: vi.fn(),
 }));
 
+vi.mock('../../api/savedViews', () => ({
+    listSavedViews: vi.fn().mockResolvedValue([]),
+}));
+
 import * as dashboardConfigApi from '../../api/dashboardConfig';
 import * as accountsApi from '../../api/accounts';
 
 const mockConfig: DashboardConfigItem[] = [
-    { id: 1, account_id: 10, position: 1, tile_type: 'transactions', time_window: null, show_balance: true, forecast_discretionary: false, balance_cents: 10000 },
-    { id: 2, account_id: 20, position: 2, tile_type: 'transactions', time_window: null, show_balance: true, forecast_discretionary: false, balance_cents: 20000 },
-    { id: 3, account_id: 30, position: 3, tile_type: 'transactions', time_window: null, show_balance: false, forecast_discretionary: false, balance_cents: 30000 },
+    { id: 1, account_id: 10, position: 1, tile_type: 'transactions', time_window: null, show_balance: true, forecast_discretionary: false, saved_view_id: null, balance_cents: 10000 },
+    { id: 2, account_id: 20, position: 2, tile_type: 'transactions', time_window: null, show_balance: true, forecast_discretionary: false, saved_view_id: null, balance_cents: 20000 },
+    { id: 3, account_id: 30, position: 3, tile_type: 'transactions', time_window: null, show_balance: false, forecast_discretionary: false, saved_view_id: null, balance_cents: 30000 },
 ];
 
 const mockAccounts: Account[] = [
@@ -53,7 +58,7 @@ beforeEach(() => {
     vi.mocked(dashboardConfigApi.reorderDashboard).mockResolvedValue(undefined);
     vi.mocked(dashboardConfigApi.removeFromDashboard).mockResolvedValue(undefined);
     vi.mocked(dashboardConfigApi.addToDashboard).mockResolvedValue({
-        id: 4, account_id: 40, position: 4, tile_type: 'transactions', time_window: null, show_balance: false, forecast_discretionary: false, balance_cents: 0,
+        id: 4, account_id: 40, position: 4, tile_type: 'transactions', time_window: null, show_balance: false, forecast_discretionary: false, saved_view_id: null, balance_cents: 0,
     });
     vi.mocked(dashboardConfigApi.updateShowBalance).mockResolvedValue(undefined);
 });

@@ -68,6 +68,7 @@ const KNOWN_FILTER_KEYS = new Set([
     'recurringOnly',
     'tagIds',
     'tagMode',
+    'cleared',
 ]);
 
 // Strip unknown keys so a client that's older than the saved view doesn't apply garbage.

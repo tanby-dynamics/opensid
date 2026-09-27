@@ -145,6 +145,7 @@ db.exec(`
         WHERE deleted_at IS NULL;
 `);
 
+
 db.exec(`
     CREATE TABLE IF NOT EXISTS tags (
         id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -288,6 +289,15 @@ try {
         `);
         db.pragma('foreign_keys = ON');
     }
+}
+
+// A tile can optionally be filtered by a Saved View. References saved_views.id; the referencing
+// tile falls back to unfiltered if the view is later deleted (see docs/adr/0001). Must run after
+// the dashboard_config table-rename migration above, which doesn't know about this column.
+try {
+    db.exec(`ALTER TABLE dashboard_config ADD COLUMN saved_view_id INTEGER REFERENCES saved_views(id)`);
+} catch {
+    // column already exists
 }
 
 db.exec(`

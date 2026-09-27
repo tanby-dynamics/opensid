@@ -1,17 +1,21 @@
 import { Router } from 'express';
 import db from '../db';
+import { findByAccount } from '../transactions/repository';
+import { resolveSavedViewFilters } from '../saved-views/resolve';
 
 const router = Router();
 
-interface DashboardRow {
+const RECENT_TRANSACTIONS_LIMIT = 5;
+
+interface ConfiguredAccountRow {
+    account_id: number;
+    position: number;
+    saved_view_id: number | null;
+}
+
+interface AccountRow {
     id: number;
     name: string;
-    balance_cents: number;
-    t_id: number | null;
-    t_description: string | null;
-    t_amount_cents: number | null;
-    t_type: string | null;
-    t_date: string | null;
 }
 
 interface DashboardAccountResponse {
@@ -28,68 +32,59 @@ interface DashboardAccountResponse {
 }
 
 router.get('/', (_req, res) => {
-    const rows = db
+    // One "transactions" tile is shown per account — when more than one config row targets the
+    // same account, the lowest position wins (see dashboard/routes.test.ts).
+    const configuredAccounts = db
         .prepare(
             `
-        WITH configured_accounts AS (
-            SELECT account_id, MIN(position) AS position
+        SELECT account_id, position, saved_view_id
+        FROM (
+            SELECT account_id, position, saved_view_id,
+                   ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY position) AS rn
             FROM dashboard_config
             WHERE tile_type = 'transactions'
-            GROUP BY account_id
-        ),
-        balances AS (
-            SELECT account_id, SUM(amount_cents) AS balance_cents
-            FROM transactions
-            WHERE deleted_at IS NULL AND split_parent_id IS NULL
-            GROUP BY account_id
-        ),
-        ranked AS (
-            SELECT id, account_id, description, amount_cents, type, date,
-                   ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY date DESC, id DESC) AS rn
-            FROM transactions
-            WHERE deleted_at IS NULL AND split_parent_id IS NULL
         )
-        SELECT
-            a.id,
-            a.name,
-            COALESCE(b.balance_cents, 0) AS balance_cents,
-            r.id AS t_id,
-            r.description AS t_description,
-            r.amount_cents AS t_amount_cents,
-            r.type AS t_type,
-            r.date AS t_date
-        FROM accounts a
-        INNER JOIN configured_accounts ca ON ca.account_id = a.id
-        LEFT JOIN balances b ON b.account_id = a.id
-        LEFT JOIN ranked r ON r.account_id = a.id AND r.rn <= 5
-        WHERE a.deleted_at IS NULL
-        ORDER BY ca.position, r.date DESC, r.id DESC
+        WHERE rn = 1
+        ORDER BY position
     `,
         )
-        .all() as DashboardRow[];
+        .all() as ConfiguredAccountRow[];
 
-    const accountMap = new Map<number, DashboardAccountResponse>();
-    for (const row of rows) {
-        if (!accountMap.has(row.id)) {
-            accountMap.set(row.id, {
-                id: row.id,
-                name: row.name,
-                balance_cents: row.balance_cents,
-                recent_transactions: [],
-            });
-        }
-        if (row.t_id !== null) {
-            accountMap.get(row.id)!.recent_transactions.push({
-                id: row.t_id,
-                description: row.t_description,
-                amount_cents: row.t_amount_cents,
-                type: row.t_type,
-                date: row.t_date,
-            });
-        }
+    const balances = db
+        .prepare(
+            `SELECT account_id, SUM(amount_cents) AS balance_cents
+             FROM transactions
+             WHERE deleted_at IS NULL AND split_parent_id IS NULL
+             GROUP BY account_id`,
+        )
+        .all() as { account_id: number; balance_cents: number }[];
+    const balanceByAccount = new Map(balances.map((b) => [b.account_id, b.balance_cents]));
+
+    const accounts: DashboardAccountResponse[] = [];
+    for (const configured of configuredAccounts) {
+        const account = db
+            .prepare(`SELECT id, name FROM accounts WHERE id = ? AND deleted_at IS NULL`)
+            .get(configured.account_id) as AccountRow | undefined;
+        if (!account) continue;
+
+        const filters = resolveSavedViewFilters(configured.saved_view_id);
+        const recent = findByAccount(account.id, filters, RECENT_TRANSACTIONS_LIMIT);
+
+        accounts.push({
+            id: account.id,
+            name: account.name,
+            balance_cents: balanceByAccount.get(account.id) ?? 0,
+            recent_transactions: recent.map((t) => ({
+                id: t.id,
+                description: t.description,
+                amount_cents: t.amount_cents,
+                type: t.type,
+                date: t.date,
+            })),
+        });
     }
 
-    res.json({ accounts: Array.from(accountMap.values()) });
+    res.json({ accounts });
 });
 
 export default router;

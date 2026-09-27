@@ -14,6 +14,8 @@ export type TileType =
 
 export const CROSS_ACCOUNT_TILE_TYPES: TileType[] = ['net_worth', 'net_worth_chart'];
 
+export const FILTERABLE_TILE_TYPES: TileType[] = ['transactions', 'balance_over_time', 'totals_by_category', 'income_vs_expense'];
+
 export interface DashboardConfigItem {
     id: number;
     account_id: number | null;
@@ -22,6 +24,7 @@ export interface DashboardConfigItem {
     time_window: string | null;
     show_balance: boolean;
     forecast_discretionary: boolean;
+    saved_view_id: number | null;
     balance_cents: number | null;
 }
 
@@ -31,6 +34,7 @@ export interface UpdateTilePayload {
     time_window?: string;
     show_balance: boolean;
     forecast_discretionary?: boolean;
+    saved_view_id?: number | null;
 }
 
 export async function getDashboardConfig(): Promise<DashboardConfigItem[]> {
@@ -67,6 +71,7 @@ export async function updateTile(tileId: number, payload: UpdateTilePayload): Pr
         time_window: payload.time_window,
         show_balance: payload.show_balance,
         forecast_discretionary: payload.forecast_discretionary,
+        saved_view_id: payload.saved_view_id ?? null,
     });
     return data;
 }

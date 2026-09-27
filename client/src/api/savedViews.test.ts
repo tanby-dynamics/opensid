@@ -13,6 +13,7 @@ describe('sanitiseSavedFilters', () => {
             amountMax: '100',
             hasAttachment: 'yes',
             recurringOnly: true,
+            cleared: 'yes',
         });
         expect(result).toEqual({
             keyword: 'hi',
@@ -24,6 +25,7 @@ describe('sanitiseSavedFilters', () => {
             amountMax: '100',
             hasAttachment: 'yes',
             recurringOnly: true,
+            cleared: 'yes',
         });
     });
 

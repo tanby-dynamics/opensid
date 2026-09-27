@@ -20,11 +20,15 @@ export interface DashboardConfigItem {
     time_window: string | null;
     show_balance: number; // 0 or 1
     forecast_discretionary: number; // 0 or 1
+    saved_view_id: number | null;
     balance_cents: number | null;
 }
 
+// Tile types whose data is a filterable list of transactions.
+export const FILTERABLE_TILE_TYPES: TileType[] = ['transactions', 'balance_over_time', 'totals_by_category', 'income_vs_expense'];
+
 const SELECT_SQL = `
-    SELECT dc.id, dc.account_id, dc.position, dc.tile_type, dc.time_window, dc.show_balance, dc.forecast_discretionary,
+    SELECT dc.id, dc.account_id, dc.position, dc.tile_type, dc.time_window, dc.show_balance, dc.forecast_discretionary, dc.saved_view_id,
         CASE WHEN dc.tile_type IN ('transactions', 'balance_over_time')
             THEN (SELECT COALESCE(SUM(t.amount_cents), 0) FROM transactions t WHERE t.account_id = dc.account_id AND t.deleted_at IS NULL AND t.split_parent_id IS NULL)
             ELSE NULL
@@ -72,6 +76,7 @@ export interface UpdateTileFields {
     time_window: string | null;
     show_balance: boolean;
     forecast_discretionary: boolean;
+    saved_view_id: number | null;
 }
 
 export function updateShowBalance(tileId: number, showBalance: boolean): DashboardConfigItem | null {
@@ -86,8 +91,8 @@ export function updateShowBalance(tileId: number, showBalance: boolean): Dashboa
 
 export function updateTile(tileId: number, fields: UpdateTileFields): DashboardConfigItem | null {
     const result = db
-        .prepare('UPDATE dashboard_config SET account_id = ?, tile_type = ?, time_window = ?, show_balance = ?, forecast_discretionary = ? WHERE id = ?')
-        .run(fields.account_id, fields.tile_type, fields.time_window, fields.show_balance ? 1 : 0, fields.forecast_discretionary ? 1 : 0, tileId);
+        .prepare('UPDATE dashboard_config SET account_id = ?, tile_type = ?, time_window = ?, show_balance = ?, forecast_discretionary = ?, saved_view_id = ? WHERE id = ?')
+        .run(fields.account_id, fields.tile_type, fields.time_window, fields.show_balance ? 1 : 0, fields.forecast_discretionary ? 1 : 0, fields.saved_view_id, tileId);
     if (result.changes === 0) return null;
     return db
         .prepare(`${SELECT_SQL} WHERE dc.id = ?`)

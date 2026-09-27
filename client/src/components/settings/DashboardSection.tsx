@@ -27,10 +27,12 @@ import {
     updateTile,
     updateShowBalance,
     CROSS_ACCOUNT_TILE_TYPES,
+    FILTERABLE_TILE_TYPES,
     type TileType,
     type DashboardConfigItem,
 } from '../../api/dashboardConfig';
 import { listAccounts } from '../../api/accounts';
+import { listSavedViews, type SavedView } from '../../api/savedViews';
 import { formatChartWindow } from '../../utils/chartWindow';
 
 const TILE_TYPE_LABELS: Record<TileType, string> = {
@@ -148,6 +150,7 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
     const [weeks, setWeeks] = useState(() => windowToOption(tile.time_window).weeks);
     const [showBalance, setShowBalance] = useState(tile.show_balance);
     const [discretionary, setDiscretionary] = useState(tile.forecast_discretionary);
+    const [savedViewId, setSavedViewId] = useState<number | null>(tile.saved_view_id);
     const [error, setError] = useState('');
 
     const isCrossAccountType = CROSS_ACCOUNT_TILE_TYPES.includes(tileType);
@@ -156,8 +159,32 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
     const isForecastType = tileType === 'forecast';
     const needsWindow = isChartType || isIncomeVsExpense || isForecastType;
     const supportsBalance = tileType === 'transactions' || tileType === 'balance_over_time';
+    const supportsSavedView = FILTERABLE_TILE_TYPES.includes(tileType);
+
+    const { data: savedViews = [] } = useQuery({
+        queryKey: ['saved-views'],
+        queryFn: () => listSavedViews(),
+        enabled: supportsSavedView,
+    });
+    const selectedAccountId = accountId === '' ? null : parseInt(accountId, 10);
+    const compatibleSavedViews = savedViews.filter(
+        (v: SavedView) => v.scope === 'global' || v.account_id === selectedAccountId,
+    );
 
     const handleCancel = useCallback(onCancel, [onCancel]);
+
+    function handleAccountChange(newAccountId: string) {
+        setAccountId(newAccountId);
+        const newAccountIdNum = newAccountId === '' ? null : parseInt(newAccountId, 10);
+        if (savedViewId !== null) {
+            const current = savedViews.find((v: SavedView) => v.id === savedViewId);
+            const stillCompatible = current && (current.scope === 'global' || current.account_id === newAccountIdNum);
+            if (!stillCompatible) {
+                setSavedViewId(null);
+                toast.info('Saved view cleared — it doesn\'t apply to the newly selected account.');
+            }
+        }
+    }
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') handleCancel(); };
@@ -181,6 +208,7 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                 time_window: timeWindow,
                 show_balance: supportsBalance ? showBalance : false,
                 forecast_discretionary: isForecastType ? discretionary : false,
+                saved_view_id: supportsSavedView ? savedViewId : null,
             });
         },
         onSuccess: onSave,
@@ -213,7 +241,7 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                             <select
                                 className={inputCls}
                                 value={accountId}
-                                onChange={(e) => setAccountId(e.target.value)}
+                                onChange={(e) => handleAccountChange(e.target.value)}
                             >
                                 {accounts.map((a) => (
                                     <option key={a.id} value={a.id}>{a.name}</option>
@@ -314,6 +342,22 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                             value={weeks}
                             onChange={(e) => setWeeks(e.target.value)}
                         />
+                    )}
+
+                    {supportsSavedView && (
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[12px] font-bold tracking-[0.06em] text-[var(--text-muted)] uppercase font-body">Saved view</label>
+                            <select
+                                className={inputCls}
+                                value={savedViewId ?? ''}
+                                onChange={(e) => setSavedViewId(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                            >
+                                <option value="">None</option>
+                                {compatibleSavedViews.map((v: SavedView) => (
+                                    <option key={v.id} value={v.id}>{v.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     )}
 
                     {supportsBalance && (

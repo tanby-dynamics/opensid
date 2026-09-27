@@ -208,6 +208,7 @@ export default function Dashboard() {
                                         window={tile.time_window ?? '30d'}
                                         showBalance={tile.show_balance}
                                         balanceCents={tile.balance_cents}
+                                        savedViewId={tile.saved_view_id}
                                     />
                                 );
                             }
@@ -219,6 +220,7 @@ export default function Dashboard() {
                                         accountId={tile.account_id}
                                         accountName={account?.name ?? `Account ${tile.account_id}`}
                                         window={tile.time_window ?? '30d'}
+                                        savedViewId={tile.saved_view_id}
                                     />
                                 );
                             }
@@ -240,6 +242,7 @@ export default function Dashboard() {
                                         accountId={tile.account_id}
                                         accountName={account?.name ?? `Account ${tile.account_id}`}
                                         window={tile.time_window ?? '3m'}
+                                        savedViewId={tile.saved_view_id}
                                     />
                                 );
                             }

@@ -93,7 +93,7 @@ function stitchTags<T extends { id: number }>(rows: T[]): (T & { tags: TagRef[] 
     return rows.map((r) => ({ ...r, tags: map.get(r.id) ?? [] }));
 }
 
-function buildFilterClauses(filters: TransactionFilters | undefined, tableAlias = ''): { conditions: string[]; params: unknown[] } {
+export function buildFilterClauses(filters: TransactionFilters | undefined, tableAlias = ''): { conditions: string[]; params: unknown[] } {
     const conditions: string[] = [];
     const params: unknown[] = [];
     // Fully qualify when the caller didn't supply an alias — bare column names in correlated
@@ -166,12 +166,15 @@ function buildFilterClauses(filters: TransactionFilters | undefined, tableAlias 
     return { conditions, params };
 }
 
-export function findByAccount(accountId: number, filters?: TransactionFilters): Transaction[] {
+export function findByAccount(accountId: number, filters?: TransactionFilters, limit?: number): Transaction[] {
     const { conditions, params } = buildFilterClauses(filters);
     const allConditions = ['account_id = ?', 'deleted_at IS NULL', 'split_parent_id IS NULL', ...conditions];
     const allParams = [accountId, ...params];
 
-    const sql = `SELECT *, ${splitCountSql()} FROM transactions WHERE ${allConditions.join(' AND ')} ORDER BY date DESC, id DESC`;
+    const limitSql = limit !== undefined ? ' LIMIT ?' : '';
+    if (limit !== undefined) allParams.push(limit);
+
+    const sql = `SELECT *, ${splitCountSql()} FROM transactions WHERE ${allConditions.join(' AND ')} ORDER BY date DESC, id DESC${limitSql}`;
     const rows = db.prepare(sql).all(...allParams) as Omit<Transaction, 'tags'>[];
     return stitchTags(rows) as Transaction[];
 }

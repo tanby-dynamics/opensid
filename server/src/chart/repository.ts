@@ -1,5 +1,6 @@
 import db from '../db';
 import { REPORTING_ROWS_CTE } from '../reporting/view';
+import { buildFilterClauses, type TransactionFilters } from '../transactions/repository';
 
 export interface IncomeVsExpensePoint {
     month: string;
@@ -55,7 +56,10 @@ export function isValidWindow(window: string): boolean {
     return false;
 }
 
-export function getBalanceOverTime(accountId: number, fromDate: string | null): BalancePoint[] {
+export function getBalanceOverTime(accountId: number, fromDate: string | null, filters?: TransactionFilters): BalancePoint[] {
+    const { conditions: filterConditions, params: filterParams } = buildFilterClauses(filters);
+    const baseConditions = ['account_id = ?', 'deleted_at IS NULL', 'split_parent_id IS NULL', ...filterConditions];
+
     // Starting balance: sum of all transactions before the window
     let startingBalance = 0;
     if (fromDate) {
@@ -63,9 +67,9 @@ export function getBalanceOverTime(accountId: number, fromDate: string | null): 
             .prepare(
                 `SELECT COALESCE(SUM(amount_cents), 0) AS total
                  FROM transactions
-                 WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL AND date < ?`,
+                 WHERE ${[...baseConditions, 'date < ?'].join(' AND ')}`,
             )
-            .get(accountId, fromDate) as { total: number };
+            .get(accountId, ...filterParams, fromDate) as { total: number };
         startingBalance = row.total;
     }
 
@@ -75,20 +79,20 @@ export function getBalanceOverTime(accountId: number, fromDate: string | null): 
               .prepare(
                   `SELECT date, SUM(amount_cents) AS day_delta
                    FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL AND date >= ?
+                   WHERE ${[...baseConditions, 'date >= ?'].join(' AND ')}
                    GROUP BY date
                    ORDER BY date ASC`,
               )
-              .all(accountId, fromDate) as { date: string; day_delta: number }[])
+              .all(accountId, ...filterParams, fromDate) as { date: string; day_delta: number }[])
         : (db
               .prepare(
                   `SELECT date, SUM(amount_cents) AS day_delta
                    FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL
+                   WHERE ${baseConditions.join(' AND ')}
                    GROUP BY date
                    ORDER BY date ASC`,
               )
-              .all(accountId) as { date: string; day_delta: number }[]);
+              .all(accountId, ...filterParams) as { date: string; day_delta: number }[]);
 
     const points: BalancePoint[] = [];
     let running = startingBalance;
@@ -111,26 +115,29 @@ export function getBalanceOverTime(accountId: number, fromDate: string | null): 
     return points;
 }
 
-export function getIncomeVsExpenseByMonth(accountId: number, fromDate: string | null): IncomeVsExpensePoint[] {
+export function getIncomeVsExpenseByMonth(accountId: number, fromDate: string | null, filters?: TransactionFilters): IncomeVsExpensePoint[] {
+    const { conditions: filterConditions, params: filterParams } = buildFilterClauses(filters);
+    const baseConditions = ["account_id = ?", 'deleted_at IS NULL', 'split_parent_id IS NULL', "type != 'transfer'", ...filterConditions];
+
     const rows = fromDate
         ? (db
               .prepare(
                   `SELECT strftime('%Y-%m', date) as month, type, SUM(amount_cents) as total_cents
                    FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL AND type != 'transfer' AND date >= ?
+                   WHERE ${[...baseConditions, 'date >= ?'].join(' AND ')}
                    GROUP BY month, type
                    ORDER BY month`,
               )
-              .all(accountId, fromDate) as { month: string; type: string; total_cents: number }[])
+              .all(accountId, ...filterParams, fromDate) as { month: string; type: string; total_cents: number }[])
         : (db
               .prepare(
                   `SELECT strftime('%Y-%m', date) as month, type, SUM(amount_cents) as total_cents
                    FROM transactions
-                   WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL AND type != 'transfer'
+                   WHERE ${baseConditions.join(' AND ')}
                    GROUP BY month, type
                    ORDER BY month`,
               )
-              .all(accountId) as { month: string; type: string; total_cents: number }[]);
+              .all(accountId, ...filterParams) as { month: string; type: string; total_cents: number }[]);
 
     if (rows.length === 0) return [];
 
@@ -165,29 +172,30 @@ export function getIncomeVsExpenseByMonth(accountId: number, fromDate: string | 
     return result;
 }
 
-export function getCategoryTotals(accountId: number, fromDate: string | null): CategoryTotal[] {
+export function getCategoryTotals(accountId: number, fromDate: string | null, filters?: TransactionFilters): CategoryTotal[] {
+    const { conditions: filterConditions, params: filterParams } = buildFilterClauses(filters, 'reporting_rows');
+    const baseConditions = ['account_id = ?', "type = 'expense'", 'category IS NOT NULL', ...filterConditions];
+
     const rows = fromDate
         ? (db
               .prepare(
                   `WITH ${REPORTING_ROWS_CTE}
                    SELECT category, SUM(ABS(amount_cents)) AS total_cents
                    FROM reporting_rows
-                   WHERE account_id = ? AND type = 'expense'
-                     AND category IS NOT NULL AND date >= ?
+                   WHERE ${[...baseConditions, 'date >= ?'].join(' AND ')}
                    GROUP BY category
                    ORDER BY total_cents DESC`,
               )
-              .all(accountId, fromDate) as CategoryTotal[])
+              .all(accountId, ...filterParams, fromDate) as CategoryTotal[])
         : (db
               .prepare(
                   `WITH ${REPORTING_ROWS_CTE}
                    SELECT category, SUM(ABS(amount_cents)) AS total_cents
                    FROM reporting_rows
-                   WHERE account_id = ? AND type = 'expense'
-                     AND category IS NOT NULL
+                   WHERE ${baseConditions.join(' AND ')}
                    GROUP BY category
                    ORDER BY total_cents DESC`,
               )
-              .all(accountId) as CategoryTotal[]);
+              .all(accountId, ...filterParams) as CategoryTotal[]);
     return rows;
 }

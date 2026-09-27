@@ -19,6 +19,7 @@ interface Props {
     window: string;
     showBalance: boolean;
     balanceCents: number | null;
+    savedViewId: number | null;
 }
 
 function formatYAxis(value: number): string {
@@ -39,10 +40,10 @@ function CustomTooltip({ active, payload, label }: TooltipContentProps) {
     );
 }
 
-export default function BalanceChartTile({ accountId, accountName, window, showBalance, balanceCents }: Props) {
+export default function BalanceChartTile({ accountId, accountName, window, showBalance, balanceCents, savedViewId }: Props) {
     const { data = [], isLoading } = useQuery({
-        queryKey: ['chart-balance', accountId, window],
-        queryFn: () => getBalanceChart(accountId, window),
+        queryKey: ['chart-balance', accountId, window, savedViewId],
+        queryFn: () => getBalanceChart(accountId, window, savedViewId),
     });
     const windowLabel = formatChartWindow(window);
 
