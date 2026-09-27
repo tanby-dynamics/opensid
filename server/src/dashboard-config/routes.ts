@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as repo from './repository';
 import * as accountRepo from '../accounts/repository';
 import { findById as findSavedView } from '../saved-views/repository';
+import { isSavedViewCompatibleWithAccount } from '../saved-views/resolve';
 import { CROSS_ACCOUNT_TILE_TYPES, FILTERABLE_TILE_TYPES, type TileType, type DashboardConfigItem, type UpdateTileFields } from './repository';
 
 const router = Router();
@@ -47,8 +48,7 @@ function resolveSavedViewId(tileType: TileType, accountId: number | null, raw: u
     if (!view) {
         return { ok: false, error: 'saved view not found' };
     }
-    const compatible = view.scope === 'global' || view.account_id === accountId;
-    if (!compatible) {
+    if (!isSavedViewCompatibleWithAccount(view, accountId)) {
         return { ok: false, error: 'saved_view_id is not compatible with this tile\'s account' };
     }
     return { ok: true, value: raw };

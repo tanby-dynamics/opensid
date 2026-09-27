@@ -67,7 +67,7 @@ router.get('/', (_req, res) => {
             .get(configured.account_id) as AccountRow | undefined;
         if (!account) continue;
 
-        const filters = resolveSavedViewFilters(configured.saved_view_id);
+        const filters = resolveSavedViewFilters(configured.saved_view_id, account.id);
         const recent = findByAccount(account.id, filters, RECENT_TRANSACTIONS_LIMIT);
 
         accounts.push({

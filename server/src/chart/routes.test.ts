@@ -63,6 +63,22 @@ t.test('GET /categories — applies the filters from saved_view_id when given', 
     t.same(res.body, [{ category: 'Groceries', total_cents: 5000 }]);
 });
 
+t.test('GET /categories — falls back to unfiltered when saved_view_id belongs to a different account', async (t) => {
+    const accountA = insertAccount('Everyday');
+    const accountB = insertAccount('Savings');
+    insertTransaction(accountA, 'Woolies', 'Groceries', -5000);
+    insertTransaction(accountA, 'Netflix', 'Entertainment', -1500);
+    const viewIdOnB = insertSavedView('account', accountB, { keyword: 'Woolies' });
+
+    const app = makeApp();
+    const res = await request(app)
+        .get(`/api/accounts/${accountA}/chart/categories`)
+        .query({ window: 'all', saved_view_id: viewIdOnB })
+        .expect(200);
+
+    t.equal(res.body.length, 2);
+});
+
 t.test('GET /categories — falls back to unfiltered when saved_view_id does not exist', async (t) => {
     const accountId = insertAccount('Everyday');
     insertTransaction(accountId, 'Woolies', 'Groceries', -5000);
