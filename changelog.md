@@ -1,5 +1,15 @@
 # OpenSid Changelog
 
+## 0.3.0
+
+**Release date**: 2026-09-28
+
+- Net worth dashboard tile
+- Forecast tile
+- Split transactions
+- Rename from Sid to OpenSid
+
+
 ## 0.2.0
 
 **Release date**: 2026-06-21
