@@ -13,6 +13,7 @@
 - Pagination on account transactions page
 - Dashboard tiles can have a custom title
 - Remove redundant "Show balance" checkbox from dashboard settings table
+- In "Settings -> Dashboard" remove "Show Balance" checkbox from table
 
 ## 0.2.0
 
