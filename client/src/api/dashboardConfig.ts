@@ -25,6 +25,7 @@ export interface DashboardConfigItem {
     show_balance: boolean;
     forecast_discretionary: boolean;
     saved_view_id: number | null;
+    title: string | null;
     balance_cents: number | null;
 }
 
@@ -35,6 +36,7 @@ export interface UpdateTilePayload {
     show_balance: boolean;
     forecast_discretionary?: boolean;
     saved_view_id?: number | null;
+    title?: string | null;
 }
 
 export async function getDashboardConfig(): Promise<DashboardConfigItem[]> {
@@ -72,6 +74,7 @@ export async function updateTile(tileId: number, payload: UpdateTilePayload): Pr
         show_balance: payload.show_balance,
         forecast_discretionary: payload.forecast_discretionary,
         saved_view_id: payload.saved_view_id ?? null,
+        title: payload.title ?? null,
     });
     return data;
 }

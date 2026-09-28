@@ -14,6 +14,7 @@ import { formatCents, formatDate } from '../utils/format';
 
 interface Props {
     window: string;
+    title: string;
 }
 
 function formatYAxis(value: number): string {
@@ -34,7 +35,7 @@ function CustomTooltip({ active, payload, label }: TooltipContentProps) {
     );
 }
 
-export default function NetWorthChartTile({ window }: Props) {
+export default function NetWorthChartTile({ window, title }: Props) {
     const { data = [], isLoading } = useQuery({
         queryKey: ['net-worth-history', window],
         queryFn: () => getNetWorthHistory(window),
@@ -46,7 +47,7 @@ export default function NetWorthChartTile({ window }: Props) {
             <div className="wood-stripe h-6 shrink-0" />
             <div className="px-5 py-[18px] flex-1 flex flex-col">
                 <div className="mb-2.5 font-body font-bold text-[15px] text-[var(--text-primary)] leading-[1.3]">
-                    Net Worth Over Time
+                    {title}
                 </div>
 
                 <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)] font-body">

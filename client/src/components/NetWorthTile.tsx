@@ -3,7 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { getNetWorth, getNetWorthHistory } from '../api/netWorth';
 import { formatCents, balanceColor } from '../utils/format';
 
-export default function NetWorthTile() {
+interface Props {
+    title: string;
+}
+
+export default function NetWorthTile({ title }: Props) {
     const [showBreakdown, setShowBreakdown] = useState(false);
 
     const { data: netWorth, isLoading } = useQuery({
@@ -26,7 +30,7 @@ export default function NetWorthTile() {
             <div className="wood-stripe h-6 shrink-0" />
             <div className="px-5 py-[18px] flex-1 flex flex-col">
                 <div className="mb-2.5 font-body font-bold text-[15px] text-[var(--text-primary)] leading-[1.3]">
-                    Net Worth
+                    {title}
                 </div>
 
                 {isLoading && <p className="text-xs text-[var(--text-muted)] italic">Loading…</p>}

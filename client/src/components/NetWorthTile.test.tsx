@@ -14,7 +14,7 @@ function renderTile() {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     return render(
         <QueryClientProvider client={client}>
-            <NetWorthTile />
+            <NetWorthTile title="Net Worth" />
         </QueryClientProvider>,
     );
 }

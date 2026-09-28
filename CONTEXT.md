@@ -8,6 +8,18 @@ A personal/household finance app: accounts, transactions, budgets, and a configu
 One configured widget on the dashboard, backed by a single `dashboard_config` row (`tile_type`, `account_id`, `position`, plus type-specific settings like `time_window`). Most tile types belong to one account; `net_worth` and `net_worth_chart` are cross-account.
 _Avoid_: Widget, panel
 
+**Custom Title**:
+An optional user-entered override (`dashboard_config.title`) that replaces a Dashboard Tile's Generated Title. Editable only via the tile edit form, not at tile creation. Blank/whitespace-only input is treated as "no override" (stored as NULL, not empty string) and falls back to the Generated Title. Unbounded in the database; the edit form caps entry at 60 characters. No uniqueness constraint across tiles.
+_Avoid_: Custom name, tile name
+
+**Generated Title**:
+The computed default title for a Dashboard Tile when no Custom Title is set, derived from its account and tile type. Rendered in two formats depending on context: a terse form (e.g. account name alone) on the dashboard itself, and a fuller descriptive form (e.g. "Checking — Balance Over Time (90 days)") in the dashboard settings list. A Custom Title, when set, is shown verbatim in both places — the descriptive-form time-window suffix is not appended to it.
+_Avoid_: Default title
+
+**Tile Title**:
+The resolved value actually displayed for a Dashboard Tile: its Custom Title if set, otherwise its Generated Title.
+_Avoid_: Display title
+
 **Saved View**:
 A named, reusable set of transaction filter criteria (keyword, date range, category, type, amount range, tags, cleared, attachment, recurring), scoped to a single account or globally. Created from the transaction filter bar via "Save as view."
 _Avoid_: Filter view, saved filter, saved search

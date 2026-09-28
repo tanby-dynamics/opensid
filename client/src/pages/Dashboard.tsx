@@ -16,6 +16,7 @@ import TransactionForm from '../components/TransactionForm';
 import TransferForm from '../components/TransferForm';
 import { getDashboard } from '../api/dashboard';
 import { getDashboardConfig } from '../api/dashboardConfig';
+import { resolveTileTitle } from '../utils/tileTitle';
 import { createAccount, listAccountsWithBalances } from '../api/accounts';
 import { createTransaction, type TransactionPayload } from '../api/transactions';
 import { createTransfer, type TransferPayload } from '../api/transfers';
@@ -54,6 +55,10 @@ export default function Dashboard() {
     });
 
     const accountMap = new Map(dashboardAccounts.map((a) => [a.id, a]));
+
+    function accountDisplayName(accountId: number): string {
+        return allAccountsWithBalances.find((a) => a.id === accountId)?.name ?? `Account ${accountId}`;
+    }
 
     const createMutation = useMutation({
         mutationFn: (values: AccountFormValues) => createAccount(values.name, values.kind, values.excludeFromNetWorth),
@@ -179,10 +184,10 @@ export default function Dashboard() {
                     <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(310px,1fr))] gap-5">
                         {tileConfig.map((tile) => {
                             if (tile.tile_type === 'net_worth') {
-                                return <NetWorthTile key={tile.id} />;
+                                return <NetWorthTile key={tile.id} title={resolveTileTitle(tile, '', 'terse')} />;
                             }
                             if (tile.tile_type === 'net_worth_chart') {
-                                return <NetWorthChartTile key={tile.id} window={tile.time_window ?? '30d'} />;
+                                return <NetWorthChartTile key={tile.id} window={tile.time_window ?? '30d'} title={resolveTileTitle(tile, '', 'terse')} />;
                             }
                             if (tile.account_id === null) return null;
 
@@ -193,18 +198,18 @@ export default function Dashboard() {
                                     <AccountTile
                                         key={tile.id}
                                         account={account}
+                                        title={resolveTileTitle(tile, account.name, 'terse')}
                                         showBalance={tile.show_balance}
                                         onAddTransaction={(a) => setModal({ type: 'add-transaction', account: a })}
                                     />
                                 );
                             }
                             if (tile.tile_type === 'balance_over_time') {
-                                const account = allAccountsWithBalances.find((a) => a.id === tile.account_id);
                                 return (
                                     <BalanceChartTile
                                         key={tile.id}
                                         accountId={tile.account_id}
-                                        accountName={account?.name ?? `Account ${tile.account_id}`}
+                                        accountName={resolveTileTitle(tile, accountDisplayName(tile.account_id), 'terse')}
                                         window={tile.time_window ?? '30d'}
                                         showBalance={tile.show_balance}
                                         balanceCents={tile.balance_cents}
@@ -213,47 +218,43 @@ export default function Dashboard() {
                                 );
                             }
                             if (tile.tile_type === 'totals_by_category') {
-                                const account = allAccountsWithBalances.find((a) => a.id === tile.account_id);
                                 return (
                                     <CategoryChartTile
                                         key={tile.id}
                                         accountId={tile.account_id}
-                                        accountName={account?.name ?? `Account ${tile.account_id}`}
+                                        accountName={resolveTileTitle(tile, accountDisplayName(tile.account_id), 'terse')}
                                         window={tile.time_window ?? '30d'}
                                         savedViewId={tile.saved_view_id}
                                     />
                                 );
                             }
                             if (tile.tile_type === 'budget_progress') {
-                                const account = allAccountsWithBalances.find((a) => a.id === tile.account_id);
                                 return (
                                     <BudgetProgressTile
                                         key={tile.id}
                                         accountId={tile.account_id}
-                                        accountName={account?.name ?? `Account ${tile.account_id}`}
+                                        accountName={resolveTileTitle(tile, accountDisplayName(tile.account_id), 'terse')}
                                     />
                                 );
                             }
                             if (tile.tile_type === 'income_vs_expense') {
-                                const account = allAccountsWithBalances.find((a) => a.id === tile.account_id);
                                 return (
                                     <IncomeVsExpenseChartTile
                                         key={tile.id}
                                         accountId={tile.account_id}
-                                        accountName={account?.name ?? `Account ${tile.account_id}`}
+                                        accountName={resolveTileTitle(tile, accountDisplayName(tile.account_id), 'terse')}
                                         window={tile.time_window ?? '3m'}
                                         savedViewId={tile.saved_view_id}
                                     />
                                 );
                             }
                             if (tile.tile_type === 'forecast') {
-                                const account = allAccountsWithBalances.find((a) => a.id === tile.account_id);
                                 const days = parseInt((tile.time_window ?? '30d').replace('d', ''), 10);
                                 return (
                                     <ForecastTile
                                         key={tile.id}
                                         accountId={tile.account_id}
-                                        accountName={account?.name ?? `Account ${tile.account_id}`}
+                                        accountName={resolveTileTitle(tile, accountDisplayName(tile.account_id), 'terse')}
                                         days={days}
                                         includeDiscretionary={tile.forecast_discretionary}
                                     />

@@ -129,14 +129,21 @@ router.patch('/:id/show-balance', (req, res) => {
 
 router.patch('/:id', (req, res) => {
     const tileId = parseInt(req.params.id, 10);
-    const { account_id, tile_type, time_window, show_balance, forecast_discretionary, saved_view_id } = req.body as {
+    const { account_id, tile_type, time_window, show_balance, forecast_discretionary, saved_view_id, title } = req.body as {
         account_id?: unknown;
         tile_type?: unknown;
         time_window?: unknown;
         show_balance?: unknown;
         forecast_discretionary?: unknown;
         saved_view_id?: unknown;
+        title?: unknown;
     };
+
+    if (title !== undefined && title !== null && typeof title !== 'string') {
+        res.status(400).json({ error: 'title must be a string or null' });
+        return;
+    }
+    const resolvedTitle = title && title.trim() !== '' ? title.trim() : null;
 
     if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType)) {
         res.status(400).json({ error: TILE_TYPE_ERROR });
@@ -191,6 +198,7 @@ router.patch('/:id', (req, res) => {
         show_balance,
         forecast_discretionary: forecast_discretionary === true,
         saved_view_id: savedView.value,
+        title: resolvedTitle,
     };
     const updated = repo.updateTile(tileId, fields);
     if (!updated) {

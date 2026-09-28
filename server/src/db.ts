@@ -306,6 +306,12 @@ try {
     // column already exists
 }
 
+try {
+    db.exec(`ALTER TABLE dashboard_config ADD COLUMN title TEXT`);
+} catch {
+    // column already exists
+}
+
 db.exec(`
     CREATE TABLE IF NOT EXISTS rules (
         id                  INTEGER PRIMARY KEY AUTOINCREMENT,

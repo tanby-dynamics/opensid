@@ -334,6 +334,113 @@ t.test('PATCH /:id — omitting saved_view_id defaults to null', async (t) => {
     t.equal(res.body.saved_view_id, null);
 });
 
+// --- title ---
+
+t.test('PATCH /:id — persists a custom title', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, title: 'My Rainy Day Fund' })
+        .expect(200);
+
+    t.equal(res.body.title, 'My Rainy Day Fund');
+});
+
+t.test('PATCH /:id — trims whitespace from title', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, title: '  My Fund  ' })
+        .expect(200);
+
+    t.equal(res.body.title, 'My Fund');
+});
+
+t.test('PATCH /:id — blank/whitespace-only title is stored as null', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, title: '   ' })
+        .expect(200);
+
+    t.equal(res.body.title, null);
+});
+
+t.test('PATCH /:id — omitting title defaults to null', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false })
+        .expect(200);
+
+    t.equal(res.body.title, null);
+});
+
+t.test('PATCH /:id — clearing a previously set title falls back to null', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, title: 'Rainy Day' })
+        .expect(200);
+
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, title: '' })
+        .expect(200);
+
+    t.equal(res.body.title, null);
+});
+
+t.test('PATCH /:id — accepts an explicit null title', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    const res = await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, title: null })
+        .expect(200);
+
+    t.equal(res.body.title, null);
+});
+
+t.test('PATCH /:id — returns 400 when title is not a string', async () => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+
+    const app = makeApp();
+    await request(app)
+        .patch(`/api/dashboard-config/${tileId}`)
+        .send({ account_id: accountId, tile_type: 'transactions', show_balance: false, title: 123 })
+        .expect(400);
+});
+
+t.test('GET / — includes title in response', async (t) => {
+    const accountId = insertAccount('Savings');
+    const tileId = insertTile(accountId, 'transactions');
+    db.prepare('UPDATE dashboard_config SET title = ? WHERE id = ?').run('Custom', tileId);
+
+    const app = makeApp();
+    const response = await request(app).get('/api/dashboard-config').expect(200);
+
+    t.equal(response.body.items[0].title, 'Custom');
+});
+
 t.test('PATCH /:id — accepts null account_id for net_worth tile', async (t) => {
     const app = makeApp();
     const created = await request(app)

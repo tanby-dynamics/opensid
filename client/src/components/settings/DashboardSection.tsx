@@ -33,30 +33,8 @@ import {
 } from '../../api/dashboardConfig';
 import { listAccounts } from '../../api/accounts';
 import { listSavedViews, type SavedView } from '../../api/savedViews';
-import { formatChartWindow } from '../../utils/chartWindow';
-
-const TILE_TYPE_LABELS: Record<TileType, string> = {
-    transactions: 'Transactions',
-    balance_over_time: 'Balance over time',
-    totals_by_category: 'Totals by category',
-    income_vs_expense: 'Income vs Expense',
-    budget_progress: 'Budget Progress',
-    net_worth: 'Net Worth',
-    net_worth_chart: 'Net Worth Over Time',
-    forecast: 'Forecast',
-};
-
-const FORECAST_WINDOW_OPTIONS = [
-    { value: '14d', label: 'Next 14 days' },
-    { value: '30d', label: 'Next 30 days' },
-    { value: '60d', label: 'Next 60 days' },
-    { value: '90d', label: 'Next 90 days' },
-];
-
-function forecastWindowLabel(timeWindow: string): string {
-    const match = FORECAST_WINDOW_OPTIONS.find((o) => o.value === timeWindow);
-    return match?.label ?? timeWindow;
-}
+import { resolveTileTitle, generatedTileTitle } from '../../utils/tileTitle';
+import { FORECAST_WINDOW_OPTIONS } from '../../utils/chartWindow';
 
 const WINDOW_OPTIONS = [
     { value: '30d', label: 'Last 30 days' },
@@ -72,20 +50,6 @@ const INCOME_VS_EXPENSE_WINDOW_OPTIONS = [
     { value: '12m', label: 'Last 12 months' },
     { value: 'all', label: 'All time' },
 ];
-
-function tileLabel(item: DashboardConfigItem, accountName: string): string {
-    const windowLabel = (w: string) => item.tile_type === 'forecast' ? forecastWindowLabel(w) : formatChartWindow(w);
-
-    if (item.account_id === null) {
-        const base = TILE_TYPE_LABELS[item.tile_type];
-        if (item.time_window) return `${base} — ${windowLabel(item.time_window)}`;
-        return base;
-    }
-    if (item.tile_type === 'transactions') return accountName;
-    const base = `${accountName} — ${TILE_TYPE_LABELS[item.tile_type]}`;
-    if (item.time_window) return `${base} — ${windowLabel(item.time_window)}`;
-    return base;
-}
 
 function isValidWeeks(value: string): boolean {
     const n = parseInt(value, 10);
@@ -151,6 +115,7 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
     const [showBalance, setShowBalance] = useState(tile.show_balance);
     const [discretionary, setDiscretionary] = useState(tile.forecast_discretionary);
     const [savedViewId, setSavedViewId] = useState<number | null>(tile.saved_view_id);
+    const [title, setTitle] = useState(tile.title ?? '');
     const [error, setError] = useState('');
 
     const isCrossAccountType = CROSS_ACCOUNT_TILE_TYPES.includes(tileType);
@@ -170,6 +135,8 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
     const compatibleSavedViews = savedViews.filter(
         (v: SavedView) => v.scope === 'global' || v.account_id === selectedAccountId,
     );
+    const selectedAccountName = accounts.find((a) => a.id === selectedAccountId)?.name ?? '';
+    const titlePlaceholder = generatedTileTitle({ ...tile, tile_type: tileType, account_id: isCrossAccountType ? null : selectedAccountId }, selectedAccountName, 'terse');
 
     const handleCancel = useCallback(onCancel, [onCancel]);
 
@@ -209,6 +176,7 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                 show_balance: supportsBalance ? showBalance : false,
                 forecast_discretionary: isForecastType ? discretionary : false,
                 saved_view_id: supportsSavedView ? savedViewId : null,
+                title: title === '' ? null : title,
             });
         },
         onSuccess: onSave,
@@ -270,6 +238,18 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                             <option value="net_worth_chart">Net Worth Over Time</option>
                             <option value="forecast">Forecast</option>
                         </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[12px] font-bold tracking-[0.06em] text-[var(--text-muted)] uppercase font-body">Title</label>
+                        <input
+                            type="text"
+                            className={inputCls}
+                            value={title}
+                            placeholder={titlePlaceholder}
+                            maxLength={60}
+                            onChange={(e) => setTitle(e.target.value)}
+                        />
                     </div>
 
                     {isForecastType && (
@@ -687,7 +667,7 @@ export default function DashboardSection() {
                                 {localConfig.map((item, index) => {
                                     const account = allAccounts.find((a) => a.id === item.account_id);
                                     const name = account?.name ?? `Account ${item.account_id}`;
-                                    const label = tileLabel(item, name);
+                                    const label = resolveTileTitle(item, name, 'descriptive');
                                     return (
                                         <SortableRow
                                             key={item.id}
@@ -713,7 +693,7 @@ export default function DashboardSection() {
                         {activeItem && (() => {
                             const account = allAccounts.find((a) => a.id === activeItem.account_id);
                             const name = account?.name ?? `Account ${activeItem.account_id}`;
-                            const label = tileLabel(activeItem, name);
+                            const label = resolveTileTitle(activeItem, name, 'descriptive');
                             return (
                                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <tbody>

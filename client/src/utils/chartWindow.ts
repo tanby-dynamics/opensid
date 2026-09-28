@@ -1,3 +1,10 @@
+export const FORECAST_WINDOW_OPTIONS = [
+    { value: '14d', label: 'Next 14 days' },
+    { value: '30d', label: 'Next 30 days' },
+    { value: '60d', label: 'Next 60 days' },
+    { value: '90d', label: 'Next 90 days' },
+];
+
 export function formatChartWindow(window: string): string {
     if (window === '30d') return 'Last 30 days';
     if (window === '3m') return 'Last 3 months';

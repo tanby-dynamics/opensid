@@ -5,13 +5,14 @@ import { Tile } from './Tile';
 
 interface Props {
     account: DashboardAccount;
+    title?: string;
     showBalance: boolean;
     onAddTransaction: (account: DashboardAccount) => void;
 }
 
-export default function AccountTile({ account, showBalance, onAddTransaction }: Props) {
+export default function AccountTile({ account, title, showBalance, onAddTransaction }: Props) {
     return (
-        <Tile accountName={account.name} accountId={account.id}>
+        <Tile accountName={title ?? account.name} accountId={account.id}>
             {/* Balance */}
             {showBalance && (
                 <div

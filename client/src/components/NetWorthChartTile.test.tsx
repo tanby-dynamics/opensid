@@ -13,7 +13,7 @@ function renderTile(window: string) {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     return render(
         <QueryClientProvider client={client}>
-            <NetWorthChartTile window={window} />
+            <NetWorthChartTile window={window} title="Net Worth Over Time" />
         </QueryClientProvider>,
     );
 }
