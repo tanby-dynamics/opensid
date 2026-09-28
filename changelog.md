@@ -11,6 +11,7 @@
 - Filter dashboard tiles by saved views
 - Make reconciliation feature configurable per account
 - Pagination on account transactions page
+- Dashboard tiles can have a custom title
 
 ## 0.2.0
 
