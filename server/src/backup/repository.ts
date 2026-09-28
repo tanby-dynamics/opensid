@@ -7,7 +7,7 @@ function formatTimestamp(d: Date): string {
 }
 
 export function exportAll(): BackupPayload {
-    const accounts = db.prepare(`SELECT id, name, created_at, deleted_at, kind, exclude_from_net_worth FROM accounts ORDER BY id`).all() as BackupAccount[];
+    const accounts = db.prepare(`SELECT id, name, created_at, deleted_at, kind, exclude_from_net_worth, reconciliation_enabled FROM accounts ORDER BY id`).all() as BackupAccount[];
 
     const transactions = db.prepare(`SELECT id, account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, recurrence_source_id, transfer_group_id, cleared_at, split_parent_id FROM transactions ORDER BY id`).all() as BackupTransaction[];
 
@@ -46,7 +46,7 @@ export function exportAll(): BackupPayload {
 }
 
 export function importMerge(payload: BackupPayload): ImportResult {
-    const insertAccount = db.prepare(`INSERT INTO accounts (name, created_at, deleted_at, kind, exclude_from_net_worth) VALUES (?, ?, ?, ?, ?)`);
+    const insertAccount = db.prepare(`INSERT INTO accounts (name, created_at, deleted_at, kind, exclude_from_net_worth, reconciliation_enabled) VALUES (?, ?, ?, ?, ?, ?)`);
     const insertTransaction = db.prepare(`INSERT INTO transactions (account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, transfer_group_id, cleared_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     // split_parent_id and recurrence_source_id both reference other transactions and are wired up
     // in a second pass below, once every row's remapped ID is known.
@@ -68,7 +68,9 @@ export function importMerge(payload: BackupPayload): ImportResult {
         for (const account of p.accounts) {
             const conflict = findActiveByName.get(account.name) as { id: number } | undefined;
             const name = conflict ? `${account.name} ${timestamp}` : account.name;
-            const result = insertAccount.run(name, account.created_at, account.deleted_at, account.kind ?? 'asset', account.exclude_from_net_worth ?? 0);
+            // Backups from before this feature existed have no reconciliation_enabled field;
+            // treat them like pre-existing accounts and grandfather them to enabled (matches db.ts's migration default).
+            const result = insertAccount.run(name, account.created_at, account.deleted_at, account.kind ?? 'asset', account.exclude_from_net_worth ?? 0, account.reconciliation_enabled ?? 1);
             const newId = result.lastInsertRowid as number;
             accountIdMap.set(account.id, newId);
             if (!account.deleted_at) {
@@ -283,7 +285,7 @@ export function importMerge(payload: BackupPayload): ImportResult {
 }
 
 export function importWipe(payload: BackupPayload): ImportResult {
-    const insertAccount = db.prepare(`INSERT INTO accounts (id, name, created_at, deleted_at, kind, exclude_from_net_worth) VALUES (?, ?, ?, ?, ?, ?)`);
+    const insertAccount = db.prepare(`INSERT INTO accounts (id, name, created_at, deleted_at, kind, exclude_from_net_worth, reconciliation_enabled) VALUES (?, ?, ?, ?, ?, ?, ?)`);
     const insertTransaction = db.prepare(`INSERT INTO transactions (id, account_id, category, description, amount_cents, type, date, notes, created_at, updated_at, deleted_at, recurrence, recurrence_end_date, recurrence_source_id, transfer_group_id, cleared_at, split_parent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     const insertAttachment = db.prepare(`INSERT INTO attachments (id, transaction_id, filename, mime_type, size_bytes, data, created_at, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
 
@@ -299,7 +301,7 @@ export function importWipe(payload: BackupPayload): ImportResult {
         db.prepare(`DELETE FROM accounts`).run();
 
         for (const account of p.accounts) {
-            insertAccount.run(account.id, account.name, account.created_at, account.deleted_at, account.kind ?? 'asset', account.exclude_from_net_worth ?? 0);
+            insertAccount.run(account.id, account.name, account.created_at, account.deleted_at, account.kind ?? 'asset', account.exclude_from_net_worth ?? 0, account.reconciliation_enabled ?? 1);
         }
 
         // Re-seed dashboard_config for all non-deleted accounts in alphabetical order

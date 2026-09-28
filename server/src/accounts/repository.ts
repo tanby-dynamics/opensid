@@ -10,6 +10,7 @@ export interface Account {
     transaction_count: number;
     kind: AccountKind;
     exclude_from_net_worth: number; // 0 or 1
+    reconciliation_enabled: number; // 0 or 1
 }
 
 export function findAll(): Account[] {
@@ -44,17 +45,17 @@ export function findByName(name: string): Account | undefined {
         .get(name) as Account | undefined;
 }
 
-export function create(name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false): Account {
+export function create(name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false, reconciliationEnabled = false): Account {
     const result = db
-        .prepare('INSERT INTO accounts (name, kind, exclude_from_net_worth) VALUES (?, ?, ?)')
-        .run(name, kind, excludeFromNetWorth ? 1 : 0);
+        .prepare('INSERT INTO accounts (name, kind, exclude_from_net_worth, reconciliation_enabled) VALUES (?, ?, ?, ?)')
+        .run(name, kind, excludeFromNetWorth ? 1 : 0, reconciliationEnabled ? 1 : 0);
     return findById(result.lastInsertRowid as number)!;
 }
 
-export function update(id: number, name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false): Account | undefined {
+export function update(id: number, name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false, reconciliationEnabled = false): Account | undefined {
     db.prepare(
-        'UPDATE accounts SET name = ?, kind = ?, exclude_from_net_worth = ? WHERE id = ? AND deleted_at IS NULL',
-    ).run(name, kind, excludeFromNetWorth ? 1 : 0, id);
+        'UPDATE accounts SET name = ?, kind = ?, exclude_from_net_worth = ?, reconciliation_enabled = ? WHERE id = ? AND deleted_at IS NULL',
+    ).run(name, kind, excludeFromNetWorth ? 1 : 0, reconciliationEnabled ? 1 : 0, id);
     return findById(id);
 }
 

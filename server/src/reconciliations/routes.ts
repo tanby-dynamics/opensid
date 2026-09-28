@@ -24,8 +24,13 @@ router.get<{ accountId: string }>('/last', (req, res) => {
 
 router.post<{ accountId: string }>('/', (req, res) => {
     const accountId = parseInt(req.params.accountId, 10);
-    if (!findAccount(accountId)) {
+    const account = findAccount(accountId);
+    if (!account) {
         res.status(404).json({ error: 'account not found' });
+        return;
+    }
+    if (account.reconciliation_enabled !== 1) {
+        res.status(403).json({ error: 'Reconciliation is disabled for this account' });
         return;
     }
 

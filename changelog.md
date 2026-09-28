@@ -8,7 +8,8 @@
 - Forecast tile
 - Split transactions
 - Rename from Sid to OpenSid
-
+- Filter dashboard tiles by saved views
+- Make reconciliation feature configurable per account
 
 ## 0.2.0
 

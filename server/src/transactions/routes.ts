@@ -375,9 +375,18 @@ router.put<{ accountId: string; id: string }>('/:id', (req, res) => {
 router.put<{ accountId: string; id: string }>('/:id/cleared', (req, res) => {
     const accountId = parseInt(req.params.accountId, 10);
     const id = parseInt(req.params.id, 10);
+    const account = findAccount(accountId);
+    if (!account) {
+        res.status(404).json({ error: 'account not found' });
+        return;
+    }
     const existing = repo.findById(id);
     if (!existing || existing.account_id !== accountId) {
         res.status(404).json({ error: 'transaction not found' });
+        return;
+    }
+    if (account.reconciliation_enabled !== 1) {
+        res.status(403).json({ error: 'Reconciliation is disabled for this account' });
         return;
     }
     const { cleared } = req.body as { cleared?: boolean };

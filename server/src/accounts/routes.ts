@@ -20,7 +20,7 @@ router.get('/balances', (_req, res) => {
             WHERE deleted_at IS NULL AND split_parent_id IS NULL
             GROUP BY account_id
         )
-        SELECT a.id, a.name, COALESCE(b.balance_cents, 0) AS balance_cents
+        SELECT a.id, a.name, a.reconciliation_enabled, COALESCE(b.balance_cents, 0) AS balance_cents
         FROM accounts a
         LEFT JOIN balances b ON b.account_id = a.id
         WHERE a.deleted_at IS NULL
@@ -36,7 +36,12 @@ function isValidKind(kind: unknown): kind is 'asset' | 'liability' {
 }
 
 router.post('/', (req, res) => {
-    const { name, kind, exclude_from_net_worth } = req.body as { name?: string; kind?: unknown; exclude_from_net_worth?: unknown };
+    const { name, kind, exclude_from_net_worth, reconciliation_enabled } = req.body as {
+        name?: string;
+        kind?: unknown;
+        exclude_from_net_worth?: unknown;
+        reconciliation_enabled?: unknown;
+    };
     if (!name || name.trim() === '') {
         res.status(400).json({ error: 'name is required' });
         return;
@@ -49,7 +54,12 @@ router.post('/', (req, res) => {
         res.status(409).json({ error: 'name already exists' });
         return;
     }
-    const account = repo.create(name.trim(), isValidKind(kind) ? kind : 'asset', exclude_from_net_worth === true);
+    const account = repo.create(
+        name.trim(),
+        isValidKind(kind) ? kind : 'asset',
+        exclude_from_net_worth === true,
+        reconciliation_enabled === true,
+    );
     dashboardConfig.add(account.id, 'transactions');
     res.status(201).json(account);
 });
@@ -80,7 +90,12 @@ router.get('/:id', (req, res) => {
 
 router.put('/:id', (req, res) => {
     const id = parseInt(req.params.id, 10);
-    const { name, kind, exclude_from_net_worth } = req.body as { name?: string; kind?: unknown; exclude_from_net_worth?: unknown };
+    const { name, kind, exclude_from_net_worth, reconciliation_enabled } = req.body as {
+        name?: string;
+        kind?: unknown;
+        exclude_from_net_worth?: unknown;
+        reconciliation_enabled?: unknown;
+    };
     if (!name || name.trim() === '') {
         res.status(400).json({ error: 'name is required' });
         return;
@@ -101,7 +116,10 @@ router.put('/:id', (req, res) => {
     }
     const resolvedKind = isValidKind(kind) ? kind : current.kind;
     const resolvedExclude = exclude_from_net_worth === undefined ? current.exclude_from_net_worth === 1 : exclude_from_net_worth === true;
-    const account = repo.update(id, name.trim(), resolvedKind, resolvedExclude);
+    const resolvedReconciliationEnabled = reconciliation_enabled === undefined
+        ? current.reconciliation_enabled === 1
+        : reconciliation_enabled === true;
+    const account = repo.update(id, name.trim(), resolvedKind, resolvedExclude, resolvedReconciliationEnabled);
     if (!account) {
         res.status(404).json({ error: 'account not found' });
         return;

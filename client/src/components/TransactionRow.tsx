@@ -85,11 +85,11 @@ export default function TransactionRow({ transaction, isLast, gridTemplate, onEd
         </span>
     ) : null;
 
-    const clearedToggle = (
+    const clearedToggle = onToggleCleared ? (
         <button
             type="button"
             aria-label={isCleared ? 'Unmark as cleared' : 'Mark as cleared'}
-            onClick={(e) => { e.stopPropagation(); onToggleCleared?.(transaction.id, !isCleared); }}
+            onClick={(e) => { e.stopPropagation(); onToggleCleared(transaction.id, !isCleared); }}
             className={`flex items-center justify-center w-5 h-5 rounded-full border-[1.5px] flex-shrink-0 transition-all text-[11px] font-bold ${
                 isCleared
                     ? 'bg-[var(--green)] border-[var(--green)] text-white'
@@ -101,6 +101,8 @@ export default function TransactionRow({ transaction, isLast, gridTemplate, onEd
         >
             ✓
         </button>
+    ) : (
+        <span className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
     );
 
     return (

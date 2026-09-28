@@ -13,13 +13,23 @@ export async function getAccount(id: number): Promise<Account> {
     return data;
 }
 
-export async function createAccount(name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false): Promise<Account> {
-    const { data } = await axios.post<Account>(base, { name, kind, exclude_from_net_worth: excludeFromNetWorth });
+export async function createAccount(name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false, reconciliationEnabled = false): Promise<Account> {
+    const { data } = await axios.post<Account>(base, {
+        name,
+        kind,
+        exclude_from_net_worth: excludeFromNetWorth,
+        reconciliation_enabled: reconciliationEnabled,
+    });
     return data;
 }
 
-export async function updateAccount(id: number, name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false): Promise<Account> {
-    const { data } = await axios.put<Account>(`${base}/${id}`, { name, kind, exclude_from_net_worth: excludeFromNetWorth });
+export async function updateAccount(id: number, name: string, kind: AccountKind = 'asset', excludeFromNetWorth = false, reconciliationEnabled = false): Promise<Account> {
+    const { data } = await axios.put<Account>(`${base}/${id}`, {
+        name,
+        kind,
+        exclude_from_net_worth: excludeFromNetWorth,
+        reconciliation_enabled: reconciliationEnabled,
+    });
     return data;
 }
 

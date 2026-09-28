@@ -622,8 +622,8 @@ export default function AccountDetail() {
                 &larr; {fromAllAccounts ? 'Back to all accounts' : 'Back to dashboard'}
             </PageLink>
 
-            {/* Cleared chip — shown outside reconcile mode */}
-            {!reconcileSetup && transactions.some((t) => t.cleared_at !== null) && (
+            {/* Cleared chip — shown outside reconcile mode, only when reconciliation is enabled */}
+            {account.reconciliation_enabled === 1 && !reconcileSetup && transactions.some((t) => t.cleared_at !== null) && (
                 <div className="flex items-center gap-2 mb-3 text-sm text-[var(--text-secondary)]">
                     <span className="text-[var(--green)] font-semibold">✓ Cleared: {formatCents(clearedBalance)}</span>
                     <span className="text-[var(--text-muted)]">of {formatCents(balance)}</span>
@@ -653,13 +653,15 @@ export default function AccountDetail() {
                     onExportCsv={handleExportCsv}
                     isImporting={isImporting || isPreviewLoading}
                 />
-                <button
-                    className="opensid-btn opensid-btn-ghost opensid-btn-sm"
-                    onClick={() => setModal({ type: 'reconcile-setup' })}
-                    disabled={reconcileSetup !== null}
-                >
-                    ⊘ Reconcile
-                </button>
+                {account.reconciliation_enabled === 1 && (
+                    <button
+                        className="opensid-btn opensid-btn-ghost opensid-btn-sm"
+                        onClick={() => setModal({ type: 'reconcile-setup' })}
+                        disabled={reconcileSetup !== null}
+                    >
+                        ⊘ Reconcile
+                    </button>
+                )}
                 <button className="opensid-btn opensid-btn-ghost opensid-btn-sm" onClick={() => setModal({ type: 'add-transfer' })}>
                     ↔ New transfer
                 </button>
@@ -959,7 +961,7 @@ export default function AccountDetail() {
                             isLast={idx === transactions.length - 1}
                             gridTemplate={TX_GRID}
                             initialExpanded={expandTxId === t.id}
-                            onToggleCleared={(txId, cleared) => clearMutation.mutate({ txId, cleared })}
+                            onToggleCleared={account.reconciliation_enabled === 1 ? (txId, cleared) => clearMutation.mutate({ txId, cleared }) : undefined}
                             reconcileMode={reconcileSetup !== null}
                             onEdit={(tx) => {
                                 if (tx.transfer_group_id) {

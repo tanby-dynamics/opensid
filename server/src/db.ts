@@ -256,6 +256,12 @@ try {
     db.exec(`ALTER TABLE accounts ADD COLUMN exclude_from_net_worth INTEGER NOT NULL DEFAULT 0`);
 } catch { /* column already exists */ }
 
+// Grandfathers existing accounts to enabled (DEFAULT 1); accounts/repository.ts explicitly
+// inserts 0 for newly created accounts so reconciliation is opt-in going forward.
+try {
+    db.exec(`ALTER TABLE accounts ADD COLUMN reconciliation_enabled INTEGER NOT NULL DEFAULT 1`);
+} catch { /* column already exists */ }
+
 // One-shot migration: allow NULL account_id on dashboard_config for cross-account tiles
 // (net_worth / net_worth_chart). SQLite cannot drop a NOT NULL constraint, so table-rename.
 {

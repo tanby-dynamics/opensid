@@ -5,6 +5,7 @@ export interface BackupAccount {
     deleted_at: string | null;
     kind: 'asset' | 'liability';
     exclude_from_net_worth: number;
+    reconciliation_enabled: number;
 }
 
 export interface BackupTransaction {

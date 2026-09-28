@@ -5,12 +5,14 @@ export interface AccountFormValues {
     name: string;
     kind: AccountKind;
     excludeFromNetWorth: boolean;
+    reconciliationEnabled: boolean;
 }
 
 interface Props {
     initialName?: string;
     initialKind?: AccountKind;
     initialExcludeFromNetWorth?: boolean;
+    initialReconciliationEnabled?: boolean;
     onSubmit: (values: AccountFormValues) => void;
     onCancel: () => void;
     title: string;
@@ -21,6 +23,7 @@ export default function AccountForm({
     initialName = '',
     initialKind = 'asset',
     initialExcludeFromNetWorth = false,
+    initialReconciliationEnabled = false,
     onSubmit,
     onCancel,
     title,
@@ -29,6 +32,7 @@ export default function AccountForm({
     const [name, setName] = useState(initialName);
     const [kind, setKind] = useState<AccountKind>(initialKind);
     const [excludeFromNetWorth, setExcludeFromNetWorth] = useState(initialExcludeFromNetWorth);
+    const [reconciliationEnabled, setReconciliationEnabled] = useState(initialReconciliationEnabled);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -40,7 +44,7 @@ export default function AccountForm({
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!name.trim()) { setError('Name is required.'); return; }
-        onSubmit({ name: name.trim(), kind, excludeFromNetWorth });
+        onSubmit({ name: name.trim(), kind, excludeFromNetWorth, reconciliationEnabled });
     }
 
     return (
@@ -82,6 +86,17 @@ export default function AccountForm({
                             />
                             Exclude from net worth
                         </label>
+                        <label className="flex items-center gap-2 mt-3 text-[14px] cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={reconciliationEnabled}
+                                onChange={(e) => setReconciliationEnabled(e.target.checked)}
+                            />
+                            Enable reconciliation
+                        </label>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">
+                            Turn on to track cleared transactions and reconcile against bank statements.
+                        </p>
                         <div className="flex justify-end gap-2.5 mt-5">
                             <button type="button" className="opensid-btn opensid-btn-ghost" onClick={onCancel}>Cancel</button>
                             <button type="submit" className="opensid-btn opensid-btn-primary">Save</button>

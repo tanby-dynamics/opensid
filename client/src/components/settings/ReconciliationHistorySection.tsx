@@ -10,10 +10,11 @@ export default function ReconciliationHistorySection() {
     const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
     const [viewingRecon, setViewingRecon] = useState<Reconciliation | null>(null);
 
-    const { data: accounts = [] } = useQuery({
+    const { data: allAccounts = [] } = useQuery({
         queryKey: ['accounts-balances'],
         queryFn: listAccountsWithBalances,
     });
+    const accounts = allAccounts.filter((a) => a.reconciliation_enabled === 1);
 
     const { data: reconciliations = [], isLoading } = useQuery({
         queryKey: ['reconciliations', selectedAccountId],

@@ -28,11 +28,48 @@ t.teardown(() => {
     resetDatabase();
 });
 
-t.test('POST / — defaults kind to asset and exclude_from_net_worth to false', async (t) => {
+t.test('POST / — defaults kind to asset, exclude_from_net_worth and reconciliation_enabled to false', async (t) => {
     const app = makeApp();
     const res = await request(app).post('/api/accounts').send({ name: 'Everyday' }).expect(201);
     t.equal(res.body.kind, 'asset');
     t.equal(res.body.exclude_from_net_worth, 0);
+    t.equal(res.body.reconciliation_enabled, 0);
+});
+
+t.test('POST / — accepts reconciliation_enabled', async (t) => {
+    const app = makeApp();
+    const res = await request(app)
+        .post('/api/accounts')
+        .send({ name: 'Checking', reconciliation_enabled: true })
+        .expect(201);
+    t.equal(res.body.reconciliation_enabled, 1);
+});
+
+t.test('PUT /:id — updates reconciliation_enabled', async (t) => {
+    const app = makeApp();
+    const created = await request(app).post('/api/accounts').send({ name: 'Checking' }).expect(201);
+
+    const res = await request(app)
+        .put(`/api/accounts/${created.body.id}`)
+        .send({ name: 'Checking', reconciliation_enabled: true })
+        .expect(200);
+
+    t.equal(res.body.reconciliation_enabled, 1);
+});
+
+t.test('PUT /:id — preserves existing reconciliation_enabled when not provided', async (t) => {
+    const app = makeApp();
+    const created = await request(app)
+        .post('/api/accounts')
+        .send({ name: 'Checking', reconciliation_enabled: true })
+        .expect(201);
+
+    const res = await request(app)
+        .put(`/api/accounts/${created.body.id}`)
+        .send({ name: 'Checking renamed' })
+        .expect(200);
+
+    t.equal(res.body.reconciliation_enabled, 1);
 });
 
 t.test('POST / — accepts kind and exclude_from_net_worth', async (t) => {

@@ -25,7 +25,7 @@ describe('AccountForm', () => {
         render(<AccountForm title="New account" onSubmit={onSubmit} onCancel={vi.fn()} />);
         fireEvent.change(screen.getByRole('textbox'), { target: { value: '  Training  ' } });
         fireEvent.click(screen.getByRole('button', { name: /save/i }));
-        expect(onSubmit).toHaveBeenCalledWith({ name: 'Training', kind: 'asset', excludeFromNetWorth: false });
+        expect(onSubmit).toHaveBeenCalledWith({ name: 'Training', kind: 'asset', excludeFromNetWorth: false, reconciliationEnabled: false });
     });
 
     it('shows error and does not submit when name is empty', () => {
@@ -36,29 +36,32 @@ describe('AccountForm', () => {
         expect(screen.getByText('Name is required.')).toBeTruthy();
     });
 
-    it('submits selected kind and exclude_from_net_worth', () => {
+    it('submits selected kind, exclude_from_net_worth and reconciliation_enabled', () => {
         const onSubmit = vi.fn();
         render(<AccountForm title="New account" onSubmit={onSubmit} onCancel={vi.fn()} />);
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Visa' } });
         fireEvent.change(screen.getByLabelText('Kind'), { target: { value: 'liability' } });
         fireEvent.click(screen.getByLabelText(/exclude from net worth/i));
+        fireEvent.click(screen.getByLabelText(/enable reconciliation/i));
         fireEvent.click(screen.getByRole('button', { name: /save/i }));
-        expect(onSubmit).toHaveBeenCalledWith({ name: 'Visa', kind: 'liability', excludeFromNetWorth: true });
+        expect(onSubmit).toHaveBeenCalledWith({ name: 'Visa', kind: 'liability', excludeFromNetWorth: true, reconciliationEnabled: true });
     });
 
-    it('pre-fills kind and exclude_from_net_worth from initial values', () => {
+    it('pre-fills kind, exclude_from_net_worth and reconciliation_enabled from initial values', () => {
         render(
             <AccountForm
                 title="Rename account"
                 initialName="Play money"
                 initialKind="liability"
                 initialExcludeFromNetWorth={true}
+                initialReconciliationEnabled={true}
                 onSubmit={vi.fn()}
                 onCancel={vi.fn()}
             />,
         );
         expect((screen.getByLabelText('Kind') as HTMLSelectElement).value).toBe('liability');
         expect((screen.getByLabelText(/exclude from net worth/i) as HTMLInputElement).checked).toBe(true);
+        expect((screen.getByLabelText(/enable reconciliation/i) as HTMLInputElement).checked).toBe(true);
     });
 
     it('calls onCancel when cancel is clicked', () => {

@@ -39,7 +39,7 @@ export default function AccountsSection() {
     });
 
     const createMutation = useMutation({
-        mutationFn: (values: AccountFormValues) => createAccount(values.name, values.kind, values.excludeFromNetWorth),
+        mutationFn: (values: AccountFormValues) => createAccount(values.name, values.kind, values.excludeFromNetWorth, values.reconciliationEnabled),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
@@ -57,7 +57,7 @@ export default function AccountsSection() {
 
     const updateMutation = useMutation({
         mutationFn: ({ id, values }: { id: number; values: AccountFormValues }) =>
-            updateAccount(id, values.name, values.kind, values.excludeFromNetWorth),
+            updateAccount(id, values.name, values.kind, values.excludeFromNetWorth, values.reconciliationEnabled),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
@@ -176,6 +176,7 @@ export default function AccountsSection() {
                     initialName={modal.account.name}
                     initialKind={modal.account.kind}
                     initialExcludeFromNetWorth={modal.account.exclude_from_net_worth === 1}
+                    initialReconciliationEnabled={modal.account.reconciliation_enabled === 1}
                     serverError={modal.serverError}
                     onSubmit={(values) => updateMutation.mutate({ id: modal.account.id, values })}
                     onCancel={() => setModal(null)}

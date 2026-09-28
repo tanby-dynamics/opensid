@@ -45,7 +45,7 @@ const income: Transaction = {
     type: 'income',
 };
 
-function renderRow(t = expense, onEdit = vi.fn(), onDelete = vi.fn()) {
+function renderRow(t = expense, onEdit = vi.fn(), onDelete = vi.fn(), onToggleCleared?: (id: number, cleared: boolean) => void) {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     return render(
         <QueryClientProvider client={client}>
@@ -53,6 +53,7 @@ function renderRow(t = expense, onEdit = vi.fn(), onDelete = vi.fn()) {
                 transaction={t}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onToggleCleared={onToggleCleared}
                 isLast={false}
                 gridTemplate="100px 150px 1fr 100px 100px"
             />
@@ -100,6 +101,18 @@ describe('TransactionRow', () => {
         renderRow(expense, vi.fn(), onDelete);
         fireEvent.click(screen.getAllByRole('button', { name: /delete coffee/i })[0]);
         expect(onDelete).toHaveBeenCalledWith(expense);
+    });
+
+    it('does not show a clear toggle when onToggleCleared is not provided (reconciliation disabled)', () => {
+        renderRow();
+        expect(screen.queryByRole('button', { name: /mark as cleared/i })).toBeNull();
+    });
+
+    it('shows a clear toggle when onToggleCleared is provided (reconciliation enabled)', () => {
+        const onToggleCleared = vi.fn();
+        renderRow(expense, vi.fn(), vi.fn(), onToggleCleared);
+        fireEvent.click(screen.getAllByRole('button', { name: /mark as cleared/i })[0]);
+        expect(onToggleCleared).toHaveBeenCalledWith(1, true);
     });
 
     it('does not show a split chip for a non-split transaction', () => {

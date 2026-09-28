@@ -8,10 +8,12 @@ export interface Account {
     transaction_count: number;
     kind: AccountKind;
     exclude_from_net_worth: number;
+    reconciliation_enabled: number;
 }
 
 export interface AccountWithBalance {
     id: number;
     name: string;
     balance_cents: number;
+    reconciliation_enabled: number;
 }
