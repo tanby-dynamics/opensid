@@ -62,13 +62,13 @@ export default function AccountsSection() {
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
             setModal(null);
-            toast.success('Account renamed.');
+            toast.success('Account updated.');
         },
         onError: (err) => {
             if (isNameTaken(err)) {
                 setModal((m) => m?.type === 'edit' ? { ...m, serverError: 'An account with this name already exists.' } : m);
             } else {
-                toast.error('Failed to rename account.');
+                toast.error('Failed to update account.');
             }
         },
     });
