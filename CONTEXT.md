@@ -9,7 +9,7 @@ One configured widget on the dashboard, backed by a single `dashboard_config` ro
 _Avoid_: Widget, panel
 
 **Custom Title**:
-An optional user-entered override (`dashboard_config.title`) that replaces a Dashboard Tile's Generated Title. Editable only via the tile edit form, not at tile creation. Blank/whitespace-only input is treated as "no override" (stored as NULL, not empty string) and falls back to the Generated Title. Unbounded in the database; the edit form caps entry at 60 characters. No uniqueness constraint across tiles.
+An optional user-entered override (`dashboard_config.title`) that replaces a Dashboard Tile's Generated Title. Set via the tile form, which is shared between tile creation and tile editing. Blank/whitespace-only input is treated as "no override" (stored as NULL, not empty string) and falls back to the Generated Title. Unbounded in the database; the tile form caps entry at 60 characters. No uniqueness constraint across tiles.
 _Avoid_: Custom name, tile name
 
 **Generated Title**:

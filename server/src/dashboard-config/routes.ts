@@ -54,6 +54,14 @@ function resolveSavedViewId(tileType: TileType, accountId: number | null, raw: u
     return { ok: true, value: raw };
 }
 
+function resolveTitle(raw: unknown): { ok: true; value: string | null } | { ok: false; error: string } {
+    if (raw !== undefined && raw !== null && typeof raw !== 'string') {
+        return { ok: false, error: 'title must be a string or null' };
+    }
+    const value = typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : null;
+    return { ok: true, value };
+}
+
 function toClientItem(item: DashboardConfigItem) {
     return { ...item, show_balance: item.show_balance === 1, forecast_discretionary: item.forecast_discretionary === 1 };
 }
@@ -63,7 +71,13 @@ router.get('/', (_req, res) => {
 });
 
 router.post('/cross-account', (req, res) => {
-    const { tile_type, time_window } = req.body as { tile_type?: string; time_window?: string };
+    const { tile_type, time_window, saved_view_id, title, show_balance } = req.body as {
+        tile_type?: string;
+        time_window?: string;
+        saved_view_id?: unknown;
+        title?: unknown;
+        show_balance?: unknown;
+    };
     if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType) || !isCrossAccountType(tile_type as TileType)) {
         res.status(400).json({ error: `tile_type must be one of: ${CROSS_ACCOUNT_TILE_TYPES.join(', ')}` });
         return;
@@ -80,7 +94,21 @@ router.post('/cross-account', (req, res) => {
             return;
         }
     }
-    const item = repo.add(null, tileType, needsWindow ? time_window : undefined);
+    const resolvedTitle = resolveTitle(title);
+    if (!resolvedTitle.ok) {
+        res.status(400).json({ error: resolvedTitle.error });
+        return;
+    }
+    const savedView = resolveSavedViewId(tileType, null, saved_view_id);
+    if (!savedView.ok) {
+        res.status(400).json({ error: savedView.error });
+        return;
+    }
+    const item = repo.add(null, tileType, needsWindow ? time_window : undefined, {
+        show_balance: show_balance === true,
+        saved_view_id: savedView.value,
+        title: resolvedTitle.value,
+    });
     res.status(201).json(toClientItem(item));
 });
 
@@ -90,7 +118,14 @@ router.post('/:accountId', (req, res) => {
         res.status(404).json({ error: 'account not found' });
         return;
     }
-    const { tile_type, time_window, forecast_discretionary } = req.body as { tile_type?: string; time_window?: string; forecast_discretionary?: unknown };
+    const { tile_type, time_window, forecast_discretionary, saved_view_id, title, show_balance } = req.body as {
+        tile_type?: string;
+        time_window?: string;
+        forecast_discretionary?: unknown;
+        saved_view_id?: unknown;
+        title?: unknown;
+        show_balance?: unknown;
+    };
     if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType) || isCrossAccountType(tile_type as TileType)) {
         res.status(400).json({ error: TILE_TYPE_ERROR });
         return;
@@ -108,7 +143,22 @@ router.post('/:accountId', (req, res) => {
             return;
         }
     }
-    const item = repo.add(accountId, tileType, needsWindow ? time_window : undefined, forecast_discretionary === true);
+    const resolvedTitle = resolveTitle(title);
+    if (!resolvedTitle.ok) {
+        res.status(400).json({ error: resolvedTitle.error });
+        return;
+    }
+    const savedView = resolveSavedViewId(tileType, accountId, saved_view_id);
+    if (!savedView.ok) {
+        res.status(400).json({ error: savedView.error });
+        return;
+    }
+    const item = repo.add(accountId, tileType, needsWindow ? time_window : undefined, {
+        forecast_discretionary: forecast_discretionary === true,
+        show_balance: show_balance === true,
+        saved_view_id: savedView.value,
+        title: resolvedTitle.value,
+    });
     res.status(201).json(toClientItem(item));
 });
 
@@ -124,11 +174,11 @@ router.patch('/:id', (req, res) => {
         title?: unknown;
     };
 
-    if (title !== undefined && title !== null && typeof title !== 'string') {
-        res.status(400).json({ error: 'title must be a string or null' });
+    const resolvedTitle = resolveTitle(title);
+    if (!resolvedTitle.ok) {
+        res.status(400).json({ error: resolvedTitle.error });
         return;
     }
-    const resolvedTitle = title && title.trim() !== '' ? title.trim() : null;
 
     if (!tile_type || !VALID_TILE_TYPES.includes(tile_type as TileType)) {
         res.status(400).json({ error: TILE_TYPE_ERROR });
@@ -183,7 +233,7 @@ router.patch('/:id', (req, res) => {
         show_balance,
         forecast_discretionary: forecast_discretionary === true,
         saved_view_id: savedView.value,
-        title: resolvedTitle,
+        title: resolvedTitle.value,
     };
     const updated = repo.updateTile(tileId, fields);
     if (!updated) {

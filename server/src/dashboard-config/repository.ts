@@ -43,14 +43,22 @@ export function getAll(): DashboardConfigItem[] {
         .all() as DashboardConfigItem[];
 }
 
-export function add(accountId: number | null, tileType: TileType, timeWindow?: string, forecastDiscretionary = false): DashboardConfigItem {
+export interface AddTileFields {
+    forecast_discretionary?: boolean;
+    show_balance?: boolean;
+    saved_view_id?: number | null;
+    title?: string | null;
+}
+
+export function add(accountId: number | null, tileType: TileType, timeWindow?: string, extra: AddTileFields = {}): DashboardConfigItem {
+    const { forecast_discretionary = false, show_balance = false, saved_view_id = null, title = null } = extra;
     const maxRow = db
         .prepare('SELECT COALESCE(MAX(position), 0) AS max_pos FROM dashboard_config')
         .get() as { max_pos: number };
     const nextPos = maxRow.max_pos + 1;
     const result = db
-        .prepare('INSERT INTO dashboard_config (account_id, position, tile_type, time_window, show_balance, forecast_discretionary) VALUES (?, ?, ?, ?, 0, ?)')
-        .run(accountId, nextPos, tileType, timeWindow ?? null, forecastDiscretionary ? 1 : 0);
+        .prepare('INSERT INTO dashboard_config (account_id, position, tile_type, time_window, show_balance, forecast_discretionary, saved_view_id, title) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(accountId, nextPos, tileType, timeWindow ?? null, show_balance ? 1 : 0, forecast_discretionary ? 1 : 0, saved_view_id, title);
     return db
         .prepare(`${SELECT_SQL} WHERE dc.id = ?`)
         .get(result.lastInsertRowid) as DashboardConfigItem;

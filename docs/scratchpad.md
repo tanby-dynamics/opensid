@@ -22,9 +22,9 @@
 	- [x]  start implementing
 	- [x] changelog
 	- [x] commit
-- [ ] **43** [Settings/Dashboard -> Add tile should open modal](https://github.com/tanby-dynamics/opensid/issues/43)
-	- [ ] start grilling
-	- [ ]  start implementing
-	- [ ] changelog
-	- [ ] commit
+- [x] **43** [Settings/Dashboard -> Add tile should open modal](https://github.com/tanby-dynamics/opensid/issues/43)
+	- [x] start grilling
+	- [x]  start implementing
+	- [x] changelog
+	- [x] commit
 - [ ] Tag new version

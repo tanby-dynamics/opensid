@@ -99,22 +99,27 @@ const GripDotsIcon = () => (
 
 const inputCls = 'font-body text-[14px] border-[1.5px] border-[var(--border)] rounded-[var(--radius-input)] px-3 py-[9px] bg-[var(--white)] text-[var(--text-primary)]';
 
-interface EditModalProps {
-    tile: DashboardConfigItem;
+interface TileModalProps {
+    mode: 'create' | 'edit';
+    tile?: DashboardConfigItem;
+    defaultAccountId: number | null;
     accounts: { id: number; name: string }[];
     onSave: () => void;
     onCancel: () => void;
 }
 
-function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
-    const [accountId, setAccountId] = useState(tile.account_id === null ? '' : String(tile.account_id));
-    const [tileType, setTileType] = useState<TileType>(tile.tile_type);
-    const [windowOption, setWindowOption] = useState(() => windowToOption(tile.time_window).option);
-    const [weeks, setWeeks] = useState(() => windowToOption(tile.time_window).weeks);
-    const [showBalance, setShowBalance] = useState(tile.show_balance);
-    const [discretionary, setDiscretionary] = useState(tile.forecast_discretionary);
-    const [savedViewId, setSavedViewId] = useState<number | null>(tile.saved_view_id);
-    const [title, setTitle] = useState(tile.title ?? '');
+function TileModal({ mode, tile, defaultAccountId, accounts, onSave, onCancel }: TileModalProps) {
+    const [accountId, setAccountId] = useState(() => {
+        if (tile) return tile.account_id === null ? '' : String(tile.account_id);
+        return defaultAccountId === null ? '' : String(defaultAccountId);
+    });
+    const [tileType, setTileType] = useState<TileType>(tile?.tile_type ?? 'transactions');
+    const [windowOption, setWindowOption] = useState(() => windowToOption(tile?.time_window ?? null).option);
+    const [weeks, setWeeks] = useState(() => windowToOption(tile?.time_window ?? null).weeks);
+    const [showBalance, setShowBalance] = useState(tile?.show_balance ?? false);
+    const [discretionary, setDiscretionary] = useState(tile?.forecast_discretionary ?? false);
+    const [savedViewId, setSavedViewId] = useState<number | null>(tile?.saved_view_id ?? null);
+    const [title, setTitle] = useState(tile?.title ?? '');
     const [error, setError] = useState('');
 
     const isCrossAccountType = CROSS_ACCOUNT_TILE_TYPES.includes(tileType);
@@ -135,7 +140,11 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
         (v: SavedView) => v.scope === 'global' || v.account_id === selectedAccountId,
     );
     const selectedAccountName = accounts.find((a) => a.id === selectedAccountId)?.name ?? '';
-    const titlePlaceholder = generatedTileTitle({ ...tile, tile_type: tileType, account_id: isCrossAccountType ? null : selectedAccountId }, selectedAccountName, 'terse');
+    const titlePlaceholder = generatedTileTitle(
+        { tile_type: tileType, account_id: isCrossAccountType ? null : selectedAccountId, time_window: tile?.time_window ?? null },
+        selectedAccountName,
+        'terse',
+    );
 
     const handleCancel = useCallback(onCancel, [onCancel]);
 
@@ -168,18 +177,32 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                     timeWindow = windowOption || undefined;
                 }
             }
-            return updateTile(tile.id, {
-                account_id: isCrossAccountType ? null : parseInt(accountId, 10),
-                tile_type: tileType,
+            const resolvedTitle = title === '' ? null : title;
+            if (mode === 'edit' && tile) {
+                return updateTile(tile.id, {
+                    account_id: isCrossAccountType ? null : parseInt(accountId, 10),
+                    tile_type: tileType,
+                    time_window: timeWindow,
+                    show_balance: supportsBalance ? showBalance : false,
+                    forecast_discretionary: isForecastType ? discretionary : false,
+                    saved_view_id: supportsSavedView ? savedViewId : null,
+                    title: resolvedTitle,
+                });
+            }
+            const fields = {
                 time_window: timeWindow,
                 show_balance: supportsBalance ? showBalance : false,
                 forecast_discretionary: isForecastType ? discretionary : false,
                 saved_view_id: supportsSavedView ? savedViewId : null,
-                title: title === '' ? null : title,
-            });
+                title: resolvedTitle,
+            };
+            if (isCrossAccountType) {
+                return addCrossAccountTile(tileType, fields);
+            }
+            return addToDashboard(parseInt(accountId, 10), tileType, fields);
         },
         onSuccess: onSave,
-        onError: () => toast.error('Failed to update tile.'),
+        onError: () => toast.error(mode === 'edit' ? 'Failed to update tile.' : 'Failed to add tile.'),
     });
 
     function handleSave() {
@@ -199,7 +222,7 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
             onMouseDown={(e) => { if (e.target === e.currentTarget) handleCancel(); }}
         >
             <div className="bg-[var(--white)] rounded-2xl [border:1.5px_solid_var(--border)] shadow-[var(--shadow-md)] p-6 w-full max-w-md">
-                <h3 className="font-display text-[18px] font-bold text-[var(--teak-dark)] mb-5">Edit tile</h3>
+                <h3 className="font-display text-[18px] font-bold text-[var(--teak-dark)] mb-5">{mode === 'edit' ? 'Edit tile' : 'Add tile'}</h3>
 
                 <div className="flex flex-col gap-3">
                     {!isCrossAccountType && (
@@ -364,7 +387,9 @@ function EditTileModal({ tile, accounts, onSave, onCancel }: EditModalProps) {
                         onClick={handleSave}
                         disabled={mutation.isPending}
                     >
-                        {mutation.isPending ? 'Saving…' : 'Save'}
+                        {mode === 'edit'
+                            ? (mutation.isPending ? 'Saving…' : 'Save')
+                            : (mutation.isPending ? 'Adding…' : 'Add tile')}
                     </button>
                 </div>
             </div>
@@ -451,15 +476,12 @@ function SortableRow({ item, index, totalCount, label, showGrip, onEdit, onMove,
     );
 }
 
+type ModalState = { mode: 'edit'; tile: DashboardConfigItem } | { mode: 'create' } | null;
+
 export default function DashboardSection() {
     const queryClient = useQueryClient();
 
-    const [addAccountId, setAddAccountId] = useState('');
-    const [addTileType, setAddTileType] = useState<TileType | ''>('');
-    const [addWindowOption, setAddWindowOption] = useState('');
-    const [addWeeks, setAddWeeks] = useState('');
-    const [addDiscretionary, setAddDiscretionary] = useState(false);
-    const [editingTile, setEditingTile] = useState<DashboardConfigItem | null>(null);
+    const [modalState, setModalState] = useState<ModalState>(null);
     const [localConfig, setLocalConfig] = useState<DashboardConfigItem[]>([]);
     const [activeId, setActiveId] = useState<number | null>(null);
 
@@ -497,33 +519,6 @@ export default function DashboardSection() {
         onError: () => toast.error('Failed to remove tile from dashboard.'),
     });
 
-    const addMutation = useMutation({
-        mutationFn: ({ accountId, tileType, timeWindow, forecastDiscretionary }: { accountId: number; tileType: TileType; timeWindow?: string; forecastDiscretionary?: boolean }) =>
-            addToDashboard(accountId, tileType, timeWindow, forecastDiscretionary),
-        onSuccess: () => {
-            invalidate();
-            setAddAccountId('');
-            setAddTileType('');
-            setAddWindowOption('');
-            setAddWeeks('');
-            setAddDiscretionary(false);
-        },
-        onError: () => toast.error('Failed to add tile to dashboard.'),
-    });
-
-    const addCrossAccountMutation = useMutation({
-        mutationFn: ({ tileType, timeWindow }: { tileType: TileType; timeWindow?: string }) =>
-            addCrossAccountTile(tileType, timeWindow),
-        onSuccess: () => {
-            invalidate();
-            setAddAccountId('');
-            setAddTileType('');
-            setAddWindowOption('');
-            setAddWeeks('');
-        },
-        onError: () => toast.error('Failed to add tile to dashboard.'),
-    });
-
     function move(index: number, direction: 'up' | 'down') {
         const swapIndex = direction === 'up' ? index - 1 : index + 1;
         const newConfig = arrayMove(localConfig, index, swapIndex);
@@ -558,41 +553,6 @@ export default function DashboardSection() {
 
     function handleDragCancel() {
         setActiveId(null);
-    }
-
-    function resolvedTimeWindow(): string | undefined {
-        if (addWindowOption === 'custom_weeks') {
-            return isValidWeeks(addWeeks) ? `${addWeeks}w` : undefined;
-        }
-        return addWindowOption || undefined;
-    }
-
-    const isCrossAccountType = addTileType !== '' && CROSS_ACCOUNT_TILE_TYPES.includes(addTileType);
-    const isChartType = addTileType === 'balance_over_time' || addTileType === 'totals_by_category' || addTileType === 'net_worth_chart';
-    const isIncomeVsExpenseType = addTileType === 'income_vs_expense';
-    const isForecastType = addTileType === 'forecast';
-    const needsWindow = isChartType || isIncomeVsExpenseType || isForecastType;
-    const timeWindow = resolvedTimeWindow();
-    const canAdd =
-        addTileType !== '' &&
-        (isCrossAccountType || addAccountId !== '') &&
-        (!needsWindow || (addWindowOption !== '' && (addWindowOption !== 'custom_weeks' || isValidWeeks(addWeeks))));
-
-    function handleAdd() {
-        if (!canAdd || !addTileType) return;
-        if (isCrossAccountType) {
-            addCrossAccountMutation.mutate({
-                tileType: addTileType,
-                timeWindow: needsWindow ? timeWindow : undefined,
-            });
-            return;
-        }
-        addMutation.mutate({
-            accountId: parseInt(addAccountId, 10),
-            tileType: addTileType,
-            timeWindow: needsWindow ? timeWindow : undefined,
-            forecastDiscretionary: isForecastType ? addDiscretionary : undefined,
-        });
     }
 
     const activeItem = activeId != null ? localConfig.find((i) => i.id === activeId) : null;
@@ -656,7 +616,7 @@ export default function DashboardSection() {
                                             totalCount={localConfig.length}
                                             label={label}
                                             showGrip={showGrip}
-                                            onEdit={() => setEditingTile(item)}
+                                            onEdit={() => setModalState({ mode: 'edit', tile: item })}
                                             onMove={(direction) => move(index, direction)}
                                             onRemove={() => removeMutation.mutate(item.id)}
                                         />
@@ -696,128 +656,23 @@ export default function DashboardSection() {
 
             {!configLoading && allAccounts.length > 0 && (
                 <div className="flex flex-wrap items-end gap-3 mt-2">
-                    {!isCrossAccountType && (
-                        <select
-                            aria-label="Account"
-                            className={inputCls}
-                            value={addAccountId}
-                            onChange={(e) => setAddAccountId(e.target.value)}
-                        >
-                            <option value="" disabled>Account…</option>
-                            {allAccounts.map((a) => (
-                                <option key={a.id} value={a.id}>{a.name}</option>
-                            ))}
-                        </select>
-                    )}
-
-                    <select
-                        aria-label="Tile type"
-                        className={inputCls}
-                        value={addTileType}
-                        onChange={(e) => {
-                            setAddTileType(e.target.value as TileType | '');
-                            setAddAccountId('');
-                            setAddWindowOption('');
-                            setAddWeeks('');
-                            setAddDiscretionary(false);
-                        }}
-                    >
-                        <option value="" disabled>Tile type…</option>
-                        <option value="transactions">Transactions</option>
-                        <option value="balance_over_time">Balance over time</option>
-                        <option value="totals_by_category">Totals by category</option>
-                        <option value="income_vs_expense">Income vs Expense</option>
-                        <option value="budget_progress">Budget Progress</option>
-                        <option value="net_worth">Net Worth</option>
-                        <option value="net_worth_chart">Net Worth Over Time</option>
-                        <option value="forecast">Forecast</option>
-                    </select>
-
-                    {isForecastType && (
-                        <select
-                            aria-label="Time window"
-                            className={inputCls}
-                            value={addWindowOption}
-                            onChange={(e) => setAddWindowOption(e.target.value)}
-                        >
-                            <option value="" disabled>Window…</option>
-                            {FORECAST_WINDOW_OPTIONS.map((o) => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
-                            ))}
-                        </select>
-                    )}
-
-                    {isForecastType && (
-                        <label className="flex items-center gap-2 text-[14px] font-body text-[var(--text-primary)] cursor-pointer select-none">
-                            <input
-                                type="checkbox"
-                                checked={addDiscretionary}
-                                onChange={(e) => setAddDiscretionary(e.target.checked)}
-                            />
-                            Include discretionary
-                        </label>
-                    )}
-
-                    {isChartType && (
-                        <select
-                            aria-label="Time window"
-                            className={inputCls}
-                            value={addWindowOption}
-                            onChange={(e) => {
-                                setAddWindowOption(e.target.value);
-                                setAddWeeks('');
-                            }}
-                        >
-                            <option value="" disabled>Time window…</option>
-                            {WINDOW_OPTIONS.map((o) => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
-                            ))}
-                        </select>
-                    )}
-
-                    {isIncomeVsExpenseType && (
-                        <select
-                            aria-label="Time window"
-                            className={inputCls}
-                            value={addWindowOption}
-                            onChange={(e) => setAddWindowOption(e.target.value)}
-                        >
-                            <option value="" disabled>Time window…</option>
-                            {INCOME_VS_EXPENSE_WINDOW_OPTIONS.map((o) => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
-                            ))}
-                        </select>
-                    )}
-
-                    {isChartType && addWindowOption === 'custom_weeks' && (
-                        <input
-                            type="number"
-                            aria-label="Number of weeks"
-                            className={`${inputCls} w-24`}
-                            placeholder="Weeks"
-                            min={1}
-                            max={52}
-                            value={addWeeks}
-                            onChange={(e) => setAddWeeks(e.target.value)}
-                        />
-                    )}
-
                     <button
                         className="opensid-btn opensid-btn-ghost opensid-btn-sm"
-                        onClick={handleAdd}
-                        disabled={!canAdd || addMutation.isPending}
+                        onClick={() => setModalState({ mode: 'create' })}
                     >
-                        {addMutation.isPending ? 'Adding…' : '+ Add tile'}
+                        + Add tile
                     </button>
                 </div>
             )}
 
-            {editingTile && (
-                <EditTileModal
-                    tile={editingTile}
+            {modalState && (
+                <TileModal
+                    mode={modalState.mode}
+                    tile={modalState.mode === 'edit' ? modalState.tile : undefined}
+                    defaultAccountId={allAccounts[0]?.id ?? null}
                     accounts={allAccounts}
-                    onSave={() => { invalidate(); setEditingTile(null); }}
-                    onCancel={() => setEditingTile(null)}
+                    onSave={() => { invalidate(); setModalState(null); }}
+                    onCancel={() => setModalState(null)}
                 />
             )}
         </section>

@@ -208,6 +208,68 @@ t.test('POST /cross-account — rejects per-account tile types', async () => {
         .expect(400);
 });
 
+t.test('POST /cross-account — accepts a title at creation time', async (t) => {
+    const app = makeApp();
+    const res = await request(app)
+        .post('/api/dashboard-config/cross-account')
+        .send({ tile_type: 'net_worth', title: 'Our Net Worth' })
+        .expect(201);
+
+    t.equal(res.body.title, 'Our Net Worth');
+});
+
+// --- POST /:accountId ---
+
+t.test('POST /:accountId — accepts title, show_balance, and saved_view_id at creation time', async (t) => {
+    const accountId = insertAccount('Savings');
+    const viewId = insertSavedView('global', null);
+
+    const app = makeApp();
+    const res = await request(app)
+        .post(`/api/dashboard-config/${accountId}`)
+        .send({ tile_type: 'transactions', title: 'My Rainy Day Fund', show_balance: true, saved_view_id: viewId })
+        .expect(201);
+
+    t.equal(res.body.title, 'My Rainy Day Fund');
+    t.equal(res.body.show_balance, true);
+    t.equal(res.body.saved_view_id, viewId);
+});
+
+t.test('POST /:accountId — omitting title, show_balance, and saved_view_id defaults them to falsy/null', async (t) => {
+    const accountId = insertAccount('Savings');
+
+    const app = makeApp();
+    const res = await request(app)
+        .post(`/api/dashboard-config/${accountId}`)
+        .send({ tile_type: 'transactions' })
+        .expect(201);
+
+    t.equal(res.body.title, null);
+    t.equal(res.body.show_balance, false);
+    t.equal(res.body.saved_view_id, null);
+});
+
+t.test('POST /:accountId — rejects a non-string title', async () => {
+    const accountId = insertAccount('Savings');
+    const app = makeApp();
+    await request(app)
+        .post(`/api/dashboard-config/${accountId}`)
+        .send({ tile_type: 'transactions', title: 123 })
+        .expect(400);
+});
+
+t.test('POST /:accountId — rejects a saved_view_id scoped to a different account', async () => {
+    const accountA = insertAccount('Savings');
+    const accountB = insertAccount('Checking');
+    const viewId = insertSavedView('account', accountB);
+
+    const app = makeApp();
+    await request(app)
+        .post(`/api/dashboard-config/${accountA}`)
+        .send({ tile_type: 'transactions', saved_view_id: viewId })
+        .expect(400);
+});
+
 // --- forecast tile type ---
 
 t.test('POST /:accountId — adds a forecast tile with a 14d/30d/60d/90d window', async (t) => {

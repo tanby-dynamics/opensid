@@ -39,6 +39,14 @@ export interface UpdateTilePayload {
     title?: string | null;
 }
 
+export interface CreateTileFields {
+    time_window?: string;
+    show_balance?: boolean;
+    forecast_discretionary?: boolean;
+    saved_view_id?: number | null;
+    title?: string | null;
+}
+
 export async function getDashboardConfig(): Promise<DashboardConfigItem[]> {
     const { data } = await axios.get<{ items: DashboardConfigItem[] }>(base);
     return data.items;
@@ -47,21 +55,26 @@ export async function getDashboardConfig(): Promise<DashboardConfigItem[]> {
 export async function addToDashboard(
     accountId: number,
     tileType: TileType,
-    timeWindow?: string,
-    forecastDiscretionary?: boolean,
+    fields: CreateTileFields = {},
 ): Promise<DashboardConfigItem> {
     const { data } = await axios.post<DashboardConfigItem>(`${base}/${accountId}`, {
         tile_type: tileType,
-        time_window: timeWindow,
-        forecast_discretionary: forecastDiscretionary,
+        time_window: fields.time_window,
+        forecast_discretionary: fields.forecast_discretionary,
+        show_balance: fields.show_balance,
+        saved_view_id: fields.saved_view_id,
+        title: fields.title,
     });
     return data;
 }
 
-export async function addCrossAccountTile(tileType: TileType, timeWindow?: string): Promise<DashboardConfigItem> {
+export async function addCrossAccountTile(tileType: TileType, fields: CreateTileFields = {}): Promise<DashboardConfigItem> {
     const { data } = await axios.post<DashboardConfigItem>(`${base}/cross-account`, {
         tile_type: tileType,
-        time_window: timeWindow,
+        time_window: fields.time_window,
+        show_balance: fields.show_balance,
+        saved_view_id: fields.saved_view_id,
+        title: fields.title,
     });
     return data;
 }

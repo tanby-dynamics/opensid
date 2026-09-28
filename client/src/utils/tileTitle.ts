@@ -25,7 +25,7 @@ export type TitleFormat = 'terse' | 'descriptive';
 
 // Terse mirrors what appears on the dashboard tile itself (kept unchanged by this feature);
 // descriptive mirrors the settings-list format, which disambiguates same-account tiles.
-export function generatedTileTitle(item: DashboardConfigItem, accountName: string, format: TitleFormat): string {
+export function generatedTileTitle(item: Pick<DashboardConfigItem, 'account_id' | 'tile_type' | 'time_window'>, accountName: string, format: TitleFormat): string {
     if (format === 'terse') {
         return item.account_id === null ? TILE_TYPE_LABELS[item.tile_type] : accountName;
     }
