@@ -10,7 +10,12 @@ vi.mock('../api/charts', () => ({
 
 import * as chartsApi from '../api/charts';
 
-function renderTile(window: string, showBalance = false, balanceCents: number | null = null) {
+function renderTile(
+    window: string,
+    showBalance = false,
+    balanceCents: number | null = null,
+    savedViewId: number | null = null,
+) {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
     return render(
@@ -22,6 +27,7 @@ function renderTile(window: string, showBalance = false, balanceCents: number | 
                     window={window}
                     showBalance={showBalance}
                     balanceCents={balanceCents}
+                    savedViewId={savedViewId}
                 />
             </MemoryRouter>
         </QueryClientProvider>,
