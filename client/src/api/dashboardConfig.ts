@@ -86,7 +86,3 @@ export async function removeFromDashboard(tileId: number): Promise<void> {
 export async function reorderDashboard(tileIds: number[]): Promise<void> {
     await axios.put(`${base}/order`, { tile_ids: tileIds });
 }
-
-export async function updateShowBalance(tileId: number, showBalance: boolean): Promise<void> {
-    await axios.patch(`${base}/${tileId}/show-balance`, { show_balance: showBalance });
-}

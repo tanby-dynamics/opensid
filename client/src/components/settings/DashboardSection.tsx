@@ -25,7 +25,6 @@ import {
     removeFromDashboard,
     reorderDashboard,
     updateTile,
-    updateShowBalance,
     CROSS_ACCOUNT_TILE_TYPES,
     FILTERABLE_TILE_TYPES,
     type TileType,
@@ -382,10 +381,9 @@ interface SortableRowProps {
     onEdit: () => void;
     onMove: (direction: 'up' | 'down') => void;
     onRemove: () => void;
-    onShowBalanceChange: (showBalance: boolean) => void;
 }
 
-function SortableRow({ item, index, totalCount, label, showGrip, onEdit, onMove, onRemove, onShowBalanceChange }: SortableRowProps) {
+function SortableRow({ item, index, totalCount, label, showGrip, onEdit, onMove, onRemove }: SortableRowProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
     const style: React.CSSProperties = {
@@ -410,17 +408,6 @@ function SortableRow({ item, index, totalCount, label, showGrip, onEdit, onMove,
             </td>
             <td className="p-3 text-sm font-semibold text-[var(--text-primary)] font-body">
                 <span>{label}</span>
-                {(item.tile_type === 'transactions' || item.tile_type === 'balance_over_time') && (
-                    <label className="ml-3 inline-flex items-center gap-1.5 text-xs font-normal text-[var(--text-muted)] cursor-pointer">
-                        <input
-                            type="checkbox"
-                            aria-label="Show balance"
-                            checked={item.show_balance}
-                            onChange={(e) => onShowBalanceChange(e.target.checked)}
-                        />
-                        Show balance
-                    </label>
-                )}
             </td>
             <td className="p-3 pl-0">
                 <div className="flex gap-0.5 justify-end">
@@ -535,13 +522,6 @@ export default function DashboardSection() {
             setAddWeeks('');
         },
         onError: () => toast.error('Failed to add tile to dashboard.'),
-    });
-
-    const showBalanceMutation = useMutation({
-        mutationFn: ({ tileId, showBalance }: { tileId: number; showBalance: boolean }) =>
-            updateShowBalance(tileId, showBalance),
-        onSuccess: invalidate,
-        onError: () => toast.error('Failed to update show balance.'),
     });
 
     function move(index: number, direction: 'up' | 'down') {
@@ -679,9 +659,6 @@ export default function DashboardSection() {
                                             onEdit={() => setEditingTile(item)}
                                             onMove={(direction) => move(index, direction)}
                                             onRemove={() => removeMutation.mutate(item.id)}
-                                            onShowBalanceChange={(showBalance) =>
-                                                showBalanceMutation.mutate({ tileId: item.id, showBalance })
-                                            }
                                         />
                                     );
                                 })}

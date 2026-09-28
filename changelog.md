@@ -12,6 +12,7 @@
 - Make reconciliation feature configurable per account
 - Pagination on account transactions page
 - Dashboard tiles can have a custom title
+- Remove redundant "Show balance" checkbox from dashboard settings table
 
 ## 0.2.0
 

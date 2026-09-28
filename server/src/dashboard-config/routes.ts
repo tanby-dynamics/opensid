@@ -112,21 +112,6 @@ router.post('/:accountId', (req, res) => {
     res.status(201).json(toClientItem(item));
 });
 
-router.patch('/:id/show-balance', (req, res) => {
-    const tileId = parseInt(req.params.id, 10);
-    const { show_balance } = req.body as { show_balance?: unknown };
-    if (typeof show_balance !== 'boolean') {
-        res.status(400).json({ error: 'show_balance must be a boolean' });
-        return;
-    }
-    const updated = repo.updateShowBalance(tileId, show_balance);
-    if (!updated) {
-        res.status(404).json({ error: 'tile not found' });
-        return;
-    }
-    res.json(toClientItem(updated));
-});
-
 router.patch('/:id', (req, res) => {
     const tileId = parseInt(req.params.id, 10);
     const { account_id, tile_type, time_window, show_balance, forecast_discretionary, saved_view_id, title } = req.body as {

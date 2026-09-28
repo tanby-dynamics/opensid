@@ -12,16 +12,16 @@
 	- [x]  start implementing
 	- [x] changelog
 	- [x] commit
-- [ ] **41** [Dashboard tiles should have an optional "Title"](https://github.com/tanby-dynamics/opensid/issues/41)
+- [x] **41** [Dashboard tiles should have an optional "Title"](https://github.com/tanby-dynamics/opensid/issues/41)
 	- [x] start grilling
 	- [x] start implementing
-	- [ ] changelog
-	- [ ] commit
-- [ ] **42** [In "settings/dashboard" remove "Show Balance" checkbox from table](https://github.com/tanby-dynamics/opensid/issues/42)
-	- [ ] start grilling
-	- [ ]  start implementing
-	- [ ] changelog
-	- [ ] commit
+	- [x] changelog
+	- [x] commit
+- [x] **42** [In "settings/dashboard" remove "Show Balance" checkbox from table](https://github.com/tanby-dynamics/opensid/issues/42)
+	- [x] start grilling
+	- [x]  start implementing
+	- [x] changelog
+	- [x] commit
 - [ ] **43** [Settings/Dashboard -> Add tile should open modal](https://github.com/tanby-dynamics/opensid/issues/43)
 	- [ ] start grilling
 	- [ ]  start implementing
