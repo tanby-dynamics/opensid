@@ -195,6 +195,6 @@ t.test('GET /api/accounts/:id/transactions accepts new filter params', async () 
         .query({ hasAttachment: 'true', recurringOnly: 'false' })
         .expect(200);
 
-    t.equal(res.body.length, 1);
-    t.equal(res.body[0].id, withAttach);
+    t.equal(res.body.transactions.length, 1);
+    t.equal(res.body.transactions[0].id, withAttach);
 });

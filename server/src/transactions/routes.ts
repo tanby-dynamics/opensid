@@ -107,6 +107,14 @@ function applyValidatedSplits(parentId: number, rows: ValidatedSplitRow[]): repo
 
 const router = Router({ mergeParams: true });
 
+function parsePositiveInt(value: unknown, fallback: number): number {
+    if (typeof value === 'string' && /^\d+$/.test(value)) {
+        const n = parseInt(value, 10);
+        if (n > 0) return n;
+    }
+    return fallback;
+}
+
 router.get<{ accountId: string }>('/', (req, res) => {
     const accountId = parseInt(req.params.accountId, 10);
     if (!findAccount(accountId)) {
@@ -115,7 +123,41 @@ router.get<{ accountId: string }>('/', (req, res) => {
     }
 
     const filters = parseFilters(req.query);
-    res.json(repo.findByAccount(accountId, Object.keys(filters).length > 0 ? filters : undefined));
+    const effectiveFilters = Object.keys(filters).length > 0 ? filters : undefined;
+
+    // Reconciliation setup needs the full unbounded filtered set to match against a bank statement —
+    // ?unbounded=true bypasses pagination and returns the old plain-array shape.
+    if (req.query.unbounded === 'true') {
+        res.json(repo.findByAccount(accountId, effectiveFilters));
+        return;
+    }
+
+    const page = parsePositiveInt(req.query.page, 1);
+    const pageSize = parsePositiveInt(req.query.pageSize, 50);
+    res.json(repo.findByAccountPaginated(accountId, effectiveFilters, page, pageSize));
+});
+
+router.get<{ accountId: string }>('/locate', (req, res) => {
+    const accountId = parseInt(req.params.accountId, 10);
+    if (!findAccount(accountId)) {
+        res.status(404).json({ error: 'account not found' });
+        return;
+    }
+
+    const txId = parsePositiveInt(req.query.txId, NaN);
+    if (isNaN(txId)) {
+        res.status(404).json({ error: 'transaction not found' });
+        return;
+    }
+
+    const filters = parseFilters(req.query);
+    const pageSize = parsePositiveInt(req.query.pageSize, 50);
+    const page = repo.locateTransactionPage(accountId, Object.keys(filters).length > 0 ? filters : undefined, txId, pageSize);
+    if (page === undefined) {
+        res.status(404).json({ error: 'transaction not found' });
+        return;
+    }
+    res.json({ page });
 });
 
 router.post<{ accountId: string }>('/', (req, res) => {

@@ -40,11 +40,67 @@ function toQueryParams(filters?: TransactionFilters): Record<string, string> {
     return params;
 }
 
+export interface PaginatedTransactionsResponse {
+    transactions: Transaction[];
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    totalBalanceCents: number;
+    clearedBalanceCents: number;
+    runningBalanceStartCents: number;
+}
+
+export interface ListTransactionsOptions {
+    filters?: TransactionFilters;
+    page?: number;
+    pageSize?: number;
+    // Bypasses pagination and returns every filtered row unbounded — used by reconciliation, which needs
+    // to match the full statement against the full filtered set rather than one page at a time.
+    unbounded?: boolean;
+}
+
 export async function listTransactions(
     accountId: number,
+    options?: ListTransactionsOptions,
+): Promise<PaginatedTransactionsResponse> {
+    if (options?.unbounded) {
+        const { data } = await axios.get<Transaction[]>(base(accountId), {
+            params: { ...toQueryParams(options.filters), unbounded: 'true' },
+        });
+        return {
+            transactions: data,
+            page: 1,
+            pageSize: data.length,
+            totalCount: data.length,
+            totalPages: 1,
+            totalBalanceCents: data.reduce((sum, t) => sum + t.amount_cents, 0),
+            clearedBalanceCents: data.filter((t) => t.cleared_at !== null).reduce((sum, t) => sum + t.amount_cents, 0),
+            runningBalanceStartCents: 0,
+        };
+    }
+
+    const params = {
+        ...toQueryParams(options?.filters),
+        page: String(options?.page ?? 1),
+        pageSize: String(options?.pageSize ?? 50),
+    };
+    const { data } = await axios.get<PaginatedTransactionsResponse>(base(accountId), { params });
+    return data;
+}
+
+export async function locateTransaction(
+    accountId: number,
+    txId: number,
     filters?: TransactionFilters,
-): Promise<Transaction[]> {
-    const { data } = await axios.get<Transaction[]>(base(accountId), { params: toQueryParams(filters) });
+    pageSize?: number,
+): Promise<{ page: number }> {
+    const params = {
+        ...toQueryParams(filters),
+        txId: String(txId),
+        pageSize: String(pageSize ?? 50),
+    };
+    const { data } = await axios.get<{ page: number }>(`${base(accountId)}/locate`, { params });
     return data;
 }
 

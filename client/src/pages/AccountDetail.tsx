@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getAccount, listAccountsWithBalances } from '../api/accounts';
 import {
     listTransactions,
+    locateTransaction,
     createTransaction,
     updateTransaction,
     deleteTransaction,
@@ -137,6 +138,12 @@ function ActionsDropdown({
 }
 
 const TX_GRID = '32px 28px 130px 120px 1fr 90px 120px 72px';
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+const DEFAULT_PAGE_SIZE = 50;
+const FILTER_PARAM_KEYS = [
+    'keyword', 'from', 'to', 'category', 'type', 'amountMin', 'amountMax',
+    'hasAttachment', 'recurringOnly', 'tagIds', 'tagMode', 'cleared', 'page', 'pageSize',
+];
 
 export default function AccountDetail() {
     const { id } = useParams<{ id: string }>();
@@ -155,29 +162,60 @@ export default function AccountDetail() {
     const importInputRef = useRef<HTMLInputElement>(null);
     const smartImportInputRef = useRef<HTMLInputElement>(null);
 
-    const [keyword, setKeyword] = useState('');
-    const [debouncedKeyword, setDebouncedKeyword] = useState('');
-    const [filterFrom, setFilterFrom] = useState('');
-    const [filterTo, setFilterTo] = useState('');
-    const [filterCategory, setFilterCategory] = useState('');
-    const [filterType, setFilterType] = useState<'income' | 'expense' | ''>('');
-    const [amountMin, setAmountMin] = useState('');
-    const [amountMax, setAmountMax] = useState('');
-    const [filterHasAttachment, setFilterHasAttachment] = useState<'yes' | 'no' | ''>('');
-    const [filterRecurringOnly, setFilterRecurringOnly] = useState(false);
-    const [filterTagIds, setFilterTagIds] = useState<number[]>([]);
-    const [filterTagMode, setFilterTagMode] = useState<'any' | 'all'>('any');
-    const [filterCleared, setFilterCleared] = useState<'yes' | 'no' | ''>('');
+    const [searchParams, setSearchParams] = useSearchParams();
+    // Captured once, from the URL as it was on first render — used to decide whether the default
+    // saved view should auto-apply (only when the URL arrived "clean") and whether an explicit
+    // ?page= should be trusted over resolving ?expand= via a server lookup.
+    const urlHadFilterParamsRef = useRef(FILTER_PARAM_KEYS.some((k) => searchParams.get(k) !== null));
+    const urlHadExplicitPageRef = useRef(searchParams.get('page') !== null);
+
+    const [keyword, setKeyword] = useState(() => searchParams.get('keyword') ?? '');
+    const [debouncedKeyword, setDebouncedKeyword] = useState(() => searchParams.get('keyword') ?? '');
+    const [filterFrom, setFilterFrom] = useState(() => searchParams.get('from') ?? '');
+    const [filterTo, setFilterTo] = useState(() => searchParams.get('to') ?? '');
+    const [filterCategory, setFilterCategory] = useState(() => searchParams.get('category') ?? '');
+    const [filterType, setFilterType] = useState<'income' | 'expense' | ''>(() => {
+        const v = searchParams.get('type');
+        return v === 'income' || v === 'expense' ? v : '';
+    });
+    const [amountMin, setAmountMin] = useState(() => searchParams.get('amountMin') ?? '');
+    const [amountMax, setAmountMax] = useState(() => searchParams.get('amountMax') ?? '');
+    const [filterHasAttachment, setFilterHasAttachment] = useState<'yes' | 'no' | ''>(() => {
+        const v = searchParams.get('hasAttachment');
+        return v === 'yes' || v === 'no' ? v : '';
+    });
+    const [filterRecurringOnly, setFilterRecurringOnly] = useState(() => searchParams.get('recurringOnly') === 'true');
+    const [filterTagIds, setFilterTagIds] = useState<number[]>(() => {
+        const v = searchParams.get('tagIds');
+        if (!v) return [];
+        return v.split(',').map(Number).filter((n) => !isNaN(n) && n > 0);
+    });
+    const [filterTagMode, setFilterTagMode] = useState<'any' | 'all'>(() => (searchParams.get('tagMode') === 'all' ? 'all' : 'any'));
+    const [filterCleared, setFilterCleared] = useState<'yes' | 'no' | ''>(() => {
+        const v = searchParams.get('cleared');
+        return v === 'yes' || v === 'no' ? v : '';
+    });
     const [activeDefaultViewName, setActiveDefaultViewName] = useState<string | null>(null);
     const defaultAppliedRef = useRef(false);
     const [reconcileSetup, setReconcileSetup] = useState<{ statementDate: string; statementBalanceCents: number } | null>(null);
     const [isFinishingReconcile, setIsFinishingReconcile] = useState(false);
 
-    const expandTxId = (() => {
+    const [page, setPage] = useState(() => {
+        const n = parseInt(searchParams.get('page') ?? '', 10);
+        return Number.isFinite(n) && n > 0 ? n : 1;
+    });
+    const [pageSize, setPageSize] = useState(() => {
+        const n = parseInt(searchParams.get('pageSize') ?? '', 10);
+        return (PAGE_SIZE_OPTIONS as readonly number[]).includes(n) ? n : DEFAULT_PAGE_SIZE;
+    });
+
+    // ?expand=<txId> is a one-shot deep link: read once on mount, resolved to a page (if needed)
+    // below, then just used to auto-expand the matching row if it's on the current page.
+    const [expandTxId] = useState(() => {
         const v = new URLSearchParams(location.search).get('expand');
         const n = v ? parseInt(v, 10) : NaN;
         return Number.isFinite(n) ? n : null;
-    })();
+    });
 
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const selectAllRef = useRef<HTMLInputElement>(null);
@@ -205,6 +243,7 @@ export default function AccountDetail() {
         ? { ...activeFilters, to: reconcileSetup.statementDate }
         : activeFilters;
     const isFiltered = Object.values(activeFilters).some(Boolean);
+    const filtersKey = JSON.stringify(activeFilters);
 
     function clearFilters() {
         setKeyword('');
@@ -256,9 +295,14 @@ export default function AccountDetail() {
     });
 
     // Apply the default saved view once, on first load — but only if the user hasn't
-    // already set filters (e.g. by arriving with ?expand=… or pressing back).
+    // already set filters (e.g. by arriving with ?expand=… or pressing back), and only if the
+    // URL itself didn't already carry filter/page params (a URL wins over the saved default).
     useEffect(() => {
         if (defaultAppliedRef.current) return;
+        if (urlHadFilterParamsRef.current) {
+            defaultAppliedRef.current = true;
+            return;
+        }
         if (!savedViewsForAccount) return;
         const def = savedViewsForAccount.find((v) => v.is_default);
         defaultAppliedRef.current = true;
@@ -270,15 +314,89 @@ export default function AccountDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [savedViewsForAccount]);
 
+    // Any filter change resets to page 1 — detect an actual change in the filter set (not just a
+    // re-render) by comparing against the previously seen serialized filters.
+    const prevFiltersKeyRef = useRef(filtersKey);
+    useEffect(() => {
+        if (prevFiltersKeyRef.current !== filtersKey) {
+            prevFiltersKeyRef.current = filtersKey;
+            setPage(1);
+        }
+    }, [filtersKey]);
+
+    // Row selection is scoped to the current page — a page change swaps the visible set entirely.
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedIds(new Set());
+    }, [page]);
+
+    // Keep the URL in sync with filters/page/pageSize (replace, not push, so Back leaves the page
+    // rather than stepping through pagination history).
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (keyword) params.set('keyword', keyword);
+        if (filterFrom) params.set('from', filterFrom);
+        if (filterTo) params.set('to', filterTo);
+        if (filterCategory) params.set('category', filterCategory);
+        if (filterType) params.set('type', filterType);
+        if (amountMin) params.set('amountMin', amountMin);
+        if (amountMax) params.set('amountMax', amountMax);
+        if (filterHasAttachment) params.set('hasAttachment', filterHasAttachment);
+        if (filterRecurringOnly) params.set('recurringOnly', 'true');
+        if (filterTagIds.length > 0) params.set('tagIds', filterTagIds.join(','));
+        if (filterTagMode !== 'any') params.set('tagMode', filterTagMode);
+        if (filterCleared) params.set('cleared', filterCleared);
+        if (page !== 1) params.set('page', String(page));
+        if (pageSize !== DEFAULT_PAGE_SIZE) params.set('pageSize', String(pageSize));
+        setSearchParams(params, { replace: true });
+    }, [
+        keyword, filterFrom, filterTo, filterCategory, filterType, amountMin, amountMax,
+        filterHasAttachment, filterRecurringOnly, filterTagIds, filterTagMode, filterCleared,
+        page, pageSize, setSearchParams,
+    ]);
+
+    // Resolve a ?expand=<txId> deep link to the page it falls on, once, on mount — unless the URL
+    // already carried an explicit ?page=, in which case we trust that page and just try to expand.
+    const expandLocateAttemptedRef = useRef(false);
+    useEffect(() => {
+        if (expandLocateAttemptedRef.current) return;
+        expandLocateAttemptedRef.current = true;
+        if (expandTxId === null || urlHadExplicitPageRef.current) return;
+        locateTransaction(accountId, expandTxId, isFiltered ? activeFilters : undefined, pageSize)
+            .then(({ page: foundPage }) => setPage(foundPage))
+            .catch(() => toast.error('Could not find that transaction under the current filters.'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const { data: lastReconciliation = null } = useQuery<Reconciliation | null>({
         queryKey: ['reconciliations-last', accountId],
         queryFn: () => getLastReconciliation(accountId),
     });
 
-    const { data: transactions = [], isLoading: txLoading } = useQuery({
-        queryKey: ['transactions', accountId, effectiveFilters],
-        queryFn: () => listTransactions(accountId, (isFiltered || reconcileSetup) ? effectiveFilters : undefined),
+    const filtersForQuery = (isFiltered || reconcileSetup) ? effectiveFilters : undefined;
+
+    // Reconciliation needs the full unbounded filtered set to match against a bank statement — it
+    // bypasses pagination entirely rather than paging through matches.
+    const { data: paginated, isLoading: txLoading } = useQuery({
+        queryKey: reconcileSetup
+            ? ['transactions', accountId, filtersForQuery, 'unbounded']
+            : ['transactions', accountId, filtersForQuery, page, pageSize],
+        queryFn: () => reconcileSetup
+            ? listTransactions(accountId, { filters: filtersForQuery, unbounded: true })
+            : listTransactions(accountId, { filters: filtersForQuery, page, pageSize }),
     });
+
+    const transactions = useMemo(() => paginated?.transactions ?? [], [paginated]);
+
+    // If the server had to clamp an out-of-range page to the last valid page, follow it — this
+    // keeps our own `page` state (and thus the URL) in sync with what was actually returned.
+    useEffect(() => {
+        if (paginated && !reconcileSetup && paginated.page !== page) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setPage(paginated.page);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [paginated, reconcileSetup]);
 
     const { data: categories = [] } = useQuery({
         queryKey: ['categories'],
@@ -290,7 +408,7 @@ export default function AccountDetail() {
         queryFn: listTags,
     });
 
-    const balance = transactions.reduce((sum, t) => sum + t.amount_cents, 0);
+    const balance = paginated?.totalBalanceCents ?? 0;
 
     // Derive the visible selection from current transactions — stale ids in `selectedIds`
     // (e.g. from filter changes) are simply ignored at read time rather than reconciled in an effect.
@@ -333,7 +451,7 @@ export default function AccountDetail() {
         setSelectedIds(new Set());
     }
 
-    const clearedBalance = transactions.filter((t) => t.cleared_at !== null).reduce((sum, t) => sum + t.amount_cents, 0);
+    const clearedBalance = paginated?.clearedBalanceCents ?? 0;
 
     const clearMutation = useMutation({
         mutationFn: ({ txId, cleared }: { txId: number; cleared: boolean }) =>
@@ -988,6 +1106,47 @@ export default function AccountDetail() {
                             onSelect={handleSelectRow}
                         />
                     ))}
+                </div>
+            )}
+
+            {!reconcileSetup && paginated && (
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
+                    <div className="flex items-center gap-2">
+                        <label className="text-xs font-body text-[var(--text-muted)]">Rows per page</label>
+                        <select
+                            className="opensid-input w-auto"
+                            value={pageSize}
+                            onChange={(e) => {
+                                setPageSize(Number(e.target.value));
+                                setPage(1);
+                            }}
+                        >
+                            {PAGE_SIZE_OPTIONS.map((size) => (
+                                <option key={size} value={size}>{size}</option>
+                            ))}
+                        </select>
+                    </div>
+                    {paginated.totalPages > 1 && (
+                        <div className="flex items-center gap-3">
+                            <button
+                                className="opensid-btn opensid-btn-ghost opensid-btn-sm"
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={paginated.page <= 1}
+                            >
+                                ← Prev
+                            </button>
+                            <span className="text-xs font-body text-[var(--text-muted)]">
+                                Page {paginated.page} of {paginated.totalPages} · {paginated.totalCount} transactions
+                            </span>
+                            <button
+                                className="opensid-btn opensid-btn-ghost opensid-btn-sm"
+                                onClick={() => setPage((p) => Math.min(paginated.totalPages, p + 1))}
+                                disabled={paginated.page >= paginated.totalPages}
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 

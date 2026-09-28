@@ -179,6 +179,99 @@ export function findByAccount(accountId: number, filters?: TransactionFilters, l
     return stitchTags(rows) as Transaction[];
 }
 
+export const MAX_PAGE_SIZE = 200;
+
+export interface PaginatedTransactions {
+    transactions: Transaction[];
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    totalBalanceCents: number;
+    clearedBalanceCents: number;
+    runningBalanceStartCents: number;
+}
+
+export function findByAccountPaginated(
+    accountId: number,
+    filters: TransactionFilters | undefined,
+    page: number,
+    pageSize: number,
+): PaginatedTransactions {
+    const clampedPageSize = Math.min(pageSize, MAX_PAGE_SIZE);
+    const { conditions, params } = buildFilterClauses(filters);
+    const allConditions = ['account_id = ?', 'deleted_at IS NULL', 'split_parent_id IS NULL', ...conditions];
+    const whereSql = allConditions.join(' AND ');
+    const allParams = [accountId, ...params];
+
+    const countRow = db.prepare(`SELECT COUNT(*) AS cnt FROM transactions WHERE ${whereSql}`).get(...allParams) as { cnt: number };
+    const totalCount = countRow.cnt;
+    const totalPages = Math.max(1, Math.ceil(totalCount / clampedPageSize));
+    const clampedPage = Math.min(Math.max(page, 1), totalPages);
+    const offset = (clampedPage - 1) * clampedPageSize;
+
+    const sumRow = db
+        .prepare(
+            `SELECT COALESCE(SUM(amount_cents), 0) AS total,
+                    COALESCE(SUM(CASE WHEN cleared_at IS NOT NULL THEN amount_cents ELSE 0 END), 0) AS cleared
+             FROM transactions WHERE ${whereSql}`,
+        )
+        .get(...allParams) as { total: number; cleared: number };
+
+    const sql = `SELECT *, ${splitCountSql()} FROM transactions WHERE ${whereSql} ORDER BY date DESC, id DESC LIMIT ? OFFSET ?`;
+    const rows = db.prepare(sql).all(...allParams, clampedPageSize, offset) as Omit<Transaction, 'tags'>[];
+    const transactions = stitchTags(rows) as Transaction[];
+
+    // runningBalanceStartCents = sum of all matching rows that sort AFTER this page (i.e. older, given DESC
+    // order) = totalBalance minus the sum of every row from the start of the filtered set through this page.
+    let runningBalanceStartCents = sumRow.total;
+    if (transactions.length > 0) {
+        const sumThroughPageRow = db
+            .prepare(
+                `SELECT COALESCE(SUM(amount_cents), 0) AS s FROM (
+                    SELECT amount_cents FROM transactions WHERE ${whereSql} ORDER BY date DESC, id DESC LIMIT ?
+                 )`,
+            )
+            .get(...allParams, offset + transactions.length) as { s: number };
+        runningBalanceStartCents = sumRow.total - sumThroughPageRow.s;
+    }
+
+    return {
+        transactions,
+        page: clampedPage,
+        pageSize: clampedPageSize,
+        totalCount,
+        totalPages,
+        totalBalanceCents: sumRow.total,
+        clearedBalanceCents: sumRow.cleared,
+        runningBalanceStartCents,
+    };
+}
+
+export function locateTransactionPage(
+    accountId: number,
+    filters: TransactionFilters | undefined,
+    txId: number,
+    pageSize: number,
+): number | undefined {
+    const clampedPageSize = Math.min(pageSize, MAX_PAGE_SIZE);
+    const { conditions, params } = buildFilterClauses(filters);
+    const allConditions = ['account_id = ?', 'deleted_at IS NULL', 'split_parent_id IS NULL', ...conditions];
+    const whereSql = allConditions.join(' AND ');
+    const allParams = [accountId, ...params];
+
+    const target = db
+        .prepare(`SELECT date, id FROM transactions WHERE ${whereSql} AND id = ?`)
+        .get(...allParams, txId) as { date: string; id: number } | undefined;
+    if (!target) return undefined;
+
+    // Rows sorting BEFORE the target under `date DESC, id DESC`: strictly later date, or same date with a higher id.
+    const beforeSql = `SELECT COUNT(*) AS cnt FROM transactions WHERE ${whereSql} AND (date > ? OR (date = ? AND id > ?))`;
+    const beforeRow = db.prepare(beforeSql).get(...allParams, target.date, target.date, target.id) as { cnt: number };
+
+    return Math.floor(beforeRow.cnt / clampedPageSize) + 1;
+}
+
 export interface TransactionWithAccount extends Transaction {
     account_name: string;
 }

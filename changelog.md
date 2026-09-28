@@ -10,6 +10,7 @@
 - Rename from Sid to OpenSid
 - Filter dashboard tiles by saved views
 - Make reconciliation feature configurable per account
+- Pagination on account transactions page
 
 ## 0.2.0
 

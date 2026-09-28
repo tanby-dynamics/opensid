@@ -2,15 +2,15 @@
 
 ## 20260928
 
-- [ ] **38** [Make reconciliation feature configurable per account](https://github.com/tanby-dynamics/opensid/issues/38)
+- [x] **38** [Make reconciliation feature configurable per account](https://github.com/tanby-dynamics/opensid/issues/38)
 	- [x] start grilling
-	- [ ] implement
-	- [ ] changelog
-	- [ ] commit
+	- [x] implement
+	- [x] changelog
+	- [x] commit
 - [ ] **39** [Pagination on account transactions page](https://github.com/tanby-dynamics/opensid/issues/39)
-	- [ ] start grilling
-	- [ ] implement
-	- [ ] changelog
+	- [x] start grilling
+	- [x] implement
+	- [x] changelog
 	- [ ] commit
 - [ ] **40** [Dashboard tiles should be optionally filtered by saved filter views](https://github.com/tanby-dynamics/opensid/issues/40)
 	- [ ] start grilling
