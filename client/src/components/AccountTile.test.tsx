@@ -2,10 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AccountTile from './AccountTile';
-import type { DashboardAccount } from '../types/dashboard';
+import type { DashboardTransactionsTile } from '../types/dashboard';
 
-const account: DashboardAccount = {
-    id: 1,
+const account: DashboardTransactionsTile = {
+    tile_id: 1,
+    account_id: 1,
     name: 'Office',
     balance_cents: -15000,
     recent_transactions: [],

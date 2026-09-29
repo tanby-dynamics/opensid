@@ -1,7 +1,7 @@
 import axios from 'axios';
-import type { DashboardAccount } from '../types/dashboard';
+import type { DashboardTransactionsTile } from '../types/dashboard';
 
-export async function getDashboard(): Promise<DashboardAccount[]> {
-    const res = await axios.get<{ accounts: DashboardAccount[] }>('/api/dashboard');
-    return res.data.accounts;
+export async function getDashboard(): Promise<DashboardTransactionsTile[]> {
+    const res = await axios.get<{ tiles: DashboardTransactionsTile[] }>('/api/dashboard');
+    return res.data.tiles;
 }

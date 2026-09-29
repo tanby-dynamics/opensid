@@ -6,8 +6,9 @@ export interface DashboardTransaction {
     date: string;
 }
 
-export interface DashboardAccount {
-    id: number;
+export interface DashboardTransactionsTile {
+    tile_id: number;
+    account_id: number;
     name: string;
     balance_cents: number;
     recent_transactions: DashboardTransaction[];

@@ -7,9 +7,9 @@ const router = Router();
 
 const RECENT_TRANSACTIONS_LIMIT = 5;
 
-interface ConfiguredAccountRow {
+interface ConfiguredTileRow {
+    tile_id: number;
     account_id: number;
-    position: number;
     saved_view_id: number | null;
 }
 
@@ -18,8 +18,9 @@ interface AccountRow {
     name: string;
 }
 
-interface DashboardAccountResponse {
-    id: number;
+interface DashboardTileResponse {
+    tile_id: number;
+    account_id: number;
     name: string;
     balance_cents: number;
     recent_transactions: Array<{
@@ -32,26 +33,20 @@ interface DashboardAccountResponse {
 }
 
 router.get('/', (_req, res) => {
-    // One "transactions" tile is shown per account — when more than one config row targets the
-    // same account, the lowest position wins (see dashboard/routes.test.ts).
-    const configuredAccounts = db
+    // One entry per "transactions" tile. An account may have several, each with its own saved view.
+    const configuredTiles = db
         .prepare(
             `
-        SELECT account_id, position, saved_view_id
-        FROM (
-            SELECT account_id, position, saved_view_id,
-                   ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY position) AS rn
-            FROM dashboard_config
-            WHERE tile_type = 'transactions'
-        )
-        WHERE rn = 1
+        SELECT id AS tile_id, account_id, saved_view_id
+        FROM dashboard_config
+        WHERE tile_type = 'transactions'
         ORDER BY position
     `,
         )
-        .all() as ConfiguredAccountRow[];
+        .all() as ConfiguredTileRow[];
 
-    const accounts: DashboardAccountResponse[] = [];
-    for (const configured of configuredAccounts) {
+    const tiles: DashboardTileResponse[] = [];
+    for (const configured of configuredTiles) {
         const account = db
             .prepare(`SELECT id, name FROM accounts WHERE id = ? AND deleted_at IS NULL`)
             .get(configured.account_id) as AccountRow | undefined;
@@ -60,8 +55,9 @@ router.get('/', (_req, res) => {
         const filters = resolveSavedViewFilters(configured.saved_view_id, account.id);
         const recent = findByAccount(account.id, filters, RECENT_TRANSACTIONS_LIMIT);
 
-        accounts.push({
-            id: account.id,
+        tiles.push({
+            tile_id: configured.tile_id,
+            account_id: account.id,
             name: account.name,
             balance_cents: getBalance(account.id, filters),
             recent_transactions: recent.map((t) => ({
@@ -74,7 +70,7 @@ router.get('/', (_req, res) => {
         });
     }
 
-    res.json({ accounts });
+    res.json({ tiles });
 });
 
 export default router;

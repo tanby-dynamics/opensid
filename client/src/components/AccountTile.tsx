@@ -1,18 +1,18 @@
 import { Link } from 'react-router-dom';
-import type { DashboardAccount } from '../types/dashboard';
+import type { DashboardTransactionsTile } from '../types/dashboard';
 import { formatCents, formatDate, balanceColor } from '../utils/format';
 import { Tile } from './Tile';
 
 interface Props {
-    account: DashboardAccount;
+    account: DashboardTransactionsTile;
     title?: string;
     showBalance: boolean;
-    onAddTransaction: (account: DashboardAccount) => void;
+    onAddTransaction: (account: DashboardTransactionsTile) => void;
 }
 
 export default function AccountTile({ account, title, showBalance, onAddTransaction }: Props) {
     return (
-        <Tile accountName={title ?? account.name} accountId={account.id}>
+        <Tile accountName={title ?? account.name} accountId={account.account_id}>
             {/* Balance */}
             {showBalance && (
                 <div
@@ -43,7 +43,7 @@ export default function AccountTile({ account, title, showBalance, onAddTransact
             {/* Footer */}
             <div className="flex items-center justify-between pt-2.5 border-t border-[var(--cream-mid)]">
                 <Link
-                    to={`/accounts/${account.id}`}
+                    to={`/accounts/${account.account_id}`}
                     className="bg-transparent border-none cursor-pointer text-xs font-bold text-[var(--teak)] font-body flex items-center gap-1 no-underline"
                 >
                     View all &rarr;

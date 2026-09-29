@@ -1,8 +1,11 @@
 # OpenSid Changelog
 
-## Unreleased
+## 0.3.1
+
+**Release date**: 2026-09-29
 
 - Dashboard tile balances reflect the tile's selected saved view
+- Allow "Transactions" tiles for the same account on the dashboard
 
 ## 0.3.0
 

@@ -30,7 +30,7 @@ t.teardown(() => {
     resetDatabase();
 });
 
-t.test('does not duplicate recent transactions when an account has multiple dashboard tiles', async () => {
+t.test('does not duplicate recent transactions when an account has a transactions tile and a chart tile', async () => {
     const accountId = Number(
         db.prepare(`INSERT INTO accounts (name) VALUES (?)`).run('Holiday savings').lastInsertRowid,
     );
@@ -44,10 +44,12 @@ t.test('does not duplicate recent transactions when an account has multiple dash
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
     ).run(accountId, 'Holiday savings', 'Holiday savings', 20000, 'income', '2026-04-09', null);
 
-    db.prepare(
-        `INSERT INTO dashboard_config (account_id, position, tile_type, time_window)
-         VALUES (?, ?, ?, ?)`,
-    ).run(accountId, 1, 'transactions', null);
+    const tileId = Number(
+        db.prepare(
+            `INSERT INTO dashboard_config (account_id, position, tile_type, time_window)
+             VALUES (?, ?, ?, ?)`,
+        ).run(accountId, 1, 'transactions', null).lastInsertRowid,
+    );
     db.prepare(
         `INSERT INTO dashboard_config (account_id, position, tile_type, time_window)
          VALUES (?, ?, ?, ?)`,
@@ -59,9 +61,10 @@ t.test('does not duplicate recent transactions when an account has multiple dash
     const response = await request(app).get('/api/dashboard').expect(200);
 
     t.same(response.body, {
-        accounts: [
+        tiles: [
             {
-                id: accountId,
+                tile_id: tileId,
+                account_id: accountId,
                 name: 'Holiday savings',
                 balance_cents: 40000,
                 recent_transactions: [
@@ -83,6 +86,49 @@ t.test('does not duplicate recent transactions when an account has multiple dash
             },
         ],
     });
+});
+
+t.test('returns one entry per transactions tile when an account has several, each with its own saved view', async (t) => {
+    const accountId = Number(
+        db.prepare(`INSERT INTO accounts (name) VALUES (?)`).run('Everyday').lastInsertRowid,
+    );
+    db.prepare(
+        `INSERT INTO transactions (account_id, category, description, amount_cents, type, date)
+         VALUES (?, 'Salary', 'Pay', 100000, 'income', '2026-04-01')`,
+    ).run(accountId);
+    db.prepare(
+        `INSERT INTO transactions (account_id, category, description, amount_cents, type, date)
+         VALUES (?, 'Groceries', 'Woolies', -5000, 'expense', '2026-04-02')`,
+    ).run(accountId);
+
+    const expenseViewId = insertSavedView('account', accountId, { type: 'expense' });
+    const firstTileId = Number(
+        db.prepare(
+            `INSERT INTO dashboard_config (account_id, position, tile_type, time_window, saved_view_id)
+             VALUES (?, 1, 'transactions', NULL, NULL)`,
+        ).run(accountId).lastInsertRowid,
+    );
+    const secondTileId = Number(
+        db.prepare(
+            `INSERT INTO dashboard_config (account_id, position, tile_type, time_window, saved_view_id)
+             VALUES (?, 2, 'transactions', NULL, ?)`,
+        ).run(accountId, expenseViewId).lastInsertRowid,
+    );
+
+    const app = express();
+    app.use('/api/dashboard', dashboardRoutes);
+
+    const response = await request(app).get('/api/dashboard').expect(200);
+
+    t.equal(response.body.tiles.length, 2);
+    t.equal(response.body.tiles[0].tile_id, firstTileId);
+    t.equal(response.body.tiles[0].account_id, accountId);
+    t.equal(response.body.tiles[0].balance_cents, 95000);
+    t.equal(response.body.tiles[0].recent_transactions.length, 2);
+    t.equal(response.body.tiles[1].tile_id, secondTileId);
+    t.equal(response.body.tiles[1].account_id, accountId);
+    t.equal(response.body.tiles[1].balance_cents, -5000);
+    t.equal(response.body.tiles[1].recent_transactions.length, 1);
 });
 
 t.test('filters recent_transactions and balance_cents by the transactions tile saved_view_id', async (t) => {
@@ -109,9 +155,9 @@ t.test('filters recent_transactions and balance_cents by the transactions tile s
 
     const response = await request(app).get('/api/dashboard').expect(200);
 
-    t.equal(response.body.accounts[0].balance_cents, -5000);
-    t.equal(response.body.accounts[0].recent_transactions.length, 1);
-    t.equal(response.body.accounts[0].recent_transactions[0].description, 'Woolies');
+    t.equal(response.body.tiles[0].balance_cents, -5000);
+    t.equal(response.body.tiles[0].recent_transactions.length, 1);
+    t.equal(response.body.tiles[0].recent_transactions[0].description, 'Woolies');
 });
 
 t.test('balance_cents is the balance of only the transactions matching a type saved view', async (t) => {
@@ -142,7 +188,7 @@ t.test('balance_cents is the balance of only the transactions matching a type sa
 
     const response = await request(app).get('/api/dashboard').expect(200);
 
-    t.equal(response.body.accounts[0].balance_cents, -6500);
+    t.equal(response.body.tiles[0].balance_cents, -6500);
 });
 
 t.test('falls back to unfiltered recent_transactions when the tile saved_view_id has been (soft-)deleted', async (t) => {
@@ -167,5 +213,5 @@ t.test('falls back to unfiltered recent_transactions when the tile saved_view_id
 
     const response = await request(app).get('/api/dashboard').expect(200);
 
-    t.equal(response.body.accounts[0].recent_transactions.length, 1);
+    t.equal(response.body.tiles[0].recent_transactions.length, 1);
 });

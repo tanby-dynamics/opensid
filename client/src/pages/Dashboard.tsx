@@ -23,11 +23,11 @@ import { createTransfer, type TransferPayload } from '../api/transfers';
 import { uploadAttachments } from '../api/attachments';
 import { Page } from '../components/Page';
 import PageLink from '../components/PageLink';
-import type { DashboardAccount } from '../types/dashboard';
+import type { DashboardTransactionsTile } from '../types/dashboard';
 
 type Modal =
     | { type: 'create' }
-    | { type: 'add-transaction'; account: DashboardAccount }
+    | { type: 'add-transaction'; account: DashboardTransactionsTile }
     | { type: 'add-transaction-global' }
     | { type: 'add-transfer' }
     | null;
@@ -44,7 +44,7 @@ export default function Dashboard() {
         queryFn: getDashboardConfig,
     });
 
-    const { data: dashboardAccounts = [] } = useQuery({
+    const { data: dashboardTiles = [] } = useQuery({
         queryKey: ['dashboard'],
         queryFn: getDashboard,
     });
@@ -54,7 +54,7 @@ export default function Dashboard() {
         queryFn: listAccountsWithBalances,
     });
 
-    const accountMap = new Map(dashboardAccounts.map((a) => [a.id, a]));
+    const transactionsTileMap = new Map(dashboardTiles.map((t) => [t.tile_id, t]));
 
     function accountDisplayName(accountId: number): string {
         return allAccountsWithBalances.find((a) => a.id === accountId)?.name ?? `Account ${accountId}`;
@@ -90,7 +90,7 @@ export default function Dashboard() {
 
     async function handleAddTransaction(data: TransactionPayload, pendingFiles: File[], addAnother: boolean) {
         if (modal?.type !== 'add-transaction') return;
-        const tx = await addTransactionMutation.mutateAsync({ accountId: modal.account.id, data });
+        const tx = await addTransactionMutation.mutateAsync({ accountId: modal.account.account_id, data });
         queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         queryClient.invalidateQueries({ queryKey: ['accounts-balances'] });
         if (pendingFiles.length > 0) {
@@ -192,7 +192,7 @@ export default function Dashboard() {
                             if (tile.account_id === null) return null;
 
                             if (tile.tile_type === 'transactions') {
-                                const account = accountMap.get(tile.account_id);
+                                const account = transactionsTileMap.get(tile.id);
                                 if (!account) return null;
                                 return (
                                     <AccountTile

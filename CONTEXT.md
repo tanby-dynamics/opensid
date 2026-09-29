@@ -5,7 +5,7 @@ A personal/household finance app: accounts, transactions, budgets, and a configu
 ## Language
 
 **Dashboard Tile**:
-One configured widget on the dashboard, backed by a single `dashboard_config` row (`tile_type`, `account_id`, `position`, plus type-specific settings like `time_window`). Most tile types belong to one account; `net_worth` and `net_worth_chart` are cross-account.
+One configured widget on the dashboard, backed by a single `dashboard_config` row (`tile_type`, `account_id`, `position`, plus type-specific settings like `time_window`). Most tile types belong to one account; `net_worth` and `net_worth_chart` are cross-account. Any number of tiles, of any type, may target the same account — including several transactions tiles, each with its own Saved View.
 _Avoid_: Widget, panel
 
 **Custom Title**:

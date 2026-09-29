@@ -1,15 +1,15 @@
 # Scratchpad
 
-- [ ] **44** [Tile balances should reflect the selected saved view](https://github.com/tanby-dynamics/opensid/issues/44)
-	- [x]  start implementing
+- [x] **44** [Tile balances should reflect the selected saved view](https://github.com/tanby-dynamics/opensid/issues/44)
+	- [x] start implementing
 	- [x] changelog
-	- [ ] commit
+	- [x] commit
 - [ ] **45** [Allow showing multiple transactions tiles for the same account](https://github.com/tanby-dynamics/opensid/issues/45)
-	- [ ] start grilling
-	- [ ]  start implementing
+	- [x] start grilling
+	- [x] start implementing
 	- [ ] changelog
 	- [ ] commit
-- [ ] 0.3.1 release
+- [ ] 0.3.2 release
 
 ## 20260928
 
