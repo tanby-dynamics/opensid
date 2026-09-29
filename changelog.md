@@ -1,6 +1,6 @@
 # OpenSid Changelog
 
-## 0.3.1
+## 0.3.2
 
 **Release date**: 2026-09-29
 

@@ -4,11 +4,11 @@
 	- [x] start implementing
 	- [x] changelog
 	- [x] commit
-- [ ] **45** [Allow showing multiple transactions tiles for the same account](https://github.com/tanby-dynamics/opensid/issues/45)
+- [x] **45** [Allow showing multiple transactions tiles for the same account](https://github.com/tanby-dynamics/opensid/issues/45)
 	- [x] start grilling
 	- [x] start implementing
-	- [ ] changelog
-	- [ ] commit
+	- [x] changelog
+	- [x] commit
 - [ ] 0.3.2 release
 
 ## 20260928
