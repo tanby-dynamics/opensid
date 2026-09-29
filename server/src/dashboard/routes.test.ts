@@ -85,7 +85,7 @@ t.test('does not duplicate recent transactions when an account has multiple dash
     });
 });
 
-t.test('filters recent_transactions by the transactions tile saved_view_id, but not balance_cents', async (t) => {
+t.test('filters recent_transactions and balance_cents by the transactions tile saved_view_id', async (t) => {
     const accountId = Number(
         db.prepare(`INSERT INTO accounts (name) VALUES (?)`).run('Everyday').lastInsertRowid,
     );
@@ -109,9 +109,40 @@ t.test('filters recent_transactions by the transactions tile saved_view_id, but 
 
     const response = await request(app).get('/api/dashboard').expect(200);
 
-    t.equal(response.body.accounts[0].balance_cents, -6500);
+    t.equal(response.body.accounts[0].balance_cents, -5000);
     t.equal(response.body.accounts[0].recent_transactions.length, 1);
     t.equal(response.body.accounts[0].recent_transactions[0].description, 'Woolies');
+});
+
+t.test('balance_cents is the balance of only the transactions matching a type saved view', async (t) => {
+    const accountId = Number(
+        db.prepare(`INSERT INTO accounts (name) VALUES (?)`).run('Everyday').lastInsertRowid,
+    );
+    db.prepare(
+        `INSERT INTO transactions (account_id, category, description, amount_cents, type, date)
+         VALUES (?, 'Salary', 'Pay', 100000, 'income', '2026-04-01')`,
+    ).run(accountId);
+    db.prepare(
+        `INSERT INTO transactions (account_id, category, description, amount_cents, type, date)
+         VALUES (?, 'Groceries', 'Woolies', -5000, 'expense', '2026-04-02')`,
+    ).run(accountId);
+    db.prepare(
+        `INSERT INTO transactions (account_id, category, description, amount_cents, type, date)
+         VALUES (?, 'Entertainment', 'Netflix', -1500, 'expense', '2026-04-03')`,
+    ).run(accountId);
+
+    const viewId = insertSavedView('account', accountId, { type: 'expense' });
+    db.prepare(
+        `INSERT INTO dashboard_config (account_id, position, tile_type, time_window, saved_view_id)
+         VALUES (?, 1, 'transactions', NULL, ?)`,
+    ).run(accountId, viewId);
+
+    const app = express();
+    app.use('/api/dashboard', dashboardRoutes);
+
+    const response = await request(app).get('/api/dashboard').expect(200);
+
+    t.equal(response.body.accounts[0].balance_cents, -6500);
 });
 
 t.test('falls back to unfiltered recent_transactions when the tile saved_view_id has been (soft-)deleted', async (t) => {

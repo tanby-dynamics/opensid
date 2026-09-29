@@ -1,4 +1,6 @@
 import db from '../db';
+import { getBalance } from '../transactions/repository';
+import { resolveSavedViewFilters } from '../saved-views/resolve';
 
 export type TileType =
     | 'transactions'
@@ -29,18 +31,27 @@ export interface DashboardConfigItem {
 export const FILTERABLE_TILE_TYPES: TileType[] = ['transactions', 'balance_over_time', 'totals_by_category', 'income_vs_expense'];
 
 const SELECT_SQL = `
-    SELECT dc.id, dc.account_id, dc.position, dc.tile_type, dc.time_window, dc.show_balance, dc.forecast_discretionary, dc.saved_view_id, dc.title,
-        CASE WHEN dc.tile_type IN ('transactions', 'balance_over_time')
-            THEN (SELECT COALESCE(SUM(t.amount_cents), 0) FROM transactions t WHERE t.account_id = dc.account_id AND t.deleted_at IS NULL AND t.split_parent_id IS NULL)
-            ELSE NULL
-        END AS balance_cents
+    SELECT dc.id, dc.account_id, dc.position, dc.tile_type, dc.time_window, dc.show_balance, dc.forecast_discretionary, dc.saved_view_id, dc.title
     FROM dashboard_config dc
 `;
 
+const BALANCE_TILE_TYPES: TileType[] = ['transactions', 'balance_over_time'];
+
+// The balance is that of the transactions matching the tile's saved view (all of the
+// account's transactions when it has none), so it agrees with the tile's data.
+function withBalance(row: Omit<DashboardConfigItem, 'balance_cents'>): DashboardConfigItem {
+    if (row.account_id === null || !BALANCE_TILE_TYPES.includes(row.tile_type)) {
+        return { ...row, balance_cents: null };
+    }
+    const filters = resolveSavedViewFilters(row.saved_view_id, row.account_id);
+    return { ...row, balance_cents: getBalance(row.account_id, filters) };
+}
+
 export function getAll(): DashboardConfigItem[] {
-    return db
+    const rows = db
         .prepare(`${SELECT_SQL} ORDER BY dc.position`)
-        .all() as DashboardConfigItem[];
+        .all() as Omit<DashboardConfigItem, 'balance_cents'>[];
+    return rows.map(withBalance);
 }
 
 export interface AddTileFields {
@@ -59,9 +70,10 @@ export function add(accountId: number | null, tileType: TileType, timeWindow?: s
     const result = db
         .prepare('INSERT INTO dashboard_config (account_id, position, tile_type, time_window, show_balance, forecast_discretionary, saved_view_id, title) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
         .run(accountId, nextPos, tileType, timeWindow ?? null, show_balance ? 1 : 0, forecast_discretionary ? 1 : 0, saved_view_id, title);
-    return db
+    const row = db
         .prepare(`${SELECT_SQL} WHERE dc.id = ?`)
-        .get(result.lastInsertRowid) as DashboardConfigItem;
+        .get(result.lastInsertRowid) as Omit<DashboardConfigItem, 'balance_cents'>;
+    return withBalance(row);
 }
 
 export function remove(tileId: number): boolean {
@@ -94,7 +106,8 @@ export function updateTile(tileId: number, fields: UpdateTileFields): DashboardC
         .prepare('UPDATE dashboard_config SET account_id = ?, tile_type = ?, time_window = ?, show_balance = ?, forecast_discretionary = ?, saved_view_id = ?, title = ? WHERE id = ?')
         .run(fields.account_id, fields.tile_type, fields.time_window, fields.show_balance ? 1 : 0, fields.forecast_discretionary ? 1 : 0, fields.saved_view_id, fields.title, tileId);
     if (result.changes === 0) return null;
-    return db
+    const row = db
         .prepare(`${SELECT_SQL} WHERE dc.id = ?`)
-        .get(tileId) as DashboardConfigItem;
+        .get(tileId) as Omit<DashboardConfigItem, 'balance_cents'>;
+    return withBalance(row);
 }

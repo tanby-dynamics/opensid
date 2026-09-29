@@ -1,5 +1,9 @@
 # OpenSid Changelog
 
+## Unreleased
+
+- Dashboard tile balances reflect the tile's selected saved view
+
 ## 0.3.0
 
 **Release date**: 2026-09-28

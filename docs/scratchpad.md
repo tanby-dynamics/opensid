@@ -1,5 +1,16 @@
 # Scratchpad
 
+- [ ] **44** [Tile balances should reflect the selected saved view](https://github.com/tanby-dynamics/opensid/issues/44)
+	- [x]  start implementing
+	- [x] changelog
+	- [ ] commit
+- [ ] **45** [Allow showing multiple transactions tiles for the same account](https://github.com/tanby-dynamics/opensid/issues/45)
+	- [ ] start grilling
+	- [ ]  start implementing
+	- [ ] changelog
+	- [ ] commit
+- [ ] 0.3.1 release
+
 ## 20260928
 
 - [x] **38** [Make reconciliation feature configurable per account](https://github.com/tanby-dynamics/opensid/issues/38)
@@ -27,4 +38,4 @@
 	- [x]  start implementing
 	- [x] changelog
 	- [x] commit
-- [ ] Tag new version
+- [x] 0.3.0 release

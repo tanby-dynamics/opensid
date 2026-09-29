@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db from '../db';
-import { findByAccount } from '../transactions/repository';
+import { findByAccount, getBalance } from '../transactions/repository';
 import { resolveSavedViewFilters } from '../saved-views/resolve';
 
 const router = Router();
@@ -50,16 +50,6 @@ router.get('/', (_req, res) => {
         )
         .all() as ConfiguredAccountRow[];
 
-    const balances = db
-        .prepare(
-            `SELECT account_id, SUM(amount_cents) AS balance_cents
-             FROM transactions
-             WHERE deleted_at IS NULL AND split_parent_id IS NULL
-             GROUP BY account_id`,
-        )
-        .all() as { account_id: number; balance_cents: number }[];
-    const balanceByAccount = new Map(balances.map((b) => [b.account_id, b.balance_cents]));
-
     const accounts: DashboardAccountResponse[] = [];
     for (const configured of configuredAccounts) {
         const account = db
@@ -73,7 +63,7 @@ router.get('/', (_req, res) => {
         accounts.push({
             id: account.id,
             name: account.name,
-            balance_cents: balanceByAccount.get(account.id) ?? 0,
+            balance_cents: getBalance(account.id, filters),
             recent_transactions: recent.map((t) => ({
                 id: t.id,
                 description: t.description,

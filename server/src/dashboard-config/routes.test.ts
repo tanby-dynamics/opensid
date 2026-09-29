@@ -179,6 +179,27 @@ t.test('GET / — balance_cents is null for ineligible tile types', async (t) =>
     t.equal(response.body.items[0].balance_cents, null);
 });
 
+t.test('GET / — balance_cents applies the tile saved view for balance_over_time tiles', async (t) => {
+    const accountId = insertAccount('Everyday');
+    const insertTransaction = db.prepare(
+        `INSERT INTO transactions (account_id, description, category, amount_cents, type, date) VALUES (?, ?, ?, ?, ?, ?)`,
+    );
+    insertTransaction.run(accountId, 'Pay', 'Pay', 100000, 'income', '2026-01-01');
+    insertTransaction.run(accountId, 'Woolies', 'Groceries', -5000, 'expense', '2026-01-02');
+    insertTransaction.run(accountId, 'Netflix', 'Entertainment', -1500, 'expense', '2026-01-03');
+    const viewId = Number(
+        db.prepare(`INSERT INTO saved_views (scope, account_id, name, filters) VALUES (?, ?, ?, ?)`)
+            .run('account', accountId, 'Expenses', JSON.stringify({ type: 'expense' })).lastInsertRowid,
+    );
+    const tileId = insertTile(accountId, 'balance_over_time', '30d', 1);
+    db.prepare('UPDATE dashboard_config SET saved_view_id = ? WHERE id = ?').run(viewId, tileId);
+
+    const app = makeApp();
+    const response = await request(app).get('/api/dashboard-config').expect(200);
+
+    t.equal(response.body.items[0].balance_cents, -6500);
+});
+
 // --- POST /cross-account ---
 
 t.test('POST /cross-account — adds a net_worth tile with no account_id', async (t) => {

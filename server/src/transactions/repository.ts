@@ -427,12 +427,12 @@ export function updateTemplateEndDate(templateId: number, endDate: string): void
     db.prepare(`UPDATE transactions SET recurrence_end_date = ?, updated_at = datetime('now') WHERE id = ? AND deleted_at IS NULL`).run(endDate, templateId);
 }
 
-export function getBalance(accountId: number): number {
+export function getBalance(accountId: number, filters?: TransactionFilters): number {
+    const { conditions, params } = buildFilterClauses(filters);
+    const allConditions = ['account_id = ?', 'deleted_at IS NULL', 'split_parent_id IS NULL', ...conditions];
     const row = db
-        .prepare(
-            'SELECT COALESCE(SUM(amount_cents), 0) AS balance FROM transactions WHERE account_id = ? AND deleted_at IS NULL AND split_parent_id IS NULL',
-        )
-        .get(accountId) as { balance: number };
+        .prepare(`SELECT COALESCE(SUM(amount_cents), 0) AS balance FROM transactions WHERE ${allConditions.join(' AND ')}`)
+        .get(accountId, ...params) as { balance: number };
     return row.balance;
 }
 
